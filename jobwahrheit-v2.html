@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -6,6 +7,7 @@
 <title>JobWahrheit – Echte Bewertungen. Echter Einblick.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --bg: #f7f4ef;
@@ -697,78 +699,10 @@ h1 em { color: var(--accent); font-style: italic; }
         </div>
 
         <div class="sec-title fade-in">
-          Bewertungen <span style="color:var(--muted);font-family:'DM Sans';font-size:.85rem;font-weight:400">(24)</span>
+          Bewertungen <span id="bewertungen-count" style="color:var(--muted);font-family:'DM Sans';font-size:.85rem;font-weight:400">(wird geladen…)</span>
           <a onclick="showPage('bewerten')">+ Bewertung schreiben</a>
         </div>
-
-        <div class="review-card fade-in">
-          <div class="rc-top">
-            <div>
-              <div class="rc-stars">★★★★☆</div>
-              <div class="rc-title">„Mehr Papier als erwartet, aber sinnstiftend"</div>
-            </div>
-            <div class="rc-meta">Elektroniker_47<br>3 Jahre Erfahrung<br>vor 4 Tagen</div>
-          </div>
-          <div class="rc-body">Die Ausbildung hat gut gefallen und der Job macht grundsätzlich Spaß. Was mich überrascht hat: Der bürokratische Aufwand ist enorm. Dokumentation, Berichte, Kundenkommunikation – das steht in keiner Stellenbeschreibung. Dafür ist das Gefühl, wenn eine Anlage läuft, unbezahlbar.</div>
-          <div class="rc-tags">
-            <span class="rc-tag">Teamarbeit</span>
-            <span class="rc-tag">Problemlösung</span>
-            <span class="rc-tag">Körperliche Ausdauer</span>
-            <span class="rc-tag">Dokumentation</span>
-          </div>
-          <div class="rc-footer">
-            <span>Bruttogehalt: <strong>3.100 €</strong> · Bayern</span>
-            <div style="display:flex;gap:1rem;align-items:center">
-              <button class="rc-helpful" onclick="this.textContent='👍 12'">👍 11 Hilfreich</button>
-              <span class="rc-flag" title="Melden">⚑</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="review-card fade-in">
-          <div class="rc-top">
-            <div>
-              <div class="rc-stars">★★★☆☆</div>
-              <div class="rc-title">„Stellenausschreibung und Realität klaffen weit auseinander"</div>
-            </div>
-            <div class="rc-meta">Elektroniker_12<br>1 Jahr Erfahrung<br>vor 2 Wochen</div>
-          </div>
-          <div class="rc-body">In der Ausschreibung stand viel von „abwechslungsreichen Projekten" und „modernem Arbeitsumfeld". In Wirklichkeit: gleiche Routen, gleiche Kunden, selten neue Herausforderungen. Das Gehalt ist in Ordnung, aber die Entwicklungsmöglichkeiten sind begrenzt wenn man nicht den Meister macht.</div>
-          <div class="rc-tags">
-            <span class="rc-tag">Selbstorganisation</span>
-            <span class="rc-tag">Stressresistenz</span>
-          </div>
-          <div class="rc-footer">
-            <span>Bruttogehalt: <strong>2.800 €</strong> · NRW</span>
-            <div style="display:flex;gap:1rem;align-items:center">
-              <button class="rc-helpful">👍 8 Hilfreich</button>
-              <span class="rc-flag">⚑</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="review-card fade-in">
-          <div class="rc-top">
-            <div>
-              <div class="rc-stars">★★★★★</div>
-              <div class="rc-title">„Wer Technik liebt, ist hier richtig"</div>
-            </div>
-            <div class="rc-meta">Elektroniker_91<br>7 Jahre Erfahrung<br>vor 1 Monat</div>
-          </div>
-          <div class="rc-body">Nach 7 Jahren kann ich sagen: Es ist ein guter Beruf wenn man wirklich Interesse an Technik hat. Die körperliche Belastung nimmt mit den Jahren zu, aber man gewöhnt sich dran. Weiterbildungen sind wichtig – wer stehen bleibt, verliert den Anschluss an neue Technologien.</div>
-          <div class="rc-tags">
-            <span class="rc-tag">Technisches Verständnis</span>
-            <span class="rc-tag">Lernbereitschaft</span>
-            <span class="rc-tag">Körperliche Belastbarkeit</span>
-          </div>
-          <div class="rc-footer">
-            <span>Bruttogehalt: <strong>3.800 €</strong> · Baden-Württemberg</span>
-            <div style="display:flex;gap:1rem;align-items:center">
-              <button class="rc-helpful">👍 31 Hilfreich</button>
-              <span class="rc-flag">⚑</span>
-            </div>
-          </div>
-        </div>
+        <div id="bewertungen-liste"></div>
       </div>
 
       <!-- TAB: Gehalt -->
@@ -1141,7 +1075,193 @@ h1 em { color: var(--accent); font-style: italic; }
 
 <script>
 // ════════════════════════════════════════
-// BERUFENET API – Bundesagentur für Arbeit
+// SUPABASE – Datenbank
+// ════════════════════════════════════════
+const SUPABASE_URL = 'https://kvqdgcixmdnrarlaskyb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_xQJDrdvPgnnJyUD8tbhz4g_rWOzzBu_';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ════════════════════════════════════════
+// BEWERTUNGEN LADEN
+// ════════════════════════════════════════
+async function loadBewertungen(berufName) {
+  const container = document.getElementById('bewertungen-liste');
+  const counter = document.getElementById('bewertungen-count');
+  if (!container) return;
+
+  container.innerHTML = `<div style="color:var(--muted);font-size:.9rem;padding:1rem 0">Lade Bewertungen…</div>`;
+
+  const { data, error } = await sb
+    .from('bewertungen')
+    .select('*')
+    .ilike('beruf_name', berufName)
+    .order('created_at', { ascending: false });
+
+  if (error || !data?.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:3rem 1rem;border:1px dashed var(--border);border-radius:12px">
+        <div style="font-size:2rem;margin-bottom:.75rem">✍️</div>
+        <div style="font-weight:600;margin-bottom:.4rem">Noch keine Bewertungen</div>
+        <div style="font-size:.85rem;color:var(--muted);margin-bottom:1rem">Sei die erste Person die diesen Beruf bewertet!</div>
+        <button onclick="showPage('bewerten')" style="background:var(--ink);color:#fff;border:none;padding:.6rem 1.4rem;border-radius:8px;font-family:'Fraunces',serif;font-weight:700;cursor:pointer">Jetzt bewerten →</button>
+      </div>`;
+    if (counter) counter.textContent = '(0)';
+    return;
+  }
+
+  if (counter) counter.textContent = `(${data.length})`;
+
+  // Rating-Bars aktualisieren
+  const avgGesamt = (data.reduce((s,b) => s + (b.bewertung_gesamt||0), 0) / data.length).toFixed(1);
+  const avgErwartung = (data.reduce((s,b) => s + (b.bewertung_erwartung||0), 0) / data.length).toFixed(1);
+  const empfRate = Math.round(data.filter(b => b.weiterempfehlung).length / data.length * 100);
+
+  // Header-Scores aktualisieren
+  document.querySelector('.score-big.yellow').textContent = avgGesamt;
+  document.querySelector('.score-big.green').textContent = empfRate + '%';
+
+  // Gehalt berechnen
+  const mitGehalt = data.filter(b => b.gehalt_brutto > 0);
+  if (mitGehalt.length) {
+    const avgGehalt = Math.round(mitGehalt.reduce((s,b) => s + b.gehalt_brutto, 0) / mitGehalt.length);
+    document.querySelectorAll('.score-big')[3].textContent = avgGehalt.toLocaleString('de') + '€';
+  }
+
+  container.innerHTML = data.map(b => renderBewertung(b)).join('');
+}
+
+function renderBewertung(b) {
+  const stars = '★'.repeat(b.bewertung_gesamt || 0) + '☆'.repeat(5 - (b.bewertung_gesamt || 0));
+  const tags = (b.skills || []).map(s => `<span class="rc-tag">${s}</span>`).join('');
+  const datum = new Date(b.created_at).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+  const empf = b.weiterempfehlung ? '👍 Empfohlen' : '👎 Nicht empfohlen';
+
+  return `
+    <div class="review-card fade-in">
+      <div class="rc-top">
+        <div>
+          <div class="rc-stars">${stars}</div>
+          <div class="rc-title">${escHtml(b.freitext || 'Bewertung')}</div>
+        </div>
+        <div class="rc-meta">${escHtml(b.anon_name || 'Anonym')}<br>${b.berufsjahre || ''}<br>${datum}</div>
+      </div>
+      ${b.was_erwartet ? `<div class="rc-body"><strong>Erwartet:</strong> ${escHtml(b.was_erwartet)}</div>` : ''}
+      ${b.alltag_vs_stelle ? `<div class="rc-body"><strong>Realität:</strong> ${escHtml(b.alltag_vs_stelle)}</div>` : ''}
+      ${tags ? `<div class="rc-tags">${tags}</div>` : ''}
+      <div class="rc-footer">
+        <span>${b.gehalt_brutto ? `Bruttogehalt: <strong>${b.gehalt_brutto.toLocaleString('de')} €</strong>` : ''} ${b.region ? '· ' + escHtml(b.region) : ''} · ${empf}</span>
+        <div style="display:flex;gap:1rem;align-items:center">
+          <button class="rc-helpful" onclick="markHilfreich('${b.id}', this)">👍 ${b.hilfreich || 0} Hilfreich</button>
+          <span class="rc-flag" title="Melden" onclick="meldenBewertung('${b.id}')">⚑</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ════════════════════════════════════════
+// BEWERTUNG SPEICHERN
+// ════════════════════════════════════════
+async function submitBewertung() {
+  const berufInput = document.querySelector('#page-bewerten .form-input');
+  const berufName = berufInput?.value?.trim();
+
+  if (!berufName) {
+    alert('Bitte gib eine Berufsbezeichnung ein.');
+    berufInput?.focus();
+    return;
+  }
+  if (!formStars.overall) {
+    alert('Bitte gib eine Gesamtbewertung (Sterne) ab.');
+    return;
+  }
+
+  const alleInputs = document.querySelectorAll('#page-bewerten .form-input, #page-bewerten .form-select, #page-bewerten .form-textarea');
+  const felder = [...alleInputs];
+
+  const selectedSkills = [...document.querySelectorAll('#page-bewerten .skill-opt.sel')].map(s => s.textContent);
+  const weiterempfehlung = document.querySelector('#page-bewerten .toggle-opt.yes.sel') !== null;
+  const region = felder[3]?.value || '';
+  const berufsjahre = felder[2]?.value || '';
+  const gehalt = parseInt(felder[4]?.value) || null;
+  const wasErwartet = felder[5]?.value || '';
+  const alltag = felder[6]?.value || '';
+  const freitext = felder[7]?.value || '';
+
+  // Anonymer Name generieren
+  const anonName = generateAnonName(berufName);
+
+  const btn = document.querySelector('.btn-submit');
+  btn.textContent = 'Wird gespeichert…';
+  btn.disabled = true;
+
+  const { error } = await sb.from('bewertungen').insert([{
+    beruf_name: berufName,
+    berufsjahre,
+    region,
+    gehalt_brutto: gehalt,
+    was_erwartet: wasErwartet,
+    bewertung_erwartung: formStars.expect,
+    alltag_vs_stelle: alltag,
+    skills: selectedSkills,
+    bewertung_gesamt: formStars.overall,
+    weiterempfehlung,
+    freitext,
+    anon_name: anonName,
+    hilfreich: 0
+  }]);
+
+  btn.textContent = 'Anonym einreichen →';
+  btn.disabled = false;
+
+  if (error) {
+    alert('Fehler beim Speichern: ' + error.message);
+    return;
+  }
+
+  document.getElementById('modal').classList.add('open');
+}
+
+function generateAnonName(beruf) {
+  const wort = beruf.split(/[\s\/]/)[0].replace(/[^a-zA-ZäöüÄÖÜ]/g,'');
+  const num = Math.floor(Math.random() * 900) + 100;
+  return wort + '_' + num;
+}
+
+// ════════════════════════════════════════
+// HILFREICH & MELDEN
+// ════════════════════════════════════════
+async function markHilfreich(id, btn) {
+  const key = 'hilfreich_' + id;
+  if (localStorage.getItem(key)) return;
+  localStorage.setItem(key, '1');
+
+  await sb.rpc('increment_hilfreich', { row_id: id });
+  const current = parseInt(btn.textContent.match(/\d+/)?.[0] || 0);
+  btn.textContent = `👍 ${current + 1} Hilfreich`;
+}
+
+async function meldenBewertung(id) {
+  if (confirm('Diese Bewertung als unangemessen melden?')) {
+    await sb.from('meldungen').insert([{ bewertung_id: id }]);
+    alert('Danke – wir prüfen die Bewertung.');
+  }
+}
+
+// ════════════════════════════════════════
+// STATISTIKEN HOMEPAGE
+// ════════════════════════════════════════
+async function loadStats() {
+  const { count } = await sb.from('bewertungen').select('*', { count: 'exact', head: true });
+  const el = document.querySelector('.stat-num:nth-child(1)');
+  const countEl = document.querySelectorAll('.stat-num')[1];
+  if (countEl && count !== null) countEl.textContent = count.toLocaleString('de');
+}
+
+// ════════════════════════════════════════
 // Öffentlich, kostenlos, kein eigener Key nötig
 // ════════════════════════════════════════
 const BERUFENET_API = 'https://rest.arbeitsagentur.de/infosysbub/bnet/pc/v1/berufe';
@@ -1177,12 +1297,24 @@ function showBeruf(name, berufsgruppe, dkzId) {
   const bgLabel = BERUFSGRUPPEN[String(berufsgruppe)] || 'Beruf';
   document.querySelector('.beruf-pill').textContent = '🎓 ' + bgLabel;
 
+  // Bewertungsformular: Berufsfeld vorausfüllen
+  const berufInput = document.querySelector('#page-bewerten .form-input');
+  if (berufInput) berufInput.value = name;
+
   showPage('beruf');
   switchTabByName('tab-bewertungen');
+
+  // Echte Bewertungen aus Supabase laden
+  loadBewertungen(name);
 
   // Ähnliche Berufe laden wenn dkzId vorhanden
   if (dkzId) loadAehnlicheBerufe(dkzId);
 }
+
+// Init beim Seitenstart
+window.addEventListener('DOMContentLoaded', () => {
+  loadStats();
+});
 
 // ── Tabs
 function switchTab(el, tabId) {

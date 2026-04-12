@@ -875,11 +875,11 @@ h1 em { color: var(--accent); font-style: italic; }
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Berufsbezeichnung *</label>
-        <input class="form-input" type="text" placeholder="z.B. Elektroniker, Pflegefachkraft…">
+        <input id="f-beruf" class="form-input" type="text" placeholder="z.B. Elektroniker, Pflegefachkraft…">
       </div>
       <div class="form-group">
         <label class="form-label">Spezialisierung</label>
-        <select class="form-select">
+        <select id="f-spezi" class="form-select">
           <option>Keine / Nicht relevant</option>
           <option>Energie- und Gebäudetechnik</option>
           <option>Automatisierungstechnik</option>
@@ -890,17 +890,17 @@ h1 em { color: var(--accent); font-style: italic; }
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Berufsjahre</label>
-        <select class="form-select">
+        <select id="f-jahre" class="form-select">
           <option>Unter 1 Jahr</option>
           <option>1–3 Jahre</option>
-          <option selected>3–5 Jahre</option>
+          <option>3–5 Jahre</option>
           <option>5–10 Jahre</option>
           <option>Über 10 Jahre</option>
         </select>
       </div>
       <div class="form-group">
         <label class="form-label">Region</label>
-        <select class="form-select">
+        <select id="f-region" class="form-select">
           <option>Bayern</option>
           <option>NRW</option>
           <option>Baden-Württemberg</option>
@@ -914,7 +914,7 @@ h1 em { color: var(--accent); font-style: italic; }
     <div class="form-section-title">02 — Deine Erfahrung</div>
     <div class="form-group">
       <label class="form-label">Was habe ich erwartet? *</label>
-      <textarea class="form-textarea" placeholder="Wie hast du dir den Job vorgestellt, bevor du angefangen hast?"></textarea>
+      <textarea id="f-erwartet" class="form-textarea" placeholder="Wie hast du dir den Job vorgestellt, bevor du angefangen hast?"></textarea>
     </div>
     <div class="form-group">
       <label class="form-label">Wurde die Erwartung eingehalten? *</label>
@@ -928,13 +928,13 @@ h1 em { color: var(--accent); font-style: italic; }
     </div>
     <div class="form-group">
       <label class="form-label">Passt der Alltag zur Stellenbeschreibung? *</label>
-      <textarea class="form-textarea" placeholder="Was steht in typischen Ausschreibungen – und was erlebst du wirklich?"></textarea>
+      <textarea id="f-alltag" class="form-textarea" placeholder="Was steht in typischen Ausschreibungen – und was erlebst du wirklich?"></textarea>
     </div>
 
     <div class="form-section-title">03 — Skills & Gehalt</div>
     <div class="form-group">
       <label class="form-label">Welche Skills brauchst du wirklich?</label>
-      <div class="skill-select">
+      <div class="skill-select" id="f-skills">
         <div class="skill-opt" onclick="this.classList.toggle('sel')">Teamarbeit</div>
         <div class="skill-opt" onclick="this.classList.toggle('sel')">Eigeninitiative</div>
         <div class="skill-opt" onclick="this.classList.toggle('sel')">Körperliche Ausdauer</div>
@@ -951,7 +951,7 @@ h1 em { color: var(--accent); font-style: italic; }
     </div>
     <div class="form-group">
       <label class="form-label">Bruttogehalt pro Monat (optional)</label>
-      <input class="form-input" type="number" placeholder="z.B. 3200" style="max-width:200px">
+      <input id="f-gehalt" class="form-input" type="number" placeholder="z.B. 3200" style="max-width:200px">
     </div>
 
     <div class="form-section-title">04 — Gesamturteil</div>
@@ -967,14 +967,14 @@ h1 em { color: var(--accent); font-style: italic; }
     </div>
     <div class="form-group">
       <label class="form-label">Würdest du diesen Beruf weiterempfehlen?</label>
-      <div class="toggle-group">
+      <div class="toggle-group" id="f-empfehlung">
         <div class="toggle-opt yes" onclick="selectToggle(this,'rec')">👍 Ja, empfehle ich</div>
         <div class="toggle-opt no" onclick="selectToggle(this,'rec')">👎 Eher nicht</div>
       </div>
     </div>
     <div class="form-group">
       <label class="form-label">Dein ehrlichster Satz zum Job</label>
-      <textarea class="form-textarea" placeholder="Was wünschtest du, hättest du vorher gewusst?"></textarea>
+      <textarea id="f-freitext" class="form-textarea" placeholder="Was wünschtest du, hättest du vorher gewusst?"></textarea>
     </div>
 
     <div class="submit-row">
@@ -1077,7 +1077,7 @@ h1 em { color: var(--accent); font-style: italic; }
 // SUPABASE – Datenbank
 // ════════════════════════════════════════
 const SUPABASE_URL = 'https://kvqdgcixmdnrarlaskyb.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_xQJDrdvPgnnJyUD8tbhz4g_rWOzzBu_';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2cWRnY2l4bWRucmFybGFza3liIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NzUwMTQsImV4cCI6MjA5MTU1MTAxNH0.ngU8OG7cFC7ZWRrt0ZxlUBDIbtv-cEa-rFJbjZII2wk';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ════════════════════════════════════════
@@ -1165,12 +1165,11 @@ function escHtml(str) {
 // BEWERTUNG SPEICHERN
 // ════════════════════════════════════════
 async function submitBewertung() {
-  const berufInput = document.querySelector('#page-bewerten .form-input');
-  const berufName = berufInput?.value?.trim();
+  const berufName = document.getElementById('f-beruf')?.value?.trim();
 
   if (!berufName) {
     alert('Bitte gib eine Berufsbezeichnung ein.');
-    berufInput?.focus();
+    document.getElementById('f-beruf')?.focus();
     return;
   }
   if (!formStars.overall) {
@@ -1178,49 +1177,43 @@ async function submitBewertung() {
     return;
   }
 
-  const alleInputs = document.querySelectorAll('#page-bewerten .form-input, #page-bewerten .form-select, #page-bewerten .form-textarea');
-  const felder = [...alleInputs];
+  const selectedSkills = [...document.querySelectorAll('#f-skills .skill-opt.sel')].map(s => s.textContent);
+  const weiterempfehlung = document.querySelector('#f-empfehlung .toggle-opt.yes.sel') !== null;
 
-  const selectedSkills = [...document.querySelectorAll('#page-bewerten .skill-opt.sel')].map(s => s.textContent);
-  const weiterempfehlung = document.querySelector('#page-bewerten .toggle-opt.yes.sel') !== null;
-  const region = felder[3]?.value || '';
-  const berufsjahre = felder[2]?.value || '';
-  const gehalt = parseInt(felder[4]?.value) || null;
-  const wasErwartet = felder[5]?.value || '';
-  const alltag = felder[6]?.value || '';
-  const freitext = felder[7]?.value || '';
-
-  // Anonymer Name generieren
-  const anonName = generateAnonName(berufName);
+  const payload = {
+    beruf_name: berufName,
+    berufsjahre: document.getElementById('f-jahre')?.value || null,
+    region: document.getElementById('f-region')?.value || null,
+    was_erwartet: document.getElementById('f-erwartet')?.value || null,
+    bewertung_erwartung: formStars.expect || null,
+    alltag_vs_stelle: document.getElementById('f-alltag')?.value || null,
+    skills: selectedSkills.length ? selectedSkills : null,
+    gehalt_brutto: parseInt(document.getElementById('f-gehalt')?.value) || null,
+    bewertung_gesamt: formStars.overall,
+    weiterempfehlung,
+    freitext: document.getElementById('f-freitext')?.value || null,
+    anon_name: generateAnonName(berufName),
+    hilfreich: 0
+  };
 
   const btn = document.querySelector('.btn-submit');
   btn.textContent = 'Wird gespeichert…';
   btn.disabled = true;
 
-  const { error } = await sb.from('bewertungen').insert([{
-    beruf_name: berufName,
-    berufsjahre,
-    region,
-    gehalt_brutto: gehalt,
-    was_erwartet: wasErwartet,
-    bewertung_erwartung: formStars.expect,
-    alltag_vs_stelle: alltag,
-    skills: selectedSkills,
-    bewertung_gesamt: formStars.overall,
-    weiterempfehlung,
-    freitext,
-    anon_name: anonName,
-    hilfreich: 0
-  }]);
+  console.log('Sende Bewertung:', payload);
+
+  const { data, error } = await sb.from('bewertungen').insert([payload]).select();
 
   btn.textContent = 'Anonym einreichen →';
   btn.disabled = false;
 
   if (error) {
-    alert('Fehler beim Speichern: ' + error.message);
+    console.error('Supabase Fehler:', error);
+    alert('Fehler: ' + error.message);
     return;
   }
 
+  console.log('Bewertung gespeichert:', data);
   document.getElementById('modal').classList.add('open');
 }
 
@@ -1297,7 +1290,7 @@ function showBeruf(name, berufsgruppe, dkzId) {
   document.querySelector('.beruf-pill').textContent = '🎓 ' + bgLabel;
 
   // Bewertungsformular: Berufsfeld vorausfüllen
-  const berufInput = document.querySelector('#page-bewerten .form-input');
+  const berufInput = document.getElementById('f-beruf');
   if (berufInput) berufInput.value = name;
 
   showPage('beruf');

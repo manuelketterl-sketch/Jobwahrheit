@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JobWahrheit – Echte Bewertungen. Echter Einblick.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg: #f7f4ef;
+  --ink: #1a1714;
+  --accent: #c8401a;
+  --accent2: #2a6ef5;
+  --muted: #8a8278;
+  --border: #e0d9cf;
+  --card: #ffffff;
+  --green: #1a8a4a;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); overflow-x: hidden; }
+
+/* ── PAGES ── */
+.page { display: none; min-height: 100vh; }
+.page.active { display: block; }
+
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 200;
+  background: var(--ink); height: 58px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 5vw;
+  border-bottom: 1px solid #2e2b27;
+}
+.nav-logo {
+  font-family: 'Fraunces', serif; font-weight: 900;
+  font-size: 1.3rem; color: var(--bg); cursor: pointer;
+  letter-spacing: -0.02em;
+}
+.nav-logo span { color: var(--accent); }
+.nav-links { display: flex; gap: 1.5rem; align-items: center; }
+.nav-links a {
+  color: #aaa; font-size: .85rem; font-weight: 500;
+  text-decoration: none; cursor: pointer;
+  transition: color .2s;
+}
+.nav-links a:hover { color: #fff; }
+.nav-cta {
+  background: var(--accent); color: #fff;
+  border: none; padding: .4rem 1rem;
+  font-family: 'DM Sans', sans-serif; font-weight: 600;
+  font-size: .82rem; border-radius: 5px; cursor: pointer;
+  transition: opacity .2s;
+}
+.nav-cta:hover { opacity: .85; }
+
+/* ── HERO ── */
+.hero {
+  min-height: 88vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 6vh 5vw; text-align: center;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 50%, #c8401a0d 0%, transparent 70%),
+    radial-gradient(ellipse 50% 60% at 80% 30%, #2a6ef508 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 99px; padding: .3rem 1rem;
+  font-size: .78rem; color: var(--muted); margin-bottom: 2rem;
+}
+.hero-badge strong { color: var(--accent); }
+h1 {
+  font-family: 'Fraunces', serif; font-weight: 900;
+  font-size: clamp(2.8rem, 6vw, 5rem);
+  line-height: 1.05; letter-spacing: -0.03em;
+  margin-bottom: 1.2rem; max-width: 800px;
+}
+h1 em { color: var(--accent); font-style: italic; }
+.hero-sub {
+  font-size: 1.05rem; color: var(--muted);
+  max-width: 500px; line-height: 1.7; margin-bottom: 3rem;
+}
+
+/* Search */
+.search-wrap {
+  width: 100%; max-width: 600px;
+  position: relative; margin-bottom: 1rem;
+}
+.search-input {
+  width: 100%; padding: 1rem 1.4rem;
+  font-family: 'DM Sans', sans-serif; font-size: 1rem;
+  border: 2px solid var(--border); border-radius: 12px;
+  background: #fff; outline: none; color: var(--ink);
+  transition: border-color .2s, box-shadow .2s;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+.search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 4px 24px rgba(200,64,26,.12);
+}
+.search-btn {
+  position: absolute; right: .5rem; top: 50%;
+  transform: translateY(-50%);
+  background: var(--ink); color: #fff;
+  border: none; padding: .6rem 1.2rem;
+  border-radius: 8px; font-weight: 600; font-size: .9rem;
+  cursor: pointer; transition: background .2s;
+}
+.search-btn:hover { background: var(--accent); }
+.search-dropdown {
+  position: absolute; top: calc(100% + .5rem);
+  left: 0; right: 0;
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,.1);
+  display: none; z-index: 100;
+}
+.search-dropdown.open { display: block; }
+.search-item {
+  padding: .75rem 1.2rem; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+  transition: background .15s; font-size: .9rem;
+}
+.search-item:hover { background: var(--bg); }
+.search-item .tag {
+  font-size: .72rem; background: var(--bg);
+  border-radius: 4px; padding: .2rem .5rem; color: var(--muted);
+}
+
+/* Categories */
+.categories {
+  display: flex; flex-wrap: wrap; gap: .6rem;
+  justify-content: center; margin-top: 2rem;
+}
+.cat-btn {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 99px; padding: .4rem 1rem;
+  font-size: .82rem; cursor: pointer; color: var(--ink);
+  transition: all .2s; font-family: 'DM Sans', sans-serif;
+}
+.cat-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Stats bar */
+.stats-bar {
+  display: flex; gap: 3rem; justify-content: center;
+  margin-top: 4rem; padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+.stat { text-align: center; }
+.stat-num {
+  font-family: 'Fraunces', serif; font-weight: 900;
+  font-size: 2rem; color: var(--ink);
+}
+.stat-label { font-size: .8rem; color: var(--muted); margin-top: .2rem; }
+
+/* ── BERUF SEITE ── */
+.beruf-header {
+  background: var(--ink); color: var(--bg);
+  padding: 4rem 5vw 3rem;
+}
+.breadcrumb {
+  font-size: .78rem; color: #888; margin-bottom: 1rem;
+  display: flex; gap: .4rem; align-items: center;
+}
+.breadcrumb span { cursor: pointer; }
+.breadcrumb span:hover { color: #ccc; }
+.beruf-header h2 {
+  font-family: 'Fraunces', serif; font-weight: 900;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  letter-spacing: -0.02em; margin-bottom: .5rem;
+}
+.beruf-meta { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: .75rem; }
+.beruf-pill {
+  background: #2a2724; border: 1px solid #3a3733;
+  border-radius: 6px; padding: .3rem .8rem;
+  font-size: .8rem; color: #ccc;
+}
+.beruf-score-row {
+  display: flex; gap: 2rem; margin-top: 2rem; flex-wrap: wrap;
+}
+.score-item { text-align: center; }
+.score-big {
+  font-family: 'Fraunces', serif; font-size: 2.8rem;
+  font-weight: 900; line-height: 1;
+}
+.score-big.green { color: #4ade80; }
+.score-big.yellow { color: #fbbf24; }
+.score-label { font-size: .75rem; color: #888; margin-top: .3rem; }
+
+/* Tabs */
+.tabs {
+  display: flex; gap: 0; border-bottom: 1px solid var(--border);
+  background: #fff; padding: 0 5vw; sticky; position: sticky; top: 58px; z-index: 100;
+}
+.tab {
+  padding: 1rem 1.5rem; font-size: .88rem; font-weight: 600;
+  cursor: pointer; border-bottom: 3px solid transparent;
+  color: var(--muted); transition: all .2s; white-space: nowrap;
+}
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab:hover:not(.active) { color: var(--ink); }
+
+/* Layout */
+.beruf-body {
+  display: grid; grid-template-columns: 1fr 320px;
+  gap: 2rem; padding: 2rem 5vw; max-width: 1200px; margin: 0 auto;
+}
+.beruf-main { min-width: 0; }
+.beruf-sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+
+/* Section titles */
+.sec-title {
+  font-family: 'Fraunces', serif; font-weight: 700;
+  font-size: 1.3rem; margin-bottom: 1.25rem;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.sec-title a { font-family: 'DM Sans', sans-serif; font-size: .8rem; font-weight: 500; color: var(--accent2); cursor: pointer; text-decoration: none; }
+
+/* Rating bars */
+.rating-overview {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem;
+}
+.rating-bars { display: flex; flex-direction: column; gap: .9rem; }
+.rbar-row { display: flex; align-items: center; gap: .75rem; font-size: .85rem; }
+.rbar-label { width: 200px; color: var(--muted); flex-shrink: 0; }
+.rbar-track {
+  flex: 1; height: 8px; background: var(--bg);
+  border-radius: 99px; overflow: hidden;
+}
+.rbar-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  transition: width 1s ease;
+}
+.rbar-val { width: 36px; text-align: right; font-weight: 600; font-size: .82rem; }
+
+/* Review cards */
+.review-card {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.5rem; margin-bottom: 1.2rem;
+  transition: box-shadow .2s;
+}
+.review-card:hover { box-shadow: 0 4px 24px rgba(0,0,0,.07); }
+.rc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: .75rem; }
+.rc-stars { color: #f59e0b; font-size: .95rem; letter-spacing: .05em; }
+.rc-meta { font-size: .75rem; color: var(--muted); text-align: right; line-height: 1.6; }
+.rc-title { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.05rem; margin-bottom: .5rem; }
+.rc-body { font-size: .88rem; color: #4a4540; line-height: 1.65; margin-bottom: 1rem; }
+.rc-tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1rem; }
+.rc-tag {
+  background: var(--bg); border-radius: 4px;
+  padding: .2rem .6rem; font-size: .75rem; color: var(--muted);
+}
+.rc-footer {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: .75rem; border-top: 1px solid var(--border);
+  font-size: .78rem; color: var(--muted);
+}
+.rc-helpful {
+  display: flex; align-items: center; gap: .4rem;
+  cursor: pointer; transition: color .2s; background: none; border: none;
+  font-family: 'DM Sans', sans-serif; font-size: .78rem; color: var(--muted);
+  padding: 0;
+}
+.rc-helpful:hover { color: var(--accent2); }
+.rc-flag { cursor: pointer; }
+.rc-flag:hover { color: var(--accent); }
+
+/* Sidebar widgets */
+.widget {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.25rem;
+}
+.widget-title {
+  font-family: 'Fraunces', serif; font-weight: 700;
+  font-size: 1rem; margin-bottom: 1rem;
+}
+.similar-job {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .6rem 0; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: color .2s;
+}
+.similar-job:last-child { border-bottom: none; }
+.similar-job:hover .sj-name { color: var(--accent); }
+.sj-name { font-size: .88rem; font-weight: 500; }
+.sj-match { font-size: .75rem; color: var(--green); font-weight: 600; }
+
+/* Stellenanzeigen */
+.stellenanzeige {
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 1rem; margin-bottom: .75rem;
+  transition: border-color .2s, box-shadow .2s; cursor: pointer;
+  position: relative;
+}
+.stellenanzeige:hover { border-color: var(--accent2); box-shadow: 0 2px 12px rgba(42,110,245,.08); }
+.sa-badge {
+  position: absolute; top: .75rem; right: .75rem;
+  font-size: .65rem; background: #e8f0fe; color: var(--accent2);
+  border-radius: 4px; padding: .15rem .4rem; font-weight: 700;
+}
+.sa-company { font-size: .75rem; color: var(--muted); margin-bottom: .25rem; }
+.sa-title { font-size: .9rem; font-weight: 600; margin-bottom: .3rem; }
+.sa-detail { font-size: .78rem; color: var(--muted); }
+
+/* Gehalt widget */
+.gehalt-range {
+  display: flex; justify-content: space-between;
+  font-size: .82rem; color: var(--muted); margin-bottom: .4rem;
+}
+.gehalt-bar {
+  height: 10px; background: var(--bg); border-radius: 99px;
+  position: relative; margin-bottom: 1rem;
+}
+.gehalt-fill {
+  position: absolute; height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, #4ade80, #22c55e);
+}
+.gehalt-median {
+  text-align: center; font-family: 'Fraunces', serif;
+  font-size: 1.6rem; font-weight: 900; color: var(--green);
+}
+.gehalt-label { text-align: center; font-size: .75rem; color: var(--muted); }
+
+/* Skill cloud */
+.skill-cloud { display: flex; flex-wrap: wrap; gap: .5rem; }
+.skill-bubble {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 99px; padding: .35rem .85rem;
+  font-size: .8rem; color: var(--ink);
+  transition: all .2s; cursor: default;
+}
+.skill-bubble.big { font-size: .95rem; font-weight: 600; background: #fff; border-color: var(--ink); }
+.skill-bubble.med { font-size: .85rem; }
+
+/* Diskussion */
+.disc-thread {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem;
+  cursor: pointer; transition: box-shadow .2s;
+}
+.disc-thread:hover { box-shadow: 0 4px 20px rgba(0,0,0,.07); }
+.dt-title { font-weight: 600; font-size: .95rem; margin-bottom: .35rem; }
+.dt-meta { font-size: .75rem; color: var(--muted); display: flex; gap: 1rem; }
+.dt-votes { color: var(--accent2); font-weight: 600; }
+
+/* Bewertung Form */
+.form-page { max-width: 760px; margin: 0 auto; padding: 3rem 5vw; }
+.form-page h2 {
+  font-family: 'Fraunces', serif; font-weight: 900;
+  font-size: 2rem; margin-bottom: .5rem;
+}
+.form-page .sub { color: var(--muted); margin-bottom: 2.5rem; font-size: .95rem; }
+.form-section-title {
+  font-family: 'Fraunces', serif; font-weight: 700;
+  font-size: 1.1rem; margin-bottom: 1rem; margin-top: 2rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+}
+.form-group { margin-bottom: 1.25rem; }
+.form-label {
+  display: block; font-size: .82rem; font-weight: 600;
+  color: var(--muted); margin-bottom: .4rem; text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: .75rem 1rem;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  font-family: 'DM Sans', sans-serif; font-size: .92rem;
+  background: #fff; color: var(--ink); outline: none;
+  transition: border-color .2s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--accent);
+}
+.form-textarea { resize: vertical; min-height: 100px; }
+.star-select { display: flex; gap: .5rem; }
+.star-btn {
+  width: 40px; height: 40px; border: 1.5px solid var(--border);
+  border-radius: 8px; background: #fff; font-size: 1.1rem;
+  cursor: pointer; transition: all .15s; display: flex;
+  align-items: center; justify-content: center;
+}
+.star-btn.active { background: #fef3c7; border-color: #f59e0b; }
+.skill-select { display: flex; flex-wrap: wrap; gap: .5rem; }
+.skill-opt {
+  background: #fff; border: 1.5px solid var(--border);
+  border-radius: 6px; padding: .4rem .85rem;
+  font-size: .82rem; cursor: pointer; transition: all .15s;
+  user-select: none;
+}
+.skill-opt.sel { background: var(--ink); color: #fff; border-color: var(--ink); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.toggle-group { display: flex; gap: 1rem; }
+.toggle-opt {
+  flex: 1; padding: .75rem; text-align: center;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  cursor: pointer; font-weight: 600; font-size: .9rem;
+  transition: all .2s;
+}
+.toggle-opt.yes.sel { background: #dcfce7; border-color: var(--green); color: var(--green); }
+.toggle-opt.no.sel { background: #fee2e2; border-color: var(--accent); color: var(--accent); }
+.submit-row { display: flex; align-items: center; gap: 1rem; margin-top: 2rem; }
+.btn-submit {
+  background: var(--ink); color: #fff;
+  border: none; padding: .9rem 2.5rem;
+  font-family: 'Fraunces', serif; font-weight: 700;
+  font-size: 1.05rem; border-radius: 8px; cursor: pointer;
+  transition: background .2s;
+}
+.btn-submit:hover { background: var(--accent); }
+.anon-note { font-size: .8rem; color: var(--muted); }
+
+/* Vergleich */
+.vergleich-page { padding: 3rem 5vw; max-width: 1100px; margin: 0 auto; }
+.vergleich-page h2 {
+  font-family: 'Fraunces', serif; font-weight: 900;
+  font-size: 2rem; margin-bottom: 2rem;
+}
+.vergleich-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+.v-card {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.75rem;
+}
+.v-card h3 {
+  font-family: 'Fraunces', serif; font-weight: 700;
+  font-size: 1.3rem; margin-bottom: 1.25rem;
+}
+.v-row {
+  display: flex; justify-content: space-between;
+  padding: .6rem 0; border-bottom: 1px solid var(--bg);
+  font-size: .88rem;
+}
+.v-row:last-child { border-bottom: none; }
+.v-label { color: var(--muted); }
+.v-val { font-weight: 600; }
+.v-val.good { color: var(--green); }
+.v-val.mid { color: #f59e0b; }
+
+/* Arbeitgeber */
+.ag-page { padding: 4rem 5vw; max-width: 1000px; margin: 0 auto; text-align: center; }
+.ag-page h2 {
+  font-family: 'Fraunces', serif; font-weight: 900;
+  font-size: 2.5rem; margin-bottom: 1rem;
+}
+.ag-page .sub { color: var(--muted); max-width: 520px; margin: 0 auto 3rem; line-height: 1.7; }
+.pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2rem; text-align: left; }
+.price-card {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 16px; padding: 1.75rem;
+  transition: box-shadow .2s;
+}
+.price-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,.08); }
+.price-card.featured {
+  border-color: var(--accent); background: var(--ink); color: var(--bg);
+}
+.price-tag {
+  font-family: 'Fraunces', serif; font-weight: 900;
+  font-size: 2.2rem; margin: .75rem 0 .25rem;
+}
+.price-period { font-size: .8rem; color: var(--muted); margin-bottom: 1.25rem; }
+.price-card.featured .price-period { color: #888; }
+.price-feature {
+  display: flex; align-items: flex-start; gap: .5rem;
+  font-size: .85rem; margin-bottom: .6rem; line-height: 1.4;
+}
+.price-feature::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; }
+.price-card.featured .price-feature::before { color: #4ade80; }
+.btn-price {
+  width: 100%; margin-top: 1.5rem;
+  padding: .75rem; border-radius: 8px;
+  font-family: 'Fraunces', serif; font-weight: 700;
+  font-size: .95rem; cursor: pointer; border: 2px solid var(--ink);
+  background: transparent; color: var(--ink); transition: all .2s;
+}
+.btn-price:hover { background: var(--ink); color: #fff; }
+.price-card.featured .btn-price {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+.price-card.featured .btn-price:hover { opacity: .85; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6);
+  z-index: 500; display: none;
+  align-items: center; justify-content: center; padding: 2rem;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #fff; border-radius: 18px;
+  padding: 2.5rem; max-width: 420px; width: 100%;
+  text-align: center;
+  animation: popIn .3s ease both;
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(.9) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-icon { font-size: 3rem; margin-bottom: 1rem; }
+.modal h3 {
+  font-family: 'Fraunces', serif; font-weight: 900;
+  font-size: 1.6rem; margin-bottom: .5rem;
+}
+.modal p { color: var(--muted); line-height: 1.65; margin-bottom: 1.75rem; font-size: .92rem; }
+.modal-btn {
+  background: var(--ink); color: #fff; border: none;
+  padding: .75rem 2rem; border-radius: 8px;
+  font-family: 'Fraunces', serif; font-weight: 700;
+  font-size: 1rem; cursor: pointer;
+}
+
+/* Werbebanner */
+.ad-banner {
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  border-radius: 12px; padding: 1.25rem;
+  color: #fff; margin-bottom: 1.5rem;
+}
+.ad-banner .ad-label { font-size: .65rem; color: #93c5fd; margin-bottom: .4rem; text-transform: uppercase; letter-spacing: .08em; }
+.ad-banner h4 { font-weight: 700; font-size: .95rem; margin-bottom: .25rem; }
+.ad-banner p { font-size: .78rem; color: #bfdbfe; margin-bottom: .75rem; }
+.ad-banner-btn {
+  background: #fff; color: #1e3a8a;
+  border: none; padding: .4rem .9rem;
+  border-radius: 6px; font-weight: 700;
+  font-size: .78rem; cursor: pointer;
+}
+
+/* Spinner */
+.search-spinner {
+  display: inline-block; width: 14px; height: 14px;
+  border: 2px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Fade animation */
+.fade-in {
+  opacity: 0; transform: translateY(16px);
+  animation: fadeUp .5s ease forwards;
+}
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in:nth-child(1) { animation-delay: .05s; }
+.fade-in:nth-child(2) { animation-delay: .1s; }
+.fade-in:nth-child(3) { animation-delay: .15s; }
+.fade-in:nth-child(4) { animation-delay: .2s; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .beruf-body { grid-template-columns: 1fr; }
+  .beruf-sidebar { display: none; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .vergleich-grid { grid-template-columns: 1fr; }
+  .stats-bar { gap: 1.5rem; }
+  nav .nav-links { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="showPage('home')">Job<span>Wahrheit</span></div>
+  <div class="nav-links">
+    <a onclick="showPage('home')">Berufe entdecken</a>
+    <a onclick="showPage('vergleich')">Vergleichen</a>
+    <a onclick="showPage('arbeitgeber')">Für Arbeitgeber</a>
+  </div>
+  <button class="nav-cta" onclick="showPage('bewerten')">Beruf bewerten</button>
+</nav>
+
+<!-- ════════════════════════════════════════
+     PAGE: HOME
+════════════════════════════════════════ -->
+<div class="page active" id="page-home">
+  <section class="hero">
+    <div class="hero-badge">🔒 <strong>100% anonym</strong> · Kein Account · Keine E-Mail</div>
+    <h1>Was dein Job<br><em>wirklich</em> bedeutet.</h1>
+    <p class="hero-sub">Echte Bewertungen von Menschen, die den Job bereits machen. Nicht von HR-Abteilungen.</p>
+
+    <div class="search-wrap">
+      <input class="search-input" type="text" placeholder="Beruf suchen, z.B. Elektriker, Pflegefachkraft…"
+        oninput="handleSearch(this.value)" onblur="closeSearch()">
+      <button class="search-btn">Suchen</button>
+      <div class="search-dropdown" id="search-dropdown"></div>
+    </div>
+
+    <div class="categories">
+      <button class="cat-btn" onclick="searchByKategorie('TC 104')">⚡ Technik</button>
+      <button class="cat-btn" onclick="searchByKategorie('TC 0102')">💻 Informatik</button>
+      <button class="cat-btn" onclick="searchByKategorie('TC 101')">🔢 Mathematik</button>
+      <button class="cat-btn" onclick="searchByKategorie('TC 0103')">🔬 Naturwissenschaft</button>
+      <button class="cat-btn" onclick="searchByKategorie('TC 0201')">⚖️ Reglementierte Berufe</button>
+      <button class="cat-btn" onclick="showBeruf('Erzieher/in',100,'')">👶 Soziales</button>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat">
+        <div class="stat-num">3.500+</div>
+        <div class="stat-label">Berufe gelistet</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">0</div>
+        <div class="stat-label">Bewertungen bisher</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">100%</div>
+        <div class="stat-label">Anonym</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: BERUF DETAIL
+════════════════════════════════════════ -->
+<div class="page" id="page-beruf">
+  <div class="beruf-header">
+    <div class="breadcrumb">
+      <span onclick="showPage('home')">Startseite</span> › 
+      <span>Handwerk & Technik</span> › 
+      <span id="beruf-breadcrumb">Elektroniker/in</span>
+    </div>
+    <h2 id="beruf-title">Elektroniker/in</h2>
+    <div class="beruf-meta">
+      <div class="beruf-pill">🎓 Ausbildungsberuf</div>
+      <div class="beruf-pill">⚡ Energie- & Gebäudetechnik</div>
+      <div class="beruf-pill">📍 Bundesweit</div>
+      <div class="beruf-pill">3 Spezialisierungen</div>
+    </div>
+    <div class="beruf-score-row">
+      <div class="score-item">
+        <div class="score-big yellow">4.1</div>
+        <div class="score-label">Gesamtbewertung</div>
+      </div>
+      <div class="score-item">
+        <div class="score-big green">72%</div>
+        <div class="score-label">Würden weiterempfehlen</div>
+      </div>
+      <div class="score-item">
+        <div class="score-big" style="color:#a78bfa">3.8</div>
+        <div class="score-label">Versprechen ≈ Realität</div>
+      </div>
+      <div class="score-item">
+        <div class="score-big green">3.200€</div>
+        <div class="score-label">Ø Bruttogehalt</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'tab-bewertungen')">Bewertungen</div>
+    <div class="tab" onclick="switchTab(this,'tab-gehalt')">Gehalt</div>
+    <div class="tab" onclick="switchTab(this,'tab-skills')">Skills</div>
+    <div class="tab" onclick="switchTab(this,'tab-diskussion')">Diskussion</div>
+    <div class="tab" onclick="switchTab(this,'tab-stellen')">Stellen</div>
+  </div>
+
+  <div class="beruf-body">
+    <div class="beruf-main">
+
+      <!-- TAB: Bewertungen -->
+      <div id="tab-bewertungen">
+        <div class="rating-overview fade-in">
+          <div class="sec-title">Bewertungsübersicht</div>
+          <div class="rating-bars">
+            <div class="rbar-row">
+              <span class="rbar-label">Erwartung eingehalten</span>
+              <div class="rbar-track"><div class="rbar-fill" style="width:72%"></div></div>
+              <span class="rbar-val">3.6</span>
+            </div>
+            <div class="rbar-row">
+              <span class="rbar-label">Alltag = Stellenbeschreibung</span>
+              <div class="rbar-track"><div class="rbar-fill" style="width:58%"></div></div>
+              <span class="rbar-val">2.9</span>
+            </div>
+            <div class="rbar-row">
+              <span class="rbar-label">Work-Life-Balance</span>
+              <div class="rbar-track"><div class="rbar-fill" style="width:66%"></div></div>
+              <span class="rbar-val">3.3</span>
+            </div>
+            <div class="rbar-row">
+              <span class="rbar-label">Weiterempfehlung</span>
+              <div class="rbar-track"><div class="rbar-fill" style="width:72%"></div></div>
+              <span class="rbar-val">72%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec-title fade-in">
+          Bewertungen <span id="bewertungen-count" style="color:var(--muted);font-family:'DM Sans';font-size:.85rem;font-weight:400">(wird geladen…)</span>
+          <a onclick="showPage('bewerten')">+ Bewertung schreiben</a>
+        </div>
+        <div id="bewertungen-liste"></div>
+      </div>
+
+      <!-- TAB: Gehalt -->
+      <div id="tab-gehalt" style="display:none">
+        <div class="sec-title">Gehaltsübersicht</div>
+        <div class="rating-overview">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;text-align:center;margin-bottom:1.5rem">
+            <div>
+              <div style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:900;color:var(--muted)">2.400€</div>
+              <div style="font-size:.75rem;color:var(--muted)">Einstieg</div>
+            </div>
+            <div>
+              <div style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:900;color:var(--green)">3.200€</div>
+              <div style="font-size:.75rem;color:var(--muted)">Median</div>
+            </div>
+            <div>
+              <div style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:900;color:var(--ink)">4.500€</div>
+              <div style="font-size:.75rem;color:var(--muted)">Mit Meister</div>
+            </div>
+          </div>
+          <div style="font-size:.82rem;color:var(--muted);text-align:center">Basierend auf 24 anonymen Angaben · Stand April 2025</div>
+        </div>
+      </div>
+
+      <!-- TAB: Skills -->
+      <div id="tab-skills" style="display:none">
+        <div class="sec-title">Skills die im Job wirklich gefragt sind</div>
+        <div class="rating-overview">
+          <p style="font-size:.85rem;color:var(--muted);margin-bottom:1rem">Aus echten Bewertungen extrahiert – je größer, desto häufiger genannt.</p>
+          <div class="skill-cloud">
+            <span class="skill-bubble big">Technisches Verständnis</span>
+            <span class="skill-bubble big">Problemlösung</span>
+            <span class="skill-bubble med">Körperliche Ausdauer</span>
+            <span class="skill-bubble med">Selbstorganisation</span>
+            <span class="skill-bubble med">Teamarbeit</span>
+            <span class="skill-bubble">Stressresistenz</span>
+            <span class="skill-bubble">Dokumentation</span>
+            <span class="skill-bubble">Kundenumgang</span>
+            <span class="skill-bubble">Lernbereitschaft</span>
+            <span class="skill-bubble">Geduld</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Diskussion -->
+      <div id="tab-diskussion" style="display:none">
+        <div class="sec-title">
+          Diskussion
+          <a onclick="alert('Diskussion starten – kommt bald!')">+ Diskussion starten</a>
+        </div>
+        <div class="disc-thread fade-in">
+          <div class="dt-title">Lohnt sich der Meister noch finanziell?</div>
+          <div class="dt-meta">
+            <span class="dt-votes">▲ 24</span>
+            <span>12 Antworten</span>
+            <span>Elektroniker_03</span>
+            <span>vor 3 Tagen</span>
+          </div>
+        </div>
+        <div class="disc-thread fade-in">
+          <div class="dt-title">Welche Spezialisierung hat die besten Jobaussichten 2025?</div>
+          <div class="dt-meta">
+            <span class="dt-votes">▲ 18</span>
+            <span>7 Antworten</span>
+            <span>Elektroniker_55</span>
+            <span>vor 1 Woche</span>
+          </div>
+        </div>
+        <div class="disc-thread fade-in">
+          <div class="dt-title">Wie ist das mit Überstunden bei euch? Pflicht oder freiwillig?</div>
+          <div class="dt-meta">
+            <span class="dt-votes">▲ 9</span>
+            <span>5 Antworten</span>
+            <span>Elektroniker_21</span>
+            <span>vor 2 Wochen</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Stellen -->
+      <div id="tab-stellen" style="display:none">
+        <div class="sec-title">Offene Stellen als Elektroniker/in</div>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:1.25rem">Stellen aus der Jobbörse der Bundesagentur für Arbeit</p>
+        <div class="stellenanzeige">
+          <div class="sa-badge">NEU</div>
+          <div class="sa-company">Mustermann Elektro GmbH</div>
+          <div class="sa-title">Elektroniker/in für Energie- und Gebäudetechnik (m/w/d)</div>
+          <div class="sa-detail">📍 München · 💰 3.000–3.500 € · Vollzeit</div>
+        </div>
+        <div class="stellenanzeige">
+          <div class="sa-company">Stadtwerke Beispielstadt</div>
+          <div class="sa-title">Servicetechniker Elektro (m/w/d)</div>
+          <div class="sa-detail">📍 Hamburg · 💰 3.200 € + Zulagen · Vollzeit</div>
+        </div>
+        <div class="stellenanzeige">
+          <div class="sa-company">TechBau AG</div>
+          <div class="sa-title">Elektriker für Industrieanlagen</div>
+          <div class="sa-detail">📍 Stuttgart · 💰 3.400–4.000 € · Vollzeit</div>
+        </div>
+        <div style="text-align:center;margin-top:1rem">
+          <button onclick="showPage('arbeitgeber')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:.6rem 1.5rem;cursor:pointer;font-size:.85rem;color:var(--muted)">Stelle schalten → Jetzt Arbeitgeber werden</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="beruf-sidebar">
+      <div class="ad-banner">
+        <div class="ad-label">Anzeige</div>
+        <h4>Jetzt Elektriker werden</h4>
+        <p>Ausbildungsplätze 2025 noch verfügbar</p>
+        <button class="ad-banner-btn">Mehr erfahren</button>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">Ähnliche Berufe</div>
+        <div id="similar-jobs-list">
+        <div class="similar-job" onclick="showBeruf('Mechatroniker/in',100,'')">
+          <span class="sj-name">Mechatroniker/in</span>
+          <span class="sj-match">92% Match</span>
+        </div>
+        <div class="similar-job" onclick="showBeruf('Elektrotechniker/in',100,'')">
+          <span class="sj-name">Elektrotechniker/in</span>
+          <span class="sj-match">87% Match</span>
+        </div>
+        <div class="similar-job">
+          <span class="sj-name">Anlagenmechaniker/in</span>
+          <span class="sj-match">74% Match</span>
+        </div>
+        <div class="similar-job">
+          <span class="sj-name">Industrieelektriker/in</span>
+          <span class="sj-match">68% Match</span>
+        </div>
+        </div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">💰 Gehalt</div>
+        <div class="gehalt-range">
+          <span>2.400 €</span><span>4.500 €</span>
+        </div>
+        <div class="gehalt-bar">
+          <div class="gehalt-fill" style="left:20%;width:50%"></div>
+        </div>
+        <div class="gehalt-median">3.200 €</div>
+        <div class="gehalt-label">Ø Bruttogehalt / Monat</div>
+      </div>
+
+      <div class="widget">
+        <div class="widget-title">Bewertung fehlt?</div>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:.75rem">Teile deine Erfahrung anonym – hilf anderen bei der Entscheidung.</p>
+        <button onclick="showPage('bewerten')" style="width:100%;background:var(--ink);color:#fff;border:none;padding:.65rem;border-radius:8px;font-family:'Fraunces',serif;font-weight:700;font-size:.9rem;cursor:pointer">Jetzt bewerten →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: BEWERTUNG SCHREIBEN
+════════════════════════════════════════ -->
+<div class="page" id="page-bewerten">
+  <div class="form-page">
+    <div class="breadcrumb" style="margin-bottom:1rem">
+      <span onclick="showPage('home')">Startseite</span> › Bewertung schreiben
+    </div>
+    <h2>Beruf ehrlich bewerten</h2>
+    <p class="sub">🔒 Komplett anonym · Keine E-Mail · Keine Anmeldung nötig</p>
+
+    <div class="form-section-title">01 — Welchen Beruf bewertest du?</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Berufsbezeichnung *</label>
+        <input id="f-beruf" class="form-input" type="text" placeholder="z.B. Elektroniker, Pflegefachkraft…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Spezialisierung</label>
+        <select id="f-spezi" class="form-select">
+          <option>Keine / Nicht relevant</option>
+          <option>Energie- und Gebäudetechnik</option>
+          <option>Automatisierungstechnik</option>
+          <option>Betriebstechnik</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Berufsjahre</label>
+        <select id="f-jahre" class="form-select">
+          <option>Unter 1 Jahr</option>
+          <option>1–3 Jahre</option>
+          <option>3–5 Jahre</option>
+          <option>5–10 Jahre</option>
+          <option>Über 10 Jahre</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Region</label>
+        <select id="f-region" class="form-select">
+          <option>Bayern</option>
+          <option>NRW</option>
+          <option>Baden-Württemberg</option>
+          <option>Hessen</option>
+          <option>Niedersachsen</option>
+          <option>Andere</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-section-title">02 — Deine Erfahrung</div>
+    <div class="form-group">
+      <label class="form-label">Was habe ich erwartet? *</label>
+      <textarea id="f-erwartet" class="form-textarea" placeholder="Wie hast du dir den Job vorgestellt, bevor du angefangen hast?"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Wurde die Erwartung eingehalten? *</label>
+      <div class="star-select" id="stars-expect">
+        <button class="star-btn" onclick="setStarForm('expect',1)">1⭐</button>
+        <button class="star-btn" onclick="setStarForm('expect',2)">2⭐</button>
+        <button class="star-btn" onclick="setStarForm('expect',3)">3⭐</button>
+        <button class="star-btn" onclick="setStarForm('expect',4)">4⭐</button>
+        <button class="star-btn" onclick="setStarForm('expect',5)">5⭐</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Passt der Alltag zur Stellenbeschreibung? *</label>
+      <textarea id="f-alltag" class="form-textarea" placeholder="Was steht in typischen Ausschreibungen – und was erlebst du wirklich?"></textarea>
+    </div>
+
+    <div class="form-section-title">03 — Skills & Gehalt</div>
+    <div class="form-group">
+      <label class="form-label">Welche Skills brauchst du wirklich?</label>
+      <div class="skill-select" id="f-skills">
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Teamarbeit</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Eigeninitiative</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Körperliche Ausdauer</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Technisches Verständnis</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Kommunikation</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Stressresistenz</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Problemlösung</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Kundenumgang</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Selbstorganisation</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Geduld</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Lernbereitschaft</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Dokumentation</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bruttogehalt pro Monat (optional)</label>
+      <input id="f-gehalt" class="form-input" type="number" placeholder="z.B. 3200" style="max-width:200px">
+    </div>
+
+    <div class="form-section-title">04 — Gesamturteil</div>
+    <div class="form-group">
+      <label class="form-label">Gesamtbewertung *</label>
+      <div class="star-select" id="stars-overall">
+        <button class="star-btn" onclick="setStarForm('overall',1)">1⭐</button>
+        <button class="star-btn" onclick="setStarForm('overall',2)">2⭐</button>
+        <button class="star-btn" onclick="setStarForm('overall',3)">3⭐</button>
+        <button class="star-btn" onclick="setStarForm('overall',4)">4⭐</button>
+        <button class="star-btn" onclick="setStarForm('overall',5)">5⭐</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Würdest du diesen Beruf weiterempfehlen?</label>
+      <div class="toggle-group" id="f-empfehlung">
+        <div class="toggle-opt yes" onclick="selectToggle(this,'rec')">👍 Ja, empfehle ich</div>
+        <div class="toggle-opt no" onclick="selectToggle(this,'rec')">👎 Eher nicht</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dein ehrlichster Satz zum Job</label>
+      <textarea id="f-freitext" class="form-textarea" placeholder="Was wünschtest du, hättest du vorher gewusst?"></textarea>
+    </div>
+
+    <div class="submit-row">
+      <button class="btn-submit" onclick="submitBewertung()">Anonym einreichen →</button>
+      <span class="anon-note">🔒 Keine Daten gespeichert · Kein Account</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: VERGLEICH
+════════════════════════════════════════ -->
+<div class="page" id="page-vergleich">
+  <div class="vergleich-page">
+    <h2>Berufe vergleichen</h2>
+    <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap">
+      <input class="search-input" style="max-width:280px" type="text" value="Elektroniker/in" placeholder="Beruf 1">
+      <input class="search-input" style="max-width:280px" type="text" value="Mechatroniker/in" placeholder="Beruf 2">
+      <button class="search-btn" style="position:static;transform:none">Vergleichen</button>
+    </div>
+    <div class="vergleich-grid">
+      <div class="v-card">
+        <h3>Elektroniker/in</h3>
+        <div class="v-row"><span class="v-label">Gesamtbewertung</span><span class="v-val">4.1 / 5 ★</span></div>
+        <div class="v-row"><span class="v-label">Ø Gehalt</span><span class="v-val good">3.200 €</span></div>
+        <div class="v-row"><span class="v-label">Weiterempfehlung</span><span class="v-val good">72%</span></div>
+        <div class="v-row"><span class="v-label">Versprechen ≈ Realität</span><span class="v-val mid">3.8 / 5</span></div>
+        <div class="v-row"><span class="v-label">Work-Life-Balance</span><span class="v-val mid">3.3 / 5</span></div>
+        <div class="v-row"><span class="v-label">Ausbildungsdauer</span><span class="v-val">3,5 Jahre</span></div>
+        <div class="v-row"><span class="v-label">Bewertungen</span><span class="v-val">24</span></div>
+      </div>
+      <div class="v-card">
+        <h3>Mechatroniker/in</h3>
+        <div class="v-row"><span class="v-label">Gesamtbewertung</span><span class="v-val">4.3 / 5 ★</span></div>
+        <div class="v-row"><span class="v-label">Ø Gehalt</span><span class="v-val good">3.500 €</span></div>
+        <div class="v-row"><span class="v-label">Weiterempfehlung</span><span class="v-val good">81%</span></div>
+        <div class="v-row"><span class="v-label">Versprechen ≈ Realität</span><span class="v-val good">4.1 / 5</span></div>
+        <div class="v-row"><span class="v-label">Work-Life-Balance</span><span class="v-val good">3.7 / 5</span></div>
+        <div class="v-row"><span class="v-label">Ausbildungsdauer</span><span class="v-val">3,5 Jahre</span></div>
+        <div class="v-row"><span class="v-label">Bewertungen</span><span class="v-val">31</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: ARBEITGEBER
+════════════════════════════════════════ -->
+<div class="page" id="page-arbeitgeber">
+  <div class="ag-page">
+    <h2>Für Arbeitgeber</h2>
+    <p class="sub">Erreiche Bewerber, die sich bereits intensiv mit dem Beruf auseinandergesetzt haben – die qualifizierteste Zielgruppe auf dem Markt.</p>
+
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div style="font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Basis</div>
+        <div class="price-tag">149€</div>
+        <div class="price-period">pro Monat / Stelle</div>
+        <div class="price-feature">Stellenanzeige auf Berufsseite</div>
+        <div class="price-feature">30 Tage Laufzeit</div>
+        <div class="price-feature">Bundesweite Sichtbarkeit</div>
+        <button class="btn-price">Jetzt schalten</button>
+      </div>
+      <div class="price-card featured">
+        <div style="font-size:.8rem;color:#f87171;text-transform:uppercase;letter-spacing:.08em">⭐ Empfohlen</div>
+        <div class="price-tag">349€</div>
+        <div class="price-period">pro Monat / Stelle</div>
+        <div class="price-feature">Premium-Platzierung oben</div>
+        <div class="price-feature">60 Tage Laufzeit</div>
+        <div class="price-feature">Top Employer Badge</div>
+        <div class="price-feature">Bewerbungsanalysen</div>
+        <button class="btn-price">Premium wählen</button>
+      </div>
+      <div class="price-card">
+        <div style="font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Enterprise</div>
+        <div class="price-tag">auf Anfrage</div>
+        <div class="price-period">individuell</div>
+        <div class="price-feature">Unbegrenzte Stellen</div>
+        <div class="price-feature">Branchenreport inklusive</div>
+        <div class="price-feature">Dedicated Support</div>
+        <div class="price-feature">IHK-Badge Integration</div>
+        <button class="btn-price">Kontakt aufnehmen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SUCCESS -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-icon">🎉</div>
+    <h3>Danke für deine Bewertung!</h3>
+    <p>Deine anonyme Erfahrung hilft anderen Menschen, den richtigen Beruf zu finden. Zusammen machen wir Jobsuche ehrlicher.</p>
+    <button class="modal-btn" onclick="document.getElementById('modal').classList.remove('open');showPage('beruf')">Bewertungen ansehen</button>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// SUPABASE – Datenbank
+// ════════════════════════════════════════
+const SUPABASE_URL = 'https://kvqdgcixmdnrarlaskyb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2cWRnY2l4bWRucmFybGFza3liIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NzUwMTQsImV4cCI6MjA5MTU1MTAxNH0.ngU8OG7cFC7ZWRrt0ZxlUBDIbtv-cEa-rFJbjZII2wk';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ════════════════════════════════════════
+// BEWERTUNGEN LADEN
+// ════════════════════════════════════════
+async function loadBewertungen(berufName) {
+  const container = document.getElementById('bewertungen-liste');
+  const counter = document.getElementById('bewertungen-count');
+  if (!container) return;
+
+  container.innerHTML = `<div style="color:var(--muted);font-size:.9rem;padding:1rem 0">Lade Bewertungen…</div>`;
+
+  const { data, error } = await sb
+    .from('bewertungen')
+    .select('*')
+    .ilike('beruf_name', berufName)
+    .order('created_at', { ascending: false });
+
+  if (error || !data?.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:3rem 1rem;border:1px dashed var(--border);border-radius:12px">
+        <div style="font-size:2rem;margin-bottom:.75rem">✍️</div>
+        <div style="font-weight:600;margin-bottom:.4rem">Noch keine Bewertungen</div>
+        <div style="font-size:.85rem;color:var(--muted);margin-bottom:1rem">Sei die erste Person die diesen Beruf bewertet!</div>
+        <button onclick="showPage('bewerten')" style="background:var(--ink);color:#fff;border:none;padding:.6rem 1.4rem;border-radius:8px;font-family:'Fraunces',serif;font-weight:700;cursor:pointer">Jetzt bewerten →</button>
+      </div>`;
+    if (counter) counter.textContent = '(0)';
+    return;
+  }
+
+  if (counter) counter.textContent = `(${data.length})`;
+
+  // Rating-Bars aktualisieren
+  const avgGesamt = (data.reduce((s,b) => s + (b.bewertung_gesamt||0), 0) / data.length).toFixed(1);
+  const avgErwartung = (data.reduce((s,b) => s + (b.bewertung_erwartung||0), 0) / data.length).toFixed(1);
+  const empfRate = Math.round(data.filter(b => b.weiterempfehlung).length / data.length * 100);
+
+  // Header-Scores aktualisieren
+  document.querySelector('.score-big.yellow').textContent = avgGesamt;
+  document.querySelector('.score-big.green').textContent = empfRate + '%';
+
+  // Gehalt berechnen
+  const mitGehalt = data.filter(b => b.gehalt_brutto > 0);
+  if (mitGehalt.length) {
+    const avgGehalt = Math.round(mitGehalt.reduce((s,b) => s + b.gehalt_brutto, 0) / mitGehalt.length);
+    document.querySelectorAll('.score-big')[3].textContent = avgGehalt.toLocaleString('de') + '€';
+  }
+
+  container.innerHTML = data.map(b => renderBewertung(b)).join('');
+}
+
+function renderBewertung(b) {
+  const stars = '★'.repeat(b.bewertung_gesamt || 0) + '☆'.repeat(5 - (b.bewertung_gesamt || 0));
+  const tags = (b.skills || []).map(s => `<span class="rc-tag">${s}</span>`).join('');
+  const datum = new Date(b.created_at).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+  const empf = b.weiterempfehlung ? '👍 Empfohlen' : '👎 Nicht empfohlen';
+
+  return `
+    <div class="review-card fade-in">
+      <div class="rc-top">
+        <div>
+          <div class="rc-stars">${stars}</div>
+          <div class="rc-title">${escHtml(b.freitext || 'Bewertung')}</div>
+        </div>
+        <div class="rc-meta">${escHtml(b.anon_name || 'Anonym')}<br>${b.berufsjahre || ''}<br>${datum}</div>
+      </div>
+      ${b.was_erwartet ? `<div class="rc-body"><strong>Erwartet:</strong> ${escHtml(b.was_erwartet)}</div>` : ''}
+      ${b.alltag_vs_stelle ? `<div class="rc-body"><strong>Realität:</strong> ${escHtml(b.alltag_vs_stelle)}</div>` : ''}
+      ${tags ? `<div class="rc-tags">${tags}</div>` : ''}
+      <div class="rc-footer">
+        <span>${b.gehalt_brutto ? `Bruttogehalt: <strong>${b.gehalt_brutto.toLocaleString('de')} €</strong>` : ''} ${b.region ? '· ' + escHtml(b.region) : ''} · ${empf}</span>
+        <div style="display:flex;gap:1rem;align-items:center">
+          <button class="rc-helpful" onclick="markHilfreich('${b.id}', this)">👍 ${b.hilfreich || 0} Hilfreich</button>
+          <span class="rc-flag" title="Melden" onclick="meldenBewertung('${b.id}')">⚑</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ════════════════════════════════════════
+// BEWERTUNG SPEICHERN
+// ════════════════════════════════════════
+async function submitBewertung() {
+  const berufName = document.getElementById('f-beruf')?.value?.trim();
+
+  if (!berufName) {
+    alert('Bitte gib eine Berufsbezeichnung ein.');
+    document.getElementById('f-beruf')?.focus();
+    return;
+  }
+  if (!formStars.overall) {
+    alert('Bitte gib eine Gesamtbewertung (Sterne) ab.');
+    return;
+  }
+
+  const selectedSkills = [...document.querySelectorAll('#f-skills .skill-opt.sel')].map(s => s.textContent);
+  const weiterempfehlung = document.querySelector('#f-empfehlung .toggle-opt.yes.sel') !== null;
+
+  const payload = {
+    beruf_name: berufName,
+    berufsjahre: document.getElementById('f-jahre')?.value || null,
+    region: document.getElementById('f-region')?.value || null,
+    was_erwartet: document.getElementById('f-erwartet')?.value || null,
+    bewertung_erwartung: formStars.expect || null,
+    alltag_vs_stelle: document.getElementById('f-alltag')?.value || null,
+    skills: selectedSkills.length ? selectedSkills : null,
+    gehalt_brutto: parseInt(document.getElementById('f-gehalt')?.value) || null,
+    bewertung_gesamt: formStars.overall,
+    weiterempfehlung,
+    freitext: document.getElementById('f-freitext')?.value || null,
+    anon_name: generateAnonName(berufName),
+    hilfreich: 0
+  };
+
+  const btn = document.querySelector('.btn-submit');
+  btn.textContent = 'Wird gespeichert…';
+  btn.disabled = true;
+
+  console.log('Sende Bewertung:', payload);
+
+  const { data, error } = await sb.from('bewertungen').insert([payload]).select();
+
+  btn.textContent = 'Anonym einreichen →';
+  btn.disabled = false;
+
+  if (error) {
+    console.error('Supabase Fehler:', error);
+    alert('Fehler: ' + error.message);
+    return;
+  }
+
+  console.log('Bewertung gespeichert:', data);
+  document.getElementById('modal').classList.add('open');
+}
+
+function generateAnonName(beruf) {
+  const wort = beruf.split(/[\s\/]/)[0].replace(/[^a-zA-ZäöüÄÖÜ]/g,'');
+  const num = Math.floor(Math.random() * 900) + 100;
+  return wort + '_' + num;
+}
+
+// ════════════════════════════════════════
+// HILFREICH & MELDEN
+// ════════════════════════════════════════
+async function markHilfreich(id, btn) {
+  const key = 'hilfreich_' + id;
+  if (localStorage.getItem(key)) return;
+  localStorage.setItem(key, '1');
+
+  await sb.rpc('increment_hilfreich', { row_id: id });
+  const current = parseInt(btn.textContent.match(/\d+/)?.[0] || 0);
+  btn.textContent = `👍 ${current + 1} Hilfreich`;
+}
+
+async function meldenBewertung(id) {
+  if (confirm('Diese Bewertung als unangemessen melden?')) {
+    await sb.from('meldungen').insert([{ bewertung_id: id }]);
+    alert('Danke – wir prüfen die Bewertung.');
+  }
+}
+
+// ════════════════════════════════════════
+// STATISTIKEN HOMEPAGE
+// ════════════════════════════════════════
+async function loadStats() {
+  const { count } = await sb.from('bewertungen').select('*', { count: 'exact', head: true });
+  const el = document.querySelector('.stat-num:nth-child(1)');
+  const countEl = document.querySelectorAll('.stat-num')[1];
+  if (countEl && count !== null) countEl.textContent = count.toLocaleString('de');
+}
+
+// ════════════════════════════════════════
+// Öffentlich, kostenlos, kein eigener Key nötig
+// ════════════════════════════════════════
+const BERUFENET_PROXY = '/.netlify/functions/berufenet';
+
+// Berufsgruppen-Mapping für lesbare Kategorien
+const BERUFSGRUPPEN = {
+  '100': 'Ausbildungsberuf', '102': 'Ausbildungsberuf', '105': 'Ausbildungsberuf',
+  '200': 'Weiterbildung', '201': 'Weiterbildung', '203': 'Weiterbildung', '204': 'Weiterbildung',
+  '300': 'Studium', '301': 'Studium', '302': 'Studium',
+  '400': 'Hochschulberuf', '401': 'Hochschulberuf', '402': 'Hochschulberuf',
+  '500': 'Beamtenlaufbahn', '503': 'Beamtenlaufbahn',
+  '700': 'Tätigkeitsfeld'
+};
+
+// Debounce damit nicht bei jedem Tastendruck eine API-Anfrage geht
+let searchTimeout = null;
+let currentBeruf = null;
+
+// ── Navigation
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function showBeruf(name, berufsgruppe, dkzId) {
+  currentBeruf = { name, berufsgruppe, dkzId };
+  document.getElementById('beruf-title').textContent = name;
+  document.getElementById('beruf-breadcrumb').textContent = name;
+
+  // Berufsgruppe im Header aktualisieren
+  const bgLabel = BERUFSGRUPPEN[String(berufsgruppe)] || 'Beruf';
+  document.querySelector('.beruf-pill').textContent = '🎓 ' + bgLabel;
+
+  // Bewertungsformular: Berufsfeld vorausfüllen
+  const berufInput = document.getElementById('f-beruf');
+  if (berufInput) berufInput.value = name;
+
+  showPage('beruf');
+  switchTabByName('tab-bewertungen');
+
+  // Echte Bewertungen aus Supabase laden
+  loadBewertungen(name);
+
+  // Ähnliche Berufe laden wenn dkzId vorhanden
+  if (dkzId) loadAehnlicheBerufe(dkzId);
+}
+
+// Init beim Seitenstart
+window.addEventListener('DOMContentLoaded', () => {
+  loadStats();
+});
+
+// ── Tabs
+function switchTab(el, tabId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  switchTabByName(tabId);
+}
+
+function switchTabByName(tabId) {
+  const tabs = ['tab-bewertungen','tab-gehalt','tab-skills','tab-diskussion','tab-stellen'];
+  tabs.forEach(t => {
+    const el = document.getElementById(t);
+    if (el) el.style.display = t === tabId ? 'block' : 'none';
+  });
+}
+
+// ════════════════════════════════════════
+// LIVE SUCHE – BERUFENET API
+// ════════════════════════════════════════
+async function handleSearch(val) {
+  const dd = document.getElementById('search-dropdown');
+
+  if (!val || val.length < 2) {
+    dd.classList.remove('open');
+    return;
+  }
+
+  // Debounce: warte 300ms nach letztem Tastendruck
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => fetchBerufe(val), 300);
+}
+
+async function fetchBerufe(suchbegriff) {
+  const dd = document.getElementById('search-dropdown');
+
+  dd.innerHTML = `<div class="search-item" style="color:var(--muted);justify-content:center;gap:.5rem">
+    <span class="search-spinner"></span> Suche läuft…</div>`;
+  dd.classList.add('open');
+
+  try {
+    const res = await fetch(`${BERUFENET_PROXY}?suchwoerter=${encodeURIComponent(suchbegriff)}`);
+    if (!res.ok) throw new Error('Proxy nicht erreichbar');
+    const data = await res.json();
+    const berufe = data?.berufe || data?.content || data || [];
+
+    if (!berufe.length) {
+      dd.innerHTML = `<div class="search-item" style="color:var(--muted)">Kein Beruf gefunden – <strong onclick="showPage('bewerten')" style="cursor:pointer;color:var(--accent)">trotzdem bewerten?</strong></div>`;
+      return;
+    }
+
+    dd.innerHTML = berufe.slice(0, 8).map(b => {
+      const name = b.kurzBezeichnungNeutral || b.bezeichnung || b.name || '–';
+      const gruppe = BERUFSGRUPPEN[String(b.berufsgruppe)] || 'Beruf';
+      const id = b.id || b.dkzId || '';
+      return `<div class="search-item" onmousedown="showBeruf('${name.replace(/'/g,"\\'")}', '${b.berufsgruppe}', '${id}')">
+        <span>${name}</span><span class="tag">${gruppe}</span>
+      </div>`;
+    }).join('');
+
+  } catch (err) {
+    dd.innerHTML = `<div class="search-item" style="flex-direction:column;align-items:flex-start;gap:.25rem">
+      <span style="font-weight:600">Suche nicht verfügbar</span>
+      <span style="font-size:.75rem;color:var(--muted)">Bitte Beruf manuell eingeben</span>
+    </div>
+    ${getFallbackBerufe(suchbegriff)}`;
+  }
+
+  dd.classList.add('open');
+}
+
+// Fallback mit lokalen Beispielberufen falls API nicht erreichbar
+function getFallbackBerufe(val) {
+  const fallback = [
+    { name: 'Elektroniker/in', gruppe: 'Ausbildungsberuf' },
+    { name: 'Mechatroniker/in', gruppe: 'Ausbildungsberuf' },
+    { name: 'Fachinformatiker/in – Anwendungsentwicklung', gruppe: 'Ausbildungsberuf' },
+    { name: 'Fachinformatiker/in – Systemintegration', gruppe: 'Ausbildungsberuf' },
+    { name: 'Pflegefachkraft', gruppe: 'Ausbildungsberuf' },
+    { name: 'Industriemechaniker/in', gruppe: 'Ausbildungsberuf' },
+    { name: 'Kaufmann/frau für Büromanagement', gruppe: 'Ausbildungsberuf' },
+    { name: 'Erzieher/in', gruppe: 'Ausbildungsberuf' },
+    { name: 'Kfz-Mechatroniker/in', gruppe: 'Ausbildungsberuf' },
+    { name: 'Koch/Köchin', gruppe: 'Ausbildungsberuf' },
+  ];
+  const matches = fallback.filter(b => b.name.toLowerCase().includes(val.toLowerCase()));
+  return matches.slice(0,5).map(b =>
+    `<div class="search-item" onmousedown="showBeruf('${b.name}', 100, '')">
+      <span>${b.name}</span>
+      <span class="tag">${b.gruppe}</span>
+    </div>`
+  ).join('');
+}
+
+function closeSearch() {
+  setTimeout(() => document.getElementById('search-dropdown').classList.remove('open'), 150);
+}
+
+// ════════════════════════════════════════
+// ÄHNLICHE BERUFE – BERUFENET API
+// ════════════════════════════════════════
+async function loadAehnlicheBerufe(dkzId) {
+  const container = document.getElementById('similar-jobs-list');
+  if (!container) return;
+
+  container.innerHTML = '<div style="font-size:.8rem;color:var(--muted)">Lade ähnliche Berufe…</div>';
+
+  try {
+    // Erst KldbCode holen
+    const r1 = await fetch(`https://rest.arbeitsagentur.de/infosysbub/dkz-rest/pc/v1/berufe/${dkzId}/`, {
+      headers: { 'X-API-Key': BERUFENET_KEY }
+    });
+    const d1 = await r1.json();
+    const kldbCode = d1?.kldbCode;
+    if (!kldbCode) throw new Error('Kein kldbCode');
+
+    // Dann DkzId holen
+    const r2 = await fetch(`https://rest.arbeitsagentur.de/infosysbub/dkz-rest/pc/v1/berufe?kldb=${kldbCode}`, {
+      headers: { 'X-API-Key': BERUFENET_KEY }
+    });
+    const d2 = await r2.json();
+    const dkzIdFinal = d2?.[0]?.id;
+    if (!dkzIdFinal) throw new Error('Kein dkzId');
+
+    // Ähnliche Berufe holen
+    const r3 = await fetch(
+      `https://rest.arbeitsagentur.de/sete/suggest/pc/v1/inspiration/gattungen/${dkzIdFinal}?ausgangsberufDkzId=${dkzId}`,
+      { headers: { 'X-API-Key': BERUFENET_KEY } }
+    );
+    const d3 = await r3.json();
+    const aehnliche = d3?.naheBerufe || d3?.berufe || [];
+
+    if (!aehnliche.length) throw new Error('Keine ähnlichen Berufe');
+
+    container.innerHTML = aehnliche.slice(0, 5).map(b => `
+      <div class="similar-job" onclick="showBeruf('${(b.bezeichnung||b.name||'').replace(/'/g,"\\'")}', '', '')">
+        <span class="sj-name">${b.bezeichnung || b.name}</span>
+        <span class="sj-match">${b.wechselanteil ? Math.round(b.wechselanteil * 100) + '% wechseln' : 'Ähnlich'}</span>
+      </div>`
+    ).join('');
+
+  } catch(e) {
+    // Fallback: statische ähnliche Berufe
+    container.innerHTML = `
+      <div class="similar-job" onclick="showBeruf('Mechatroniker/in', 100, '')">
+        <span class="sj-name">Mechatroniker/in</span><span class="sj-match">92% Match</span>
+      </div>
+      <div class="similar-job" onclick="showBeruf('Elektrotechniker/in', 100, '')">
+        <span class="sj-name">Elektrotechniker/in</span><span class="sj-match">87% Match</span>
+      </div>
+      <div class="similar-job">
+        <span class="sj-name">Anlagenmechaniker/in</span><span class="sj-match">74% Match</span>
+      </div>`;
+  }
+}
+
+// ── Kategorie-Suche (Browse ohne Suchbegriff)
+async function searchByKategorie(cluster) {
+  const input = document.querySelector('.search-input');
+  input.value = '';
+  const dd = document.getElementById('search-dropdown');
+  dd.innerHTML = `<div class="search-item" style="color:var(--muted)"><span class="search-spinner"></span> Lade Berufe…</div>`;
+  dd.classList.add('open');
+  input.focus();
+
+  try {
+    const res = await fetch(`${BERUFENET_PROXY}?cluster=${encodeURIComponent(cluster)}`);
+    const data = await res.json();
+    const berufe = data?.berufe || data?.content || data || [];
+
+    dd.innerHTML = berufe.slice(0, 8).map(b => {
+      const name = b.kurzBezeichnungNeutral || b.bezeichnung || b.name || '–';
+      const gruppe = BERUFSGRUPPEN[String(b.berufsgruppe)] || 'Beruf';
+      return `<div class="search-item" onmousedown="showBeruf('${name.replace(/'/g,"\\'")}', '${b.berufsgruppe}', '${b.id||''}')">
+        <span>${name}</span><span class="tag">${gruppe}</span>
+      </div>`;
+    }).join('') || `<div class="search-item" style="color:var(--muted)">Keine Berufe gefunden</div>`;
+  } catch {
+    dd.innerHTML = `<div class="search-item" style="color:var(--muted)">Fehler beim Laden</div>`;
+  }
+}
+
+// ── Stars (form)
+const formStars = { expect: 0, overall: 0 };
+function setStarForm(type, val) {
+  formStars[type] = val;
+  document.querySelectorAll(`#stars-${type} .star-btn`).forEach((b,i) => {
+    b.classList.toggle('active', i < val);
+  });
+}
+
+// ── Toggle
+function selectToggle(el, group) {
+  el.closest('.toggle-group').querySelectorAll('.toggle-opt').forEach(o => {
+    o.classList.remove('sel');
+  });
+  el.classList.add('sel');
+}
+</script>
+
+<!-- ════════════════════════════════════════
+     PAGE: IMPRESSUM
+════════════════════════════════════════ -->
+<div class="page" id="page-impressum">
+  <div style="max-width:760px;margin:0 auto;padding:3rem 5vw">
+    <div class="breadcrumb" style="margin-bottom:1.5rem">
+      <span onclick="showPage('home')">Startseite</span> › Impressum
+    </div>
+    <h2 style="font-family:'Fraunces',serif;font-weight:900;font-size:2rem;margin-bottom:2rem">Impressum</h2>
+
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
+      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Angaben gemäß § 5 TMG</h3>
+      <p style="font-size:.95rem;line-height:1.8;color:var(--ink)">
+        <strong>DEIN VORNAME NACHNAME</strong><br>
+        DEINE STRASSE UND HAUSNUMMER<br>
+        DEINE PLZ ORT<br>
+        Deutschland
+      </p>
+    </div>
+
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
+      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Kontakt</h3>
+      <p style="font-size:.95rem;line-height:1.8;color:var(--ink)">
+        E-Mail: <a href="mailto:info@jobinsides.de" style="color:var(--accent2)">info@jobinsides.de</a>
+      </p>
+    </div>
+
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
+      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h3>
+      <p style="font-size:.95rem;line-height:1.8;color:var(--ink)">
+        <strong>DEIN VORNAME NACHNAME</strong><br>
+        DEINE STRASSE UND HAUSNUMMER<br>
+        DEINE PLZ ORT
+      </p>
+    </div>
+
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
+      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Haftungsausschluss</h3>
+      <p style="font-size:.9rem;line-height:1.7;color:var(--muted);margin-bottom:1rem">
+        <strong style="color:var(--ink)">Haftung für Inhalte:</strong> Die Inhalte unserer Seiten wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen. Als Diensteanbieter sind wir gemäß § 7 Abs.1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich.
+      </p>
+      <p style="font-size:.9rem;line-height:1.7;color:var(--muted);margin-bottom:1rem">
+        <strong style="color:var(--ink)">Nutzergenerierte Inhalte:</strong> Bewertungen und Beiträge auf dieser Plattform stammen von anonymen Nutzern. Der Betreiber macht sich diese Inhalte nicht zu eigen. Bei Bekanntwerden von Rechtsverletzungen werden entsprechende Inhalte umgehend entfernt.
+      </p>
+      <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
+        <strong style="color:var(--ink)">Haftung für Links:</strong> Unser Angebot enthält Links zu externen Webseiten Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen.
+      </p>
+    </div>
+
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem">
+      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Urheberrecht</h3>
+      <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
+        Die durch den Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: DATENSCHUTZ
+════════════════════════════════════════ -->
+<div class="page" id="page-datenschutz">
+  <div style="max-width:760px;margin:0 auto;padding:3rem 5vw">
+    <div class="breadcrumb" style="margin-bottom:1.5rem">
+      <span onclick="showPage('home')">Startseite</span> › Datenschutzerklärung
+    </div>
+    <h2 style="font-family:'Fraunces',serif;font-weight:900;font-size:2rem;margin-bottom:2rem">Datenschutzerklärung</h2>
+
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
+      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">1. Datenschutz auf einen Blick</h3>
+      <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
+        JobInsides wurde mit dem Ziel entwickelt, so wenig personenbezogene Daten wie möglich zu erheben. Bewertungen können vollständig anonym ohne Angabe einer E-Mail-Adresse oder eines Namens abgegeben werden.
+      </p>
+    </div>
+
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
+      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">2. Verantwortliche Stelle</h3>
+      <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
+        Verantwortlich für die Datenverarbeitung auf dieser Website ist:<br><br>
+        <strong style="color:var(--ink)">DEIN VORNAME NACHNAME</strong><br>
+        DEINE STRASSE UND HAUSNUMMER<br>
+        DEINE PLZ ORT<br>
+        E-Mail: info@jobinsides.de
+      </p>
+    </div>
+
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
+      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">3. Welche Daten wir erheben</h3>
+      <p style="font-size:.9rem;line-height:1.7;color:var(--muted);margin-bottom:.75rem">
+        <strong style="color:var(--ink)">Bewertungen (anonym):</strong> Beim Abgeben einer Bewertung speichern wir den Berufsbezeichnung, Bewertungsinhalt, ausgewählte Skills, optionale Gehaltsangabe sowie einen automatisch generierten anonymen Nutzernamen (z.B. "Elektroniker_472"). Es werden keine personenbezogenen Daten gespeichert.
+      </p>
+      <p style="font-size:.9rem;line-height:1.7;color:var(--muted);margin-bottom:.75rem">
+        <strong style="color:var(--ink)">Newsletter (optional):</strong> Wenn du dich für Benachrichtigungen anmeldest, speichern wir ausschließlich deine E-Mail-Adresse und den gewählten Beruf. Diese Daten werden nicht mit deiner Bewertung verknüpft.
+      </p>
+      <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
+        <strong style="color:var(--ink)">Server-Logs:</strong> Beim Besuch der Website werden automatisch technische Daten (IP-Adresse, Browsertyp, Datum/Uhrzeit) in Server-Logs gespeichert. Diese werden nach 7 Tagen automatisch gelöscht.
+      </p>
+    </div>
+
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
+      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">4. Hosting & Datenbank</h3>
+      <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
+        Diese Website wird gehostet bei <strong style="color:var(--ink)">Netlify Inc.</strong> (USA). Die Datenbank wird betrieben von <strong style="color:var(--ink)">Supabase Inc.</strong> auf Servern in der EU (Frankfurt). Mit beiden Anbietern besteht ein Auftragsverarbeitungsvertrag gemäß Art. 28 DSGVO.
+      </p>
+    </div>
+
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
+      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">5. Deine Rechte</h3>
+      <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
+        Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung deiner personenbezogenen Daten. Da Bewertungen anonym abgegeben werden, ist eine nachträgliche Zuordnung nicht möglich. Für Newsletter-Abmeldungen steht in jeder E-Mail ein Abmeldelink zur Verfügung.<br><br>
+        Bei Fragen zum Datenschutz wende dich an: <a href="mailto:info@jobinsides.de" style="color:var(--accent2)">info@jobinsides.de</a>
+      </p>
+    </div>
+
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem">
+      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">6. Cookies</h3>
+      <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
+        Diese Website verwendet nur technisch notwendige Cookies. Es werden keine Tracking- oder Marketing-Cookies eingesetzt. Eine Einwilligung ist daher nicht erforderlich.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════ -->
+<footer style="background:var(--ink);color:#666;padding:2rem 5vw;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;font-size:.82rem;border-top:1px solid #2e2b27">
+  <div style="font-family:'Fraunces',serif;font-weight:900;font-size:1.1rem;color:var(--bg)">Job<span style="color:var(--accent)">Insides</span></div>
+  <div style="color:#888">Echte Menschen. Echte Jobs. Ehrliche Bewertungen.</div>
+  <div style="display:flex;gap:1.5rem">
+    <span onclick="showPage('impressum')" style="cursor:pointer;color:#888;transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">Impressum</span>
+    <span onclick="showPage('datenschutz')" style="cursor:pointer;color:#888;transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">Datenschutz</span>
+  </div>
+</footer>
+
+</body>
+</html>

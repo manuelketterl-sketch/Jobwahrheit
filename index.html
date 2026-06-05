@@ -3,24 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JobWahrheit – Echte Bewertungen. Echter Einblick.</title>
+<title>JobInsides – Echte Bewertungen. Echter Einblick.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
-  --bg: #f7f4ef;
-  --ink: #1a1714;
-  --accent: #c8401a;
-  --accent2: #2a6ef5;
-  --muted: #8a8278;
-  --border: #e0d9cf;
+  --bg: #ffffff;
+  --bg-soft: #f3f7f6;
+  --ink: #0d1b1a;
+  --accent: #00bfa6;
+  --accent-deep: #009e88;
+  --accent2: #1f6feb;
+  --muted: #66756f;
+  --border: #e6ece9;
   --card: #ffffff;
-  --green: #1a8a4a;
+  --green: #00a878;
+  --shadow: 0 4px 24px rgba(13,27,26,.06);
+  --shadow-lg: 0 16px 50px rgba(13,27,26,.10);
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
-body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); overflow-x: hidden; }
+body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--ink); overflow-x: hidden; }
 
 /* ── PAGES ── */
 .page { display: none; min-height: 100vh; }
@@ -29,111 +34,119 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--i
 /* ── NAV ── */
 nav {
   position: sticky; top: 0; z-index: 200;
-  background: var(--ink); height: 58px;
+  background: rgba(255,255,255,.85);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  height: 68px;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 5vw;
-  border-bottom: 1px solid #2e2b27;
+  padding: 0 6vw;
+  border-bottom: 1px solid var(--border);
 }
 .nav-logo {
-  font-family: 'Fraunces', serif; font-weight: 900;
-  font-size: 1.3rem; color: var(--bg); cursor: pointer;
-  letter-spacing: -0.02em;
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+  font-size: 1.4rem; color: var(--ink); cursor: pointer;
+  letter-spacing: -0.03em;
 }
 .nav-logo span { color: var(--accent); }
-.nav-links { display: flex; gap: 1.5rem; align-items: center; }
+.nav-links { display: flex; gap: 2rem; align-items: center; }
 .nav-links a {
-  color: #aaa; font-size: .85rem; font-weight: 500;
+  color: var(--muted); font-size: .92rem; font-weight: 500;
   text-decoration: none; cursor: pointer;
   transition: color .2s;
 }
-.nav-links a:hover { color: #fff; }
+.nav-links a:hover { color: var(--ink); }
 .nav-cta {
-  background: var(--accent); color: #fff;
-  border: none; padding: .4rem 1rem;
-  font-family: 'DM Sans', sans-serif; font-weight: 600;
-  font-size: .82rem; border-radius: 5px; cursor: pointer;
-  transition: opacity .2s;
+  background: var(--ink); color: #fff;
+  border: none; padding: .6rem 1.3rem;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 600;
+  font-size: .9rem; border-radius: 99px; cursor: pointer;
+  transition: transform .2s, background .2s;
 }
-.nav-cta:hover { opacity: .85; }
+.nav-cta:hover { background: var(--accent-deep); transform: translateY(-1px); }
 
 /* ── HERO ── */
 .hero {
-  min-height: 88vh; display: flex; flex-direction: column;
+  min-height: 90vh; display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   padding: 6vh 5vw; text-align: center;
   position: relative; overflow: hidden;
+  background: var(--bg-soft);
 }
 .hero::before {
   content: '';
   position: absolute; inset: 0;
   background:
-    radial-gradient(ellipse 60% 50% at 20% 50%, #c8401a0d 0%, transparent 70%),
-    radial-gradient(ellipse 50% 60% at 80% 30%, #2a6ef508 0%, transparent 70%);
+    radial-gradient(ellipse 50% 45% at 50% 0%, rgba(0,191,166,.12) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 50% at 85% 60%, rgba(31,111,235,.06) 0%, transparent 70%);
   pointer-events: none;
 }
 .hero-badge {
   display: inline-flex; align-items: center; gap: .5rem;
   background: #fff; border: 1px solid var(--border);
-  border-radius: 99px; padding: .3rem 1rem;
-  font-size: .78rem; color: var(--muted); margin-bottom: 2rem;
+  border-radius: 99px; padding: .45rem 1.1rem;
+  font-size: .82rem; color: var(--muted); margin-bottom: 2rem;
+  box-shadow: var(--shadow);
 }
 .hero-badge strong { color: var(--accent); }
 h1 {
-  font-family: 'Fraunces', serif; font-weight: 900;
-  font-size: clamp(2.8rem, 6vw, 5rem);
-  line-height: 1.05; letter-spacing: -0.03em;
-  margin-bottom: 1.2rem; max-width: 800px;
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+  font-size: clamp(2.8rem, 6.5vw, 5.2rem);
+  line-height: 1.02; letter-spacing: -0.04em;
+  margin-bottom: 1.4rem; max-width: 900px;
 }
-h1 em { color: var(--accent); font-style: italic; }
+h1 em { color: var(--accent); font-style: normal; }
 .hero-sub {
-  font-size: 1.05rem; color: var(--muted);
-  max-width: 500px; line-height: 1.7; margin-bottom: 3rem;
+  font-size: 1.15rem; color: var(--muted);
+  max-width: 540px; line-height: 1.6; margin-bottom: 3rem;
 }
 
 /* Search */
 .search-wrap {
-  width: 100%; max-width: 600px;
+  width: 100%; max-width: 640px;
   position: relative; margin-bottom: 1rem;
 }
 .search-input {
-  width: 100%; padding: 1rem 1.4rem;
-  font-family: 'DM Sans', sans-serif; font-size: 1rem;
-  border: 2px solid var(--border); border-radius: 12px;
+  width: 100%; padding: 1.25rem 1.6rem;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.05rem;
+  border: 1px solid var(--border); border-radius: 99px;
   background: #fff; outline: none; color: var(--ink);
   transition: border-color .2s, box-shadow .2s;
-  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  box-shadow: var(--shadow-lg);
 }
 .search-input:focus {
   border-color: var(--accent);
-  box-shadow: 0 4px 24px rgba(200,64,26,.12);
+  box-shadow: 0 8px 40px rgba(0,191,166,.18);
 }
 .search-btn {
-  position: absolute; right: .5rem; top: 50%;
+  position: absolute; right: .55rem; top: 50%;
   transform: translateY(-50%);
-  background: var(--ink); color: #fff;
-  border: none; padding: .6rem 1.2rem;
-  border-radius: 8px; font-weight: 600; font-size: .9rem;
+  background: var(--accent); color: #fff;
+  border: none; padding: .75rem 1.5rem;
+  border-radius: 99px; font-weight: 700; font-size: .92rem;
   cursor: pointer; transition: background .2s;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
-.search-btn:hover { background: var(--accent); }
+.search-btn:hover { background: var(--accent-deep); }
 .search-dropdown {
-  position: absolute; top: calc(100% + .5rem);
+  position: absolute; top: calc(100% + .6rem);
   left: 0; right: 0;
   background: #fff; border: 1px solid var(--border);
-  border-radius: 10px; overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0,0,0,.1);
+  border-radius: 18px; overflow: hidden;
+  box-shadow: var(--shadow-lg);
   display: none; z-index: 100;
 }
 .search-dropdown.open { display: block; }
 .search-item {
-  padding: .75rem 1.2rem; cursor: pointer;
+  padding: .9rem 1.4rem; cursor: pointer;
   display: flex; justify-content: space-between; align-items: center;
-  transition: background .15s; font-size: .9rem;
+  transition: background .15s; font-size: .95rem;
+  text-align: left;
 }
-.search-item:hover { background: var(--bg); }
+.search-item:hover { background: var(--bg-soft); }
 .search-item .tag {
-  font-size: .72rem; background: var(--bg);
-  border-radius: 4px; padding: .2rem .5rem; color: var(--muted);
+  font-size: .72rem; background: var(--bg-soft);
+  border-radius: 99px; padding: .25rem .7rem; color: var(--muted);
+  font-weight: 600;
 }
 
 /* Categories */
@@ -143,174 +156,183 @@ h1 em { color: var(--accent); font-style: italic; }
 }
 .cat-btn {
   background: #fff; border: 1px solid var(--border);
-  border-radius: 99px; padding: .4rem 1rem;
-  font-size: .82rem; cursor: pointer; color: var(--ink);
-  transition: all .2s; font-family: 'DM Sans', sans-serif;
+  border-radius: 99px; padding: .55rem 1.2rem;
+  font-size: .88rem; cursor: pointer; color: var(--ink);
+  transition: all .2s; font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
 }
-.cat-btn:hover { border-color: var(--accent); color: var(--accent); }
+.cat-btn:hover { border-color: var(--accent); color: var(--accent-deep); transform: translateY(-2px); box-shadow: var(--shadow); }
 
 /* Stats bar */
 .stats-bar {
-  display: flex; gap: 3rem; justify-content: center;
-  margin-top: 4rem; padding-top: 2rem;
+  display: flex; gap: 3.5rem; justify-content: center;
+  margin-top: 4.5rem; padding-top: 2.5rem;
   border-top: 1px solid var(--border);
 }
 .stat { text-align: center; }
 .stat-num {
-  font-family: 'Fraunces', serif; font-weight: 900;
-  font-size: 2rem; color: var(--ink);
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+  font-size: 2.2rem; color: var(--accent-deep); letter-spacing: -0.02em;
 }
-.stat-label { font-size: .8rem; color: var(--muted); margin-top: .2rem; }
+.stat-label { font-size: .82rem; color: var(--muted); margin-top: .3rem; }
 
 /* ── BERUF SEITE ── */
 .beruf-header {
-  background: var(--ink); color: var(--bg);
-  padding: 4rem 5vw 3rem;
+  background: linear-gradient(135deg, #0d1b1a 0%, #14322e 100%);
+  color: #fff;
+  padding: 4rem 6vw 3rem;
+  position: relative; overflow: hidden;
+}
+.beruf-header::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 40% 60% at 90% 20%, rgba(0,191,166,.18) 0%, transparent 70%);
+  pointer-events: none;
 }
 .breadcrumb {
-  font-size: .78rem; color: #888; margin-bottom: 1rem;
-  display: flex; gap: .4rem; align-items: center;
+  font-size: .82rem; color: rgba(255,255,255,.55); margin-bottom: 1rem;
+  display: flex; gap: .4rem; align-items: center; position: relative; z-index: 1;
 }
 .breadcrumb span { cursor: pointer; }
-.breadcrumb span:hover { color: #ccc; }
+.breadcrumb span:hover { color: #fff; }
 .beruf-header h2 {
-  font-family: 'Fraunces', serif; font-weight: 900;
-  font-size: clamp(2rem, 4vw, 3.2rem);
-  letter-spacing: -0.02em; margin-bottom: .5rem;
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  letter-spacing: -0.03em; margin-bottom: .5rem; position: relative; z-index: 1;
 }
-.beruf-meta { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: .75rem; }
+.beruf-meta { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1rem; position: relative; z-index: 1; }
 .beruf-pill {
-  background: #2a2724; border: 1px solid #3a3733;
-  border-radius: 6px; padding: .3rem .8rem;
-  font-size: .8rem; color: #ccc;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14);
+  border-radius: 99px; padding: .4rem 1rem;
+  font-size: .82rem; color: rgba(255,255,255,.85); backdrop-filter: blur(8px);
 }
 .beruf-score-row {
-  display: flex; gap: 2rem; margin-top: 2rem; flex-wrap: wrap;
+  display: flex; gap: 2.5rem; margin-top: 2.5rem; flex-wrap: wrap; position: relative; z-index: 1;
 }
 .score-item { text-align: center; }
 .score-big {
-  font-family: 'Fraunces', serif; font-size: 2.8rem;
-  font-weight: 900; line-height: 1;
+  font-family: 'Bricolage Grotesque', sans-serif; font-size: 3rem;
+  font-weight: 800; line-height: 1; color: #fff;
 }
-.score-big.green { color: #4ade80; }
-.score-big.yellow { color: #fbbf24; }
-.score-label { font-size: .75rem; color: #888; margin-top: .3rem; }
+.score-big.green { color: #2ee6a8; }
+.score-big.yellow { color: #ffd166; }
+.score-label { font-size: .78rem; color: rgba(255,255,255,.55); margin-top: .4rem; }
 
 /* Tabs */
 .tabs {
   display: flex; gap: 0; border-bottom: 1px solid var(--border);
-  background: #fff; padding: 0 5vw; sticky; position: sticky; top: 58px; z-index: 100;
+  background: #fff; padding: 0 6vw; position: sticky; top: 68px; z-index: 100;
 }
 .tab {
-  padding: 1rem 1.5rem; font-size: .88rem; font-weight: 600;
+  padding: 1.1rem 1.5rem; font-size: .92rem; font-weight: 600;
   cursor: pointer; border-bottom: 3px solid transparent;
   color: var(--muted); transition: all .2s; white-space: nowrap;
 }
-.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab.active { color: var(--accent-deep); border-bottom-color: var(--accent); }
 .tab:hover:not(.active) { color: var(--ink); }
 
 /* Layout */
 .beruf-body {
-  display: grid; grid-template-columns: 1fr 320px;
-  gap: 2rem; padding: 2rem 5vw; max-width: 1200px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 340px;
+  gap: 2.5rem; padding: 2.5rem 6vw; max-width: 1240px; margin: 0 auto;
 }
 .beruf-main { min-width: 0; }
 .beruf-sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
 
 /* Section titles */
 .sec-title {
-  font-family: 'Fraunces', serif; font-weight: 700;
-  font-size: 1.3rem; margin-bottom: 1.25rem;
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700;
+  font-size: 1.4rem; margin-bottom: 1.25rem; letter-spacing: -0.02em;
   display: flex; justify-content: space-between; align-items: center;
 }
-.sec-title a { font-family: 'DM Sans', sans-serif; font-size: .8rem; font-weight: 500; color: var(--accent2); cursor: pointer; text-decoration: none; }
+.sec-title a { font-family: 'Plus Jakarta Sans', sans-serif; font-size: .85rem; font-weight: 600; color: var(--accent-deep); cursor: pointer; text-decoration: none; }
 
 /* Rating bars */
 .rating-overview {
   background: #fff; border: 1px solid var(--border);
-  border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem;
+  border-radius: 20px; padding: 1.75rem; margin-bottom: 1.5rem;
+  box-shadow: var(--shadow);
 }
 .rating-bars { display: flex; flex-direction: column; gap: .9rem; }
 .rbar-row { display: flex; align-items: center; gap: .75rem; font-size: .85rem; }
 .rbar-label { width: 200px; color: var(--muted); flex-shrink: 0; }
 .rbar-track {
-  flex: 1; height: 8px; background: var(--bg);
+  flex: 1; height: 8px; background: var(--bg-soft);
   border-radius: 99px; overflow: hidden;
 }
 .rbar-fill {
   height: 100%; border-radius: 99px;
-  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  background: linear-gradient(90deg, var(--accent), var(--accent-deep));
   transition: width 1s ease;
 }
-.rbar-val { width: 36px; text-align: right; font-weight: 600; font-size: .82rem; }
+.rbar-val { width: 36px; text-align: right; font-weight: 700; font-size: .82rem; }
 
 /* Review cards */
 .review-card {
   background: #fff; border: 1px solid var(--border);
-  border-radius: 14px; padding: 1.5rem; margin-bottom: 1.2rem;
-  transition: box-shadow .2s;
+  border-radius: 20px; padding: 1.75rem; margin-bottom: 1.2rem;
+  transition: box-shadow .2s, transform .2s;
 }
-.review-card:hover { box-shadow: 0 4px 24px rgba(0,0,0,.07); }
+.review-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
 .rc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: .75rem; }
-.rc-stars { color: #f59e0b; font-size: .95rem; letter-spacing: .05em; }
+.rc-stars { color: #ffb020; font-size: 1rem; letter-spacing: .05em; }
 .rc-meta { font-size: .75rem; color: var(--muted); text-align: right; line-height: 1.6; }
-.rc-title { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.05rem; margin-bottom: .5rem; }
-.rc-body { font-size: .88rem; color: #4a4540; line-height: 1.65; margin-bottom: 1rem; }
+.rc-title { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 1.1rem; margin-bottom: .5rem; letter-spacing: -0.01em; }
+.rc-body { font-size: .92rem; color: #38453f; line-height: 1.65; margin-bottom: 1rem; }
 .rc-tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1rem; }
 .rc-tag {
-  background: var(--bg); border-radius: 4px;
-  padding: .2rem .6rem; font-size: .75rem; color: var(--muted);
+  background: var(--bg-soft); border-radius: 99px;
+  padding: .3rem .8rem; font-size: .76rem; color: var(--accent-deep); font-weight: 600;
 }
 .rc-footer {
   display: flex; justify-content: space-between; align-items: center;
-  padding-top: .75rem; border-top: 1px solid var(--border);
-  font-size: .78rem; color: var(--muted);
+  padding-top: .9rem; border-top: 1px solid var(--border);
+  font-size: .8rem; color: var(--muted);
 }
 .rc-helpful {
   display: flex; align-items: center; gap: .4rem;
   cursor: pointer; transition: color .2s; background: none; border: none;
-  font-family: 'DM Sans', sans-serif; font-size: .78rem; color: var(--muted);
-  padding: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: .8rem; color: var(--muted);
+  padding: 0; font-weight: 500;
 }
-.rc-helpful:hover { color: var(--accent2); }
+.rc-helpful:hover { color: var(--accent-deep); }
 .rc-flag { cursor: pointer; }
 .rc-flag:hover { color: var(--accent); }
 
 /* Sidebar widgets */
 .widget {
   background: #fff; border: 1px solid var(--border);
-  border-radius: 14px; padding: 1.25rem;
+  border-radius: 20px; padding: 1.5rem; box-shadow: var(--shadow);
 }
 .widget-title {
-  font-family: 'Fraunces', serif; font-weight: 700;
-  font-size: 1rem; margin-bottom: 1rem;
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700;
+  font-size: 1.05rem; margin-bottom: 1rem;
 }
 .similar-job {
   display: flex; justify-content: space-between; align-items: center;
-  padding: .6rem 0; border-bottom: 1px solid var(--border);
+  padding: .7rem 0; border-bottom: 1px solid var(--border);
   cursor: pointer; transition: color .2s;
 }
 .similar-job:last-child { border-bottom: none; }
-.similar-job:hover .sj-name { color: var(--accent); }
-.sj-name { font-size: .88rem; font-weight: 500; }
-.sj-match { font-size: .75rem; color: var(--green); font-weight: 600; }
+.similar-job:hover .sj-name { color: var(--accent-deep); }
+.sj-name { font-size: .9rem; font-weight: 500; }
+.sj-match { font-size: .75rem; color: var(--green); font-weight: 700; }
 
 /* Stellenanzeigen */
 .stellenanzeige {
-  border: 1px solid var(--border); border-radius: 10px;
-  padding: 1rem; margin-bottom: .75rem;
-  transition: border-color .2s, box-shadow .2s; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 16px;
+  padding: 1.2rem; margin-bottom: .75rem;
+  transition: border-color .2s, box-shadow .2s, transform .2s; cursor: pointer;
   position: relative;
 }
-.stellenanzeige:hover { border-color: var(--accent2); box-shadow: 0 2px 12px rgba(42,110,245,.08); }
+.stellenanzeige:hover { border-color: var(--accent); box-shadow: var(--shadow); transform: translateY(-2px); }
 .sa-badge {
-  position: absolute; top: .75rem; right: .75rem;
-  font-size: .65rem; background: #e8f0fe; color: var(--accent2);
-  border-radius: 4px; padding: .15rem .4rem; font-weight: 700;
+  position: absolute; top: .9rem; right: .9rem;
+  font-size: .65rem; background: rgba(0,191,166,.12); color: var(--accent-deep);
+  border-radius: 99px; padding: .2rem .6rem; font-weight: 700;
 }
-.sa-company { font-size: .75rem; color: var(--muted); margin-bottom: .25rem; }
-.sa-title { font-size: .9rem; font-weight: 600; margin-bottom: .3rem; }
-.sa-detail { font-size: .78rem; color: var(--muted); }
+.sa-company { font-size: .78rem; color: var(--muted); margin-bottom: .25rem; }
+.sa-title { font-size: .95rem; font-weight: 700; margin-bottom: .3rem; }
+.sa-detail { font-size: .8rem; color: var(--muted); }
 
 /* Gehalt widget */
 .gehalt-range {
@@ -318,186 +340,187 @@ h1 em { color: var(--accent); font-style: italic; }
   font-size: .82rem; color: var(--muted); margin-bottom: .4rem;
 }
 .gehalt-bar {
-  height: 10px; background: var(--bg); border-radius: 99px;
+  height: 10px; background: var(--bg-soft); border-radius: 99px;
   position: relative; margin-bottom: 1rem;
 }
 .gehalt-fill {
   position: absolute; height: 100%; border-radius: 99px;
-  background: linear-gradient(90deg, #4ade80, #22c55e);
+  background: linear-gradient(90deg, var(--accent), var(--accent-deep));
 }
 .gehalt-median {
-  text-align: center; font-family: 'Fraunces', serif;
-  font-size: 1.6rem; font-weight: 900; color: var(--green);
+  text-align: center; font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 1.8rem; font-weight: 800; color: var(--accent-deep);
 }
 .gehalt-label { text-align: center; font-size: .75rem; color: var(--muted); }
 
 /* Skill cloud */
 .skill-cloud { display: flex; flex-wrap: wrap; gap: .5rem; }
 .skill-bubble {
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: 99px; padding: .35rem .85rem;
+  background: var(--bg-soft); border: 1px solid var(--border);
+  border-radius: 99px; padding: .4rem .9rem;
   font-size: .8rem; color: var(--ink);
   transition: all .2s; cursor: default;
 }
-.skill-bubble.big { font-size: .95rem; font-weight: 600; background: #fff; border-color: var(--ink); }
-.skill-bubble.med { font-size: .85rem; }
+.skill-bubble.big { font-size: .95rem; font-weight: 700; background: var(--accent); border-color: var(--accent); color: #fff; }
+.skill-bubble.med { font-size: .85rem; font-weight: 600; }
 
 /* Diskussion */
 .disc-thread {
   background: #fff; border: 1px solid var(--border);
-  border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem;
-  cursor: pointer; transition: box-shadow .2s;
+  border-radius: 16px; padding: 1.4rem; margin-bottom: 1rem;
+  cursor: pointer; transition: box-shadow .2s, transform .2s;
 }
-.disc-thread:hover { box-shadow: 0 4px 20px rgba(0,0,0,.07); }
-.dt-title { font-weight: 600; font-size: .95rem; margin-bottom: .35rem; }
+.disc-thread:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+.dt-title { font-weight: 700; font-size: 1rem; margin-bottom: .35rem; }
 .dt-meta { font-size: .75rem; color: var(--muted); display: flex; gap: 1rem; }
-.dt-votes { color: var(--accent2); font-weight: 600; }
+.dt-votes { color: var(--accent-deep); font-weight: 700; }
 
 /* Bewertung Form */
-.form-page { max-width: 760px; margin: 0 auto; padding: 3rem 5vw; }
+.form-page { max-width: 780px; margin: 0 auto; padding: 3.5rem 5vw; }
 .form-page h2 {
-  font-family: 'Fraunces', serif; font-weight: 900;
-  font-size: 2rem; margin-bottom: .5rem;
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+  font-size: 2.4rem; margin-bottom: .5rem; letter-spacing: -0.03em;
 }
-.form-page .sub { color: var(--muted); margin-bottom: 2.5rem; font-size: .95rem; }
+.form-page .sub { color: var(--muted); margin-bottom: 2.5rem; font-size: 1rem; }
 .form-section-title {
-  font-family: 'Fraunces', serif; font-weight: 700;
-  font-size: 1.1rem; margin-bottom: 1rem; margin-top: 2rem;
-  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700;
+  font-size: 1.2rem; margin-bottom: 1.25rem; margin-top: 2.5rem;
+  padding-bottom: .6rem; border-bottom: 1px solid var(--border);
 }
-.form-group { margin-bottom: 1.25rem; }
+.form-group { margin-bottom: 1.4rem; }
 .form-label {
-  display: block; font-size: .82rem; font-weight: 600;
-  color: var(--muted); margin-bottom: .4rem; text-transform: uppercase;
+  display: block; font-size: .8rem; font-weight: 700;
+  color: var(--muted); margin-bottom: .5rem; text-transform: uppercase;
   letter-spacing: .05em;
 }
 .form-input, .form-select, .form-textarea {
-  width: 100%; padding: .75rem 1rem;
-  border: 1.5px solid var(--border); border-radius: 8px;
-  font-family: 'DM Sans', sans-serif; font-size: .92rem;
+  width: 100%; padding: .85rem 1.1rem;
+  border: 1.5px solid var(--border); border-radius: 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: .95rem;
   background: #fff; color: var(--ink); outline: none;
-  transition: border-color .2s;
+  transition: border-color .2s, box-shadow .2s;
 }
 .form-input:focus, .form-select:focus, .form-textarea:focus {
-  border-color: var(--accent);
+  border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,191,166,.1);
 }
 .form-textarea { resize: vertical; min-height: 100px; }
 .star-select { display: flex; gap: .5rem; }
 .star-btn {
-  width: 40px; height: 40px; border: 1.5px solid var(--border);
-  border-radius: 8px; background: #fff; font-size: 1.1rem;
+  width: 46px; height: 46px; border: 1.5px solid var(--border);
+  border-radius: 12px; background: #fff; font-size: 1.1rem;
   cursor: pointer; transition: all .15s; display: flex;
-  align-items: center; justify-content: center;
+  align-items: center; justify-content: center; font-weight: 600;
 }
-.star-btn.active { background: #fef3c7; border-color: #f59e0b; }
+.star-btn.active { background: #fff4d6; border-color: #ffb020; }
 .skill-select { display: flex; flex-wrap: wrap; gap: .5rem; }
 .skill-opt {
   background: #fff; border: 1.5px solid var(--border);
-  border-radius: 6px; padding: .4rem .85rem;
-  font-size: .82rem; cursor: pointer; transition: all .15s;
-  user-select: none;
+  border-radius: 99px; padding: .5rem 1rem;
+  font-size: .85rem; cursor: pointer; transition: all .15s;
+  user-select: none; font-weight: 500;
 }
-.skill-opt.sel { background: var(--ink); color: #fff; border-color: var(--ink); }
+.skill-opt.sel { background: var(--accent); color: #fff; border-color: var(--accent); }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .toggle-group { display: flex; gap: 1rem; }
 .toggle-opt {
-  flex: 1; padding: .75rem; text-align: center;
-  border: 1.5px solid var(--border); border-radius: 8px;
-  cursor: pointer; font-weight: 600; font-size: .9rem;
+  flex: 1; padding: .9rem; text-align: center;
+  border: 1.5px solid var(--border); border-radius: 12px;
+  cursor: pointer; font-weight: 600; font-size: .92rem;
   transition: all .2s;
 }
-.toggle-opt.yes.sel { background: #dcfce7; border-color: var(--green); color: var(--green); }
-.toggle-opt.no.sel { background: #fee2e2; border-color: var(--accent); color: var(--accent); }
-.submit-row { display: flex; align-items: center; gap: 1rem; margin-top: 2rem; }
+.toggle-opt.yes.sel { background: rgba(0,168,120,.12); border-color: var(--green); color: var(--green); }
+.toggle-opt.no.sel { background: #fee9e3; border-color: #e8552d; color: #e8552d; }
+.submit-row { display: flex; align-items: center; gap: 1rem; margin-top: 2.5rem; flex-wrap: wrap; }
 .btn-submit {
-  background: var(--ink); color: #fff;
-  border: none; padding: .9rem 2.5rem;
-  font-family: 'Fraunces', serif; font-weight: 700;
-  font-size: 1.05rem; border-radius: 8px; cursor: pointer;
-  transition: background .2s;
+  background: var(--accent); color: #fff;
+  border: none; padding: 1rem 2.8rem;
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700;
+  font-size: 1.1rem; border-radius: 99px; cursor: pointer;
+  transition: background .2s, transform .2s;
 }
-.btn-submit:hover { background: var(--accent); }
+.btn-submit:hover { background: var(--accent-deep); transform: translateY(-1px); }
 .anon-note { font-size: .8rem; color: var(--muted); }
 
 /* Vergleich */
-.vergleich-page { padding: 3rem 5vw; max-width: 1100px; margin: 0 auto; }
+.vergleich-page { padding: 3.5rem 5vw; max-width: 1100px; margin: 0 auto; }
 .vergleich-page h2 {
-  font-family: 'Fraunces', serif; font-weight: 900;
-  font-size: 2rem; margin-bottom: 2rem;
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+  font-size: 2.4rem; margin-bottom: 2rem; letter-spacing: -0.03em;
 }
 .vergleich-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
 .v-card {
   background: #fff; border: 1px solid var(--border);
-  border-radius: 14px; padding: 1.75rem;
+  border-radius: 20px; padding: 2rem; box-shadow: var(--shadow);
 }
 .v-card h3 {
-  font-family: 'Fraunces', serif; font-weight: 700;
-  font-size: 1.3rem; margin-bottom: 1.25rem;
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700;
+  font-size: 1.4rem; margin-bottom: 1.25rem;
 }
 .v-row {
   display: flex; justify-content: space-between;
-  padding: .6rem 0; border-bottom: 1px solid var(--bg);
-  font-size: .88rem;
+  padding: .7rem 0; border-bottom: 1px solid var(--bg-soft);
+  font-size: .9rem;
 }
 .v-row:last-child { border-bottom: none; }
 .v-label { color: var(--muted); }
-.v-val { font-weight: 600; }
+.v-val { font-weight: 700; }
 .v-val.good { color: var(--green); }
 .v-val.mid { color: #f59e0b; }
 
 /* Arbeitgeber */
-.ag-page { padding: 4rem 5vw; max-width: 1000px; margin: 0 auto; text-align: center; }
+.ag-page { padding: 4.5rem 5vw; max-width: 1040px; margin: 0 auto; text-align: center; }
 .ag-page h2 {
-  font-family: 'Fraunces', serif; font-weight: 900;
-  font-size: 2.5rem; margin-bottom: 1rem;
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+  font-size: 2.8rem; margin-bottom: 1rem; letter-spacing: -0.03em;
 }
-.ag-page .sub { color: var(--muted); max-width: 520px; margin: 0 auto 3rem; line-height: 1.7; }
+.ag-page .sub { color: var(--muted); max-width: 540px; margin: 0 auto 3rem; line-height: 1.6; font-size: 1.1rem; }
 .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 2rem; text-align: left; }
 .price-card {
   background: #fff; border: 1px solid var(--border);
-  border-radius: 16px; padding: 1.75rem;
-  transition: box-shadow .2s;
+  border-radius: 24px; padding: 2rem;
+  transition: box-shadow .2s, transform .2s;
 }
-.price-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,.08); }
+.price-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); }
 .price-card.featured {
-  border-color: var(--accent); background: var(--ink); color: var(--bg);
+  border-color: transparent; background: linear-gradient(150deg, #0d1b1a, #14322e); color: #fff;
 }
 .price-tag {
-  font-family: 'Fraunces', serif; font-weight: 900;
-  font-size: 2.2rem; margin: .75rem 0 .25rem;
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+  font-size: 2.4rem; margin: .75rem 0 .25rem; letter-spacing: -0.02em;
 }
 .price-period { font-size: .8rem; color: var(--muted); margin-bottom: 1.25rem; }
-.price-card.featured .price-period { color: #888; }
+.price-card.featured .price-period { color: rgba(255,255,255,.5); }
 .price-feature {
   display: flex; align-items: flex-start; gap: .5rem;
-  font-size: .85rem; margin-bottom: .6rem; line-height: 1.4;
+  font-size: .88rem; margin-bottom: .7rem; line-height: 1.4;
 }
 .price-feature::before { content: '✓'; color: var(--green); font-weight: 700; flex-shrink: 0; }
-.price-card.featured .price-feature::before { color: #4ade80; }
+.price-card.featured .price-feature::before { color: #2ee6a8; }
 .btn-price {
   width: 100%; margin-top: 1.5rem;
-  padding: .75rem; border-radius: 8px;
-  font-family: 'Fraunces', serif; font-weight: 700;
-  font-size: .95rem; cursor: pointer; border: 2px solid var(--ink);
+  padding: .85rem; border-radius: 99px;
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700;
+  font-size: .95rem; cursor: pointer; border: 1.5px solid var(--ink);
   background: transparent; color: var(--ink); transition: all .2s;
 }
 .btn-price:hover { background: var(--ink); color: #fff; }
 .price-card.featured .btn-price {
   background: var(--accent); border-color: var(--accent); color: #fff;
 }
-.price-card.featured .btn-price:hover { opacity: .85; }
+.price-card.featured .btn-price:hover { background: var(--accent-deep); border-color: var(--accent-deep); }
 
 /* Modal */
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.6);
+  position: fixed; inset: 0; background: rgba(13,27,26,.5);
+  backdrop-filter: blur(4px);
   z-index: 500; display: none;
   align-items: center; justify-content: center; padding: 2rem;
 }
 .modal-overlay.open { display: flex; }
 .modal {
-  background: #fff; border-radius: 18px;
-  padding: 2.5rem; max-width: 420px; width: 100%;
-  text-align: center;
+  background: #fff; border-radius: 28px;
+  padding: 2.75rem; max-width: 440px; width: 100%;
+  text-align: center; box-shadow: var(--shadow-lg);
   animation: popIn .3s ease both;
 }
 @keyframes popIn {
@@ -506,32 +529,39 @@ h1 em { color: var(--accent); font-style: italic; }
 }
 .modal-icon { font-size: 3rem; margin-bottom: 1rem; }
 .modal h3 {
-  font-family: 'Fraunces', serif; font-weight: 900;
-  font-size: 1.6rem; margin-bottom: .5rem;
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;
+  font-size: 1.7rem; margin-bottom: .5rem; letter-spacing: -0.02em;
 }
-.modal p { color: var(--muted); line-height: 1.65; margin-bottom: 1.75rem; font-size: .92rem; }
+.modal p { color: var(--muted); line-height: 1.6; margin-bottom: 1.75rem; font-size: .95rem; }
 .modal-btn {
-  background: var(--ink); color: #fff; border: none;
-  padding: .75rem 2rem; border-radius: 8px;
-  font-family: 'Fraunces', serif; font-weight: 700;
-  font-size: 1rem; cursor: pointer;
+  background: var(--accent); color: #fff; border: none;
+  padding: .85rem 2.2rem; border-radius: 99px;
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700;
+  font-size: 1rem; cursor: pointer; transition: background .2s;
 }
+.modal-btn:hover { background: var(--accent-deep); }
 
 /* Werbebanner */
 .ad-banner {
-  background: linear-gradient(135deg, #1e3a8a, #2563eb);
-  border-radius: 12px; padding: 1.25rem;
-  color: #fff; margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #0d1b1a, #14322e);
+  border-radius: 20px; padding: 1.5rem;
+  color: #fff; margin-bottom: 1.5rem; position: relative; overflow: hidden;
 }
-.ad-banner .ad-label { font-size: .65rem; color: #93c5fd; margin-bottom: .4rem; text-transform: uppercase; letter-spacing: .08em; }
-.ad-banner h4 { font-weight: 700; font-size: .95rem; margin-bottom: .25rem; }
-.ad-banner p { font-size: .78rem; color: #bfdbfe; margin-bottom: .75rem; }
+.ad-banner::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 90% 10%, rgba(0,191,166,.25) 0%, transparent 70%);
+}
+.ad-banner > * { position: relative; z-index: 1; }
+.ad-banner .ad-label { font-size: .65rem; color: rgba(46,230,168,.8); margin-bottom: .4rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+.ad-banner h4 { font-weight: 700; font-size: 1rem; margin-bottom: .25rem; }
+.ad-banner p { font-size: .8rem; color: rgba(255,255,255,.7); margin-bottom: .9rem; }
 .ad-banner-btn {
-  background: #fff; color: #1e3a8a;
-  border: none; padding: .4rem .9rem;
-  border-radius: 6px; font-weight: 700;
-  font-size: .78rem; cursor: pointer;
+  background: var(--accent); color: #fff;
+  border: none; padding: .5rem 1.1rem;
+  border-radius: 99px; font-weight: 700;
+  font-size: .78rem; cursor: pointer; transition: background .2s;
 }
+.ad-banner-btn:hover { background: var(--accent-deep); }
 
 /* Spinner */
 .search-spinner {
@@ -570,7 +600,7 @@ h1 em { color: var(--accent); font-style: italic; }
 
 <!-- NAV -->
 <nav>
-  <div class="nav-logo" onclick="showPage('home')">Job<span>Wahrheit</span></div>
+  <div class="nav-logo" onclick="showPage('home')">Job<span>Insides</span></div>
   <div class="nav-links">
     <a onclick="showPage('home')">Berufe entdecken</a>
     <a onclick="showPage('vergleich')">Vergleichen</a>
@@ -596,12 +626,11 @@ h1 em { color: var(--accent); font-style: italic; }
     </div>
 
     <div class="categories">
-      <button class="cat-btn" onclick="searchByKategorie('TC 104')">⚡ Technik</button>
-      <button class="cat-btn" onclick="searchByKategorie('TC 0102')">💻 Informatik</button>
-      <button class="cat-btn" onclick="searchByKategorie('TC 101')">🔢 Mathematik</button>
-      <button class="cat-btn" onclick="searchByKategorie('TC 0103')">🔬 Naturwissenschaft</button>
-      <button class="cat-btn" onclick="searchByKategorie('TC 0201')">⚖️ Reglementierte Berufe</button>
-      <button class="cat-btn" onclick="showBeruf('Erzieher/in',100,'')">👶 Soziales</button>
+      <button class="cat-btn" onclick="searchByKategorie('Ausbildungsberuf')">🎓 Ausbildungsberufe</button>
+      <button class="cat-btn" onclick="searchByKategorie('Studium')">📚 Studienberufe</button>
+      <button class="cat-btn" onclick="searchByKategorie('Weiterbildung')">📈 Weiterbildungen</button>
+      <button class="cat-btn" onclick="searchByKategorie('Hochschulberuf')">🔬 Hochschulberufe</button>
+      <button class="cat-btn" onclick="searchByKategorie('Tätigkeitsfeld')">💼 Tätigkeitsfelder</button>
     </div>
 
     <div class="stats-bar">
@@ -634,9 +663,7 @@ h1 em { color: var(--accent); font-style: italic; }
     <h2 id="beruf-title">Elektroniker/in</h2>
     <div class="beruf-meta">
       <div class="beruf-pill">🎓 Ausbildungsberuf</div>
-      <div class="beruf-pill">⚡ Energie- & Gebäudetechnik</div>
       <div class="beruf-pill">📍 Bundesweit</div>
-      <div class="beruf-pill">3 Spezialisierungen</div>
     </div>
     <div class="beruf-score-row">
       <div class="score-item">
@@ -698,7 +725,7 @@ h1 em { color: var(--accent); font-style: italic; }
         </div>
 
         <div class="sec-title fade-in">
-          Bewertungen <span id="bewertungen-count" style="color:var(--muted);font-family:'DM Sans';font-size:.85rem;font-weight:400">(wird geladen…)</span>
+          Bewertungen <span id="bewertungen-count" style="color:var(--muted);font-family:'Plus Jakarta Sans';font-size:.85rem;font-weight:400">(wird geladen…)</span>
           <a onclick="showPage('bewerten')">+ Bewertung schreiben</a>
         </div>
         <div id="bewertungen-liste"></div>
@@ -710,15 +737,15 @@ h1 em { color: var(--accent); font-style: italic; }
         <div class="rating-overview">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;text-align:center;margin-bottom:1.5rem">
             <div>
-              <div style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:900;color:var(--muted)">2.400€</div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:1.8rem;font-weight:900;color:var(--muted)">2.400€</div>
               <div style="font-size:.75rem;color:var(--muted)">Einstieg</div>
             </div>
             <div>
-              <div style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:900;color:var(--green)">3.200€</div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:1.8rem;font-weight:900;color:var(--green)">3.200€</div>
               <div style="font-size:.75rem;color:var(--muted)">Median</div>
             </div>
             <div>
-              <div style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:900;color:var(--ink)">4.500€</div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:1.8rem;font-weight:900;color:var(--ink)">4.500€</div>
               <div style="font-size:.75rem;color:var(--muted)">Mit Meister</div>
             </div>
           </div>
@@ -854,7 +881,7 @@ h1 em { color: var(--accent); font-style: italic; }
       <div class="widget">
         <div class="widget-title">Bewertung fehlt?</div>
         <p style="font-size:.82rem;color:var(--muted);margin-bottom:.75rem">Teile deine Erfahrung anonym – hilf anderen bei der Entscheidung.</p>
-        <button onclick="showPage('bewerten')" style="width:100%;background:var(--ink);color:#fff;border:none;padding:.65rem;border-radius:8px;font-family:'Fraunces',serif;font-weight:700;font-size:.9rem;cursor:pointer">Jetzt bewerten →</button>
+        <button onclick="showPage('bewerten')" style="width:100%;background:var(--ink);color:#fff;border:none;padding:.65rem;border-radius:8px;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer">Jetzt bewerten →</button>
       </div>
     </div>
   </div>
@@ -872,20 +899,9 @@ h1 em { color: var(--accent); font-style: italic; }
     <p class="sub">🔒 Komplett anonym · Keine E-Mail · Keine Anmeldung nötig</p>
 
     <div class="form-section-title">01 — Welchen Beruf bewertest du?</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Berufsbezeichnung *</label>
-        <input id="f-beruf" class="form-input" type="text" placeholder="z.B. Elektroniker, Pflegefachkraft…">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Spezialisierung</label>
-        <select id="f-spezi" class="form-select">
-          <option>Keine / Nicht relevant</option>
-          <option>Energie- und Gebäudetechnik</option>
-          <option>Automatisierungstechnik</option>
-          <option>Betriebstechnik</option>
-        </select>
-      </div>
+    <div class="form-group">
+      <label class="form-label">Berufsbezeichnung *</label>
+      <input id="f-beruf" class="form-input" type="text" placeholder="z.B. Elektroniker, Pflegefachkraft…">
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -1102,7 +1118,7 @@ async function loadBewertungen(berufName) {
         <div style="font-size:2rem;margin-bottom:.75rem">✍️</div>
         <div style="font-weight:600;margin-bottom:.4rem">Noch keine Bewertungen</div>
         <div style="font-size:.85rem;color:var(--muted);margin-bottom:1rem">Sei die erste Person die diesen Beruf bewertet!</div>
-        <button onclick="showPage('bewerten')" style="background:var(--ink);color:#fff;border:none;padding:.6rem 1.4rem;border-radius:8px;font-family:'Fraunces',serif;font-weight:700;cursor:pointer">Jetzt bewerten →</button>
+        <button onclick="showPage('bewerten')" style="background:var(--ink);color:#fff;border:none;padding:.6rem 1.4rem;border-radius:8px;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;cursor:pointer">Jetzt bewerten →</button>
       </div>`;
     if (counter) counter.textContent = '(0)';
     return;
@@ -1346,31 +1362,28 @@ async function fetchBerufe(suchbegriff) {
   dd.classList.add('open');
 
   try {
-    const res = await fetch(`${BERUFENET_PROXY}?suchwoerter=${encodeURIComponent(suchbegriff)}`);
-    if (!res.ok) throw new Error('Proxy nicht erreichbar');
-    const data = await res.json();
-    const berufe = data?.berufe || data?.content || data || [];
+    // Suche in eigener Supabase-Datenbank (alle Berufe lokal gespeichert)
+    const { data, error } = await sb
+      .from('berufe')
+      .select('name, berufsgruppe, dkz_id')
+      .ilike('name_lower', `%${suchbegriff.toLowerCase()}%`)
+      .limit(10);
 
-    if (!berufe.length) {
+    if (error) throw error;
+
+    if (!data || !data.length) {
       dd.innerHTML = `<div class="search-item" style="color:var(--muted)">Kein Beruf gefunden – <strong onclick="showPage('bewerten')" style="cursor:pointer;color:var(--accent)">trotzdem bewerten?</strong></div>`;
       return;
     }
 
-    dd.innerHTML = berufe.slice(0, 8).map(b => {
-      const name = b.kurzBezeichnungNeutral || b.bezeichnung || b.name || '–';
-      const gruppe = BERUFSGRUPPEN[String(b.berufsgruppe)] || 'Beruf';
-      const id = b.id || b.dkzId || '';
-      return `<div class="search-item" onmousedown="showBeruf('${name.replace(/'/g,"\\'")}', '${b.berufsgruppe}', '${id}')">
-        <span>${name}</span><span class="tag">${gruppe}</span>
-      </div>`;
-    }).join('');
+    dd.innerHTML = data.map(b =>
+      `<div class="search-item" onmousedown="showBeruf('${b.name.replace(/'/g,"\\'")}', '${b.berufsgruppe}', '${b.dkz_id||''}')">
+        <span>${b.name}</span><span class="tag">${b.berufsgruppe}</span>
+      </div>`
+    ).join('');
 
   } catch (err) {
-    dd.innerHTML = `<div class="search-item" style="flex-direction:column;align-items:flex-start;gap:.25rem">
-      <span style="font-weight:600">Suche nicht verfügbar</span>
-      <span style="font-size:.75rem;color:var(--muted)">Bitte Beruf manuell eingeben</span>
-    </div>
-    ${getFallbackBerufe(suchbegriff)}`;
+    dd.innerHTML = `<div class="search-item" style="color:var(--muted)">Suche nicht verfügbar</div>${getFallbackBerufe(suchbegriff)}`;
   }
 
   dd.classList.add('open');
@@ -1462,7 +1475,7 @@ async function loadAehnlicheBerufe(dkzId) {
 }
 
 // ── Kategorie-Suche (Browse ohne Suchbegriff)
-async function searchByKategorie(cluster) {
+async function searchByKategorie(berufsgruppe) {
   const input = document.querySelector('.search-input');
   input.value = '';
   const dd = document.getElementById('search-dropdown');
@@ -1471,17 +1484,19 @@ async function searchByKategorie(cluster) {
   input.focus();
 
   try {
-    const res = await fetch(`${BERUFENET_PROXY}?cluster=${encodeURIComponent(cluster)}`);
-    const data = await res.json();
-    const berufe = data?.berufe || data?.content || data || [];
+    const { data, error } = await sb
+      .from('berufe')
+      .select('name, berufsgruppe, dkz_id')
+      .eq('berufsgruppe', berufsgruppe)
+      .limit(15);
 
-    dd.innerHTML = berufe.slice(0, 8).map(b => {
-      const name = b.kurzBezeichnungNeutral || b.bezeichnung || b.name || '–';
-      const gruppe = BERUFSGRUPPEN[String(b.berufsgruppe)] || 'Beruf';
-      return `<div class="search-item" onmousedown="showBeruf('${name.replace(/'/g,"\\'")}', '${b.berufsgruppe}', '${b.id||''}')">
-        <span>${name}</span><span class="tag">${gruppe}</span>
-      </div>`;
-    }).join('') || `<div class="search-item" style="color:var(--muted)">Keine Berufe gefunden</div>`;
+    if (error) throw error;
+
+    dd.innerHTML = (data || []).map(b =>
+      `<div class="search-item" onmousedown="showBeruf('${b.name.replace(/'/g,"\\'")}', '${b.berufsgruppe}', '${b.dkz_id||''}')">
+        <span>${b.name}</span><span class="tag">${b.berufsgruppe}</span>
+      </div>`
+    ).join('') || `<div class="search-item" style="color:var(--muted)">Keine Berufe gefunden</div>`;
   } catch {
     dd.innerHTML = `<div class="search-item" style="color:var(--muted)">Fehler beim Laden</div>`;
   }
@@ -1513,36 +1528,36 @@ function selectToggle(el, group) {
     <div class="breadcrumb" style="margin-bottom:1.5rem">
       <span onclick="showPage('home')">Startseite</span> › Impressum
     </div>
-    <h2 style="font-family:'Fraunces',serif;font-weight:900;font-size:2rem;margin-bottom:2rem">Impressum</h2>
+    <h2 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:900;font-size:2rem;margin-bottom:2rem">Impressum</h2>
 
     <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
-      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Angaben gemäß § 5 TMG</h3>
+      <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Angaben gemäß § 5 TMG</h3>
       <p style="font-size:.95rem;line-height:1.8;color:var(--ink)">
-        <strong>DEIN VORNAME NACHNAME</strong><br>
-        DEINE STRASSE UND HAUSNUMMER<br>
-        DEINE PLZ ORT<br>
+        <strong>Manuel Ketterl</strong><br>
+        Tassilostraße 4<br>
+        94374 Schwarzach<br>
         Deutschland
       </p>
     </div>
 
     <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
-      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Kontakt</h3>
+      <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Kontakt</h3>
       <p style="font-size:.95rem;line-height:1.8;color:var(--ink)">
         E-Mail: <a href="mailto:info@jobinsides.de" style="color:var(--accent2)">info@jobinsides.de</a>
       </p>
     </div>
 
     <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
-      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h3>
+      <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h3>
       <p style="font-size:.95rem;line-height:1.8;color:var(--ink)">
-        <strong>DEIN VORNAME NACHNAME</strong><br>
-        DEINE STRASSE UND HAUSNUMMER<br>
-        DEINE PLZ ORT
+        <strong>Manuel Ketterl</strong><br>
+        Tassilostraße 4<br>
+        94374 Schwarzach
       </p>
     </div>
 
     <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
-      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Haftungsausschluss</h3>
+      <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Haftungsausschluss</h3>
       <p style="font-size:.9rem;line-height:1.7;color:var(--muted);margin-bottom:1rem">
         <strong style="color:var(--ink)">Haftung für Inhalte:</strong> Die Inhalte unserer Seiten wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen. Als Diensteanbieter sind wir gemäß § 7 Abs.1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich.
       </p>
@@ -1555,7 +1570,7 @@ function selectToggle(el, group) {
     </div>
 
     <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem">
-      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Urheberrecht</h3>
+      <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Urheberrecht</h3>
       <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
         Die durch den Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.
       </p>
@@ -1571,28 +1586,28 @@ function selectToggle(el, group) {
     <div class="breadcrumb" style="margin-bottom:1.5rem">
       <span onclick="showPage('home')">Startseite</span> › Datenschutzerklärung
     </div>
-    <h2 style="font-family:'Fraunces',serif;font-weight:900;font-size:2rem;margin-bottom:2rem">Datenschutzerklärung</h2>
+    <h2 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:900;font-size:2rem;margin-bottom:2rem">Datenschutzerklärung</h2>
 
     <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
-      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">1. Datenschutz auf einen Blick</h3>
+      <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">1. Datenschutz auf einen Blick</h3>
       <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
         JobInsides wurde mit dem Ziel entwickelt, so wenig personenbezogene Daten wie möglich zu erheben. Bewertungen können vollständig anonym ohne Angabe einer E-Mail-Adresse oder eines Namens abgegeben werden.
       </p>
     </div>
 
     <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
-      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">2. Verantwortliche Stelle</h3>
+      <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">2. Verantwortliche Stelle</h3>
       <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
         Verantwortlich für die Datenverarbeitung auf dieser Website ist:<br><br>
-        <strong style="color:var(--ink)">DEIN VORNAME NACHNAME</strong><br>
-        DEINE STRASSE UND HAUSNUMMER<br>
-        DEINE PLZ ORT<br>
+        <strong style="color:var(--ink)">Manuel Ketterl</strong><br>
+        Tassilostraße 4<br>
+        94374 Schwarzach<br>
         E-Mail: info@jobinsides.de
       </p>
     </div>
 
     <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
-      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">3. Welche Daten wir erheben</h3>
+      <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">3. Welche Daten wir erheben</h3>
       <p style="font-size:.9rem;line-height:1.7;color:var(--muted);margin-bottom:.75rem">
         <strong style="color:var(--ink)">Bewertungen (anonym):</strong> Beim Abgeben einer Bewertung speichern wir den Berufsbezeichnung, Bewertungsinhalt, ausgewählte Skills, optionale Gehaltsangabe sowie einen automatisch generierten anonymen Nutzernamen (z.B. "Elektroniker_472"). Es werden keine personenbezogenen Daten gespeichert.
       </p>
@@ -1605,14 +1620,14 @@ function selectToggle(el, group) {
     </div>
 
     <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
-      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">4. Hosting & Datenbank</h3>
+      <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">4. Hosting & Datenbank</h3>
       <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
         Diese Website wird gehostet bei <strong style="color:var(--ink)">Netlify Inc.</strong> (USA). Die Datenbank wird betrieben von <strong style="color:var(--ink)">Supabase Inc.</strong> auf Servern in der EU (Frankfurt). Mit beiden Anbietern besteht ein Auftragsverarbeitungsvertrag gemäß Art. 28 DSGVO.
       </p>
     </div>
 
     <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
-      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">5. Deine Rechte</h3>
+      <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">5. Deine Rechte</h3>
       <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
         Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung deiner personenbezogenen Daten. Da Bewertungen anonym abgegeben werden, ist eine nachträgliche Zuordnung nicht möglich. Für Newsletter-Abmeldungen steht in jeder E-Mail ein Abmeldelink zur Verfügung.<br><br>
         Bei Fragen zum Datenschutz wende dich an: <a href="mailto:info@jobinsides.de" style="color:var(--accent2)">info@jobinsides.de</a>
@@ -1620,7 +1635,7 @@ function selectToggle(el, group) {
     </div>
 
     <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem">
-      <h3 style="font-family:'Fraunces',serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">6. Cookies</h3>
+      <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">6. Cookies</h3>
       <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
         Diese Website verwendet nur technisch notwendige Cookies. Es werden keine Tracking- oder Marketing-Cookies eingesetzt. Eine Einwilligung ist daher nicht erforderlich.
       </p>
@@ -1632,7 +1647,7 @@ function selectToggle(el, group) {
      FOOTER
 ════════════════════════════════════════ -->
 <footer style="background:var(--ink);color:#666;padding:2rem 5vw;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;font-size:.82rem;border-top:1px solid #2e2b27">
-  <div style="font-family:'Fraunces',serif;font-weight:900;font-size:1.1rem;color:var(--bg)">Job<span style="color:var(--accent)">Insides</span></div>
+  <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:900;font-size:1.1rem;color:var(--bg)">Job<span style="color:var(--accent)">Insides</span></div>
   <div style="color:#888">Echte Menschen. Echte Jobs. Ehrliche Bewertungen.</div>
   <div style="display:flex;gap:1.5rem">
     <span onclick="showPage('impressum')" style="cursor:pointer;color:#888;transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">Impressum</span>

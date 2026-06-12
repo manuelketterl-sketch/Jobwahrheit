@@ -131,22 +131,27 @@ h1 em { color: var(--accent); font-style: normal; }
   position: absolute; top: calc(100% + .6rem);
   left: 0; right: 0;
   background: #fff; border: 1px solid var(--border);
-  border-radius: 18px; overflow: hidden;
+  border-radius: 18px;
+  max-height: 340px; overflow-y: auto;
   box-shadow: var(--shadow-lg);
-  display: none; z-index: 100;
+  display: none; z-index: 300;
 }
 .search-dropdown.open { display: block; }
 .search-item {
   padding: .9rem 1.4rem; cursor: pointer;
   display: flex; justify-content: space-between; align-items: center;
-  transition: background .15s; font-size: .95rem;
+  gap: .75rem;
+  transition: background .15s; font-size: .92rem;
   text-align: left;
+}
+.search-item > span:first-child {
+  overflow-wrap: anywhere; line-height: 1.4; min-width: 0;
 }
 .search-item:hover { background: var(--bg-soft); }
 .search-item .tag {
-  font-size: .72rem; background: var(--bg-soft);
+  font-size: .7rem; background: var(--bg-soft);
   border-radius: 99px; padding: .25rem .7rem; color: var(--muted);
-  font-weight: 600;
+  font-weight: 600; flex-shrink: 0; white-space: nowrap;
 }
 
 /* Categories */
@@ -587,12 +592,21 @@ h1 em { color: var(--accent); font-style: normal; }
 /* Responsive */
 @media (max-width: 768px) {
   .beruf-body { grid-template-columns: 1fr; }
-  .beruf-sidebar { display: none; }
+  .beruf-sidebar { display: flex; }
   .pricing-grid { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
   .vergleich-grid { grid-template-columns: 1fr; }
   .stats-bar { gap: 1.5rem; }
   nav .nav-links { display: none; }
+  .tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { padding: 1rem 1.1rem; font-size: .88rem; }
+  .beruf-score-row { gap: 1.5rem; }
+  .score-big { font-size: 2.2rem; }
 }
 </style>
 </head>
@@ -777,34 +791,23 @@ h1 em { color: var(--accent); font-style: normal; }
       <div id="tab-diskussion" style="display:none">
         <div class="sec-title">
           Diskussion
-          <a onclick="alert('Diskussion starten – kommt bald!')">+ Diskussion starten</a>
+          <a onclick="toggleNewDiscussion()">+ Diskussion starten</a>
         </div>
-        <div class="disc-thread fade-in">
-          <div class="dt-title">Lohnt sich der Meister noch finanziell?</div>
-          <div class="dt-meta">
-            <span class="dt-votes">▲ 24</span>
-            <span>12 Antworten</span>
-            <span>Elektroniker_03</span>
-            <span>vor 3 Tagen</span>
+
+        <!-- Formular: neue Diskussion (versteckt bis Klick) -->
+        <div id="disc-form" style="display:none;background:#fff;border:1px solid var(--border);border-radius:16px;padding:1.4rem;margin-bottom:1.25rem">
+          <div style="font-size:.8rem;color:var(--muted);margin-bottom:.75rem">Du schreibst als <strong id="disc-nickname" style="color:var(--accent-deep)"></strong> – komplett anonym.</div>
+          <input id="disc-titel" class="form-input" placeholder="Deine Frage oder dein Thema…" style="margin-bottom:.6rem">
+          <textarea id="disc-inhalt" class="form-textarea" placeholder="Beschreib dein Anliegen genauer (optional)…" style="margin-bottom:.6rem;min-height:80px"></textarea>
+          <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+            <button class="modal-btn" style="padding:.6rem 1.5rem;font-size:.9rem" onclick="submitDiskussion()">Veröffentlichen</button>
+            <button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;font-family:inherit" onclick="toggleNewDiscussion()">Abbrechen</button>
           </div>
         </div>
-        <div class="disc-thread fade-in">
-          <div class="dt-title">Welche Spezialisierung hat die besten Jobaussichten 2025?</div>
-          <div class="dt-meta">
-            <span class="dt-votes">▲ 18</span>
-            <span>7 Antworten</span>
-            <span>Elektroniker_55</span>
-            <span>vor 1 Woche</span>
-          </div>
-        </div>
-        <div class="disc-thread fade-in">
-          <div class="dt-title">Wie ist das mit Überstunden bei euch? Pflicht oder freiwillig?</div>
-          <div class="dt-meta">
-            <span class="dt-votes">▲ 9</span>
-            <span>5 Antworten</span>
-            <span>Elektroniker_21</span>
-            <span>vor 2 Wochen</span>
-          </div>
+
+        <!-- Threads werden hier geladen -->
+        <div id="disc-liste">
+          <div style="color:var(--muted);font-size:.9rem;padding:1rem 0">Lade Diskussionen…</div>
         </div>
       </div>
 
@@ -905,10 +908,15 @@ h1 em { color: var(--accent); font-style: normal; }
     <p class="sub">🔒 Komplett anonym · Keine E-Mail · Keine Anmeldung nötig</p>
 
     <div class="form-section-title">01 — Welchen Beruf bewertest du?</div>
-    <div class="form-group">
+    <div class="form-group" style="position:relative">
       <label class="form-label">Berufsbezeichnung *</label>
-      <input id="f-beruf" class="form-input" type="text" placeholder="z.B. Elektroniker, Pflegefachkraft…">
+      <input id="f-beruf" class="form-input" type="text" placeholder="z.B. Elektroniker, Pflegefachkraft…"
+        oninput="handleFormBerufSearch(this.value)" onblur="setTimeout(()=>closeFormBerufDropdown(),180)" autocomplete="off">
+      <div class="search-dropdown" id="f-beruf-dropdown" style="border-radius:14px"></div>
     </div>
+    <!-- Honeypot: unsichtbar für Menschen, Bots füllen es aus -->
+    <input type="text" id="hp-website" name="website" tabindex="-1" autocomplete="off"
+      style="position:absolute;left:-9999px;top:-9999px;height:0;width:0;opacity:0" aria-hidden="true">
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Berufsjahre</label>
@@ -1086,11 +1094,35 @@ h1 em { color: var(--accent); font-style: normal; }
 
 <!-- MODAL SUCCESS -->
 <div class="modal-overlay" id="modal">
-  <div class="modal">
-    <div class="modal-icon">🎉</div>
-    <h3>Danke für deine Bewertung!</h3>
-    <p>Deine anonyme Erfahrung hilft anderen Menschen, den richtigen Beruf zu finden. Zusammen machen wir Jobsuche ehrlicher.</p>
-    <button class="modal-btn" onclick="document.getElementById('modal').classList.remove('open');showPage('beruf')">Bewertungen ansehen</button>
+  <div class="modal" style="text-align:left">
+    <div style="text-align:center">
+      <div class="modal-icon">🎉</div>
+      <h3>Danke für deine Bewertung!</h3>
+      <p style="margin-bottom:1.25rem">Deine anonyme Erfahrung hilft anderen, den richtigen Beruf zu finden.</p>
+    </div>
+
+    <div style="background:var(--bg-soft);border-radius:16px;padding:1.25rem;margin-bottom:1.25rem">
+      <div style="font-weight:700;font-size:.95rem;margin-bottom:.75rem">📬 Auf dem Laufenden bleiben? <span style="font-weight:500;color:var(--muted)">(optional)</span></div>
+
+      <label style="display:flex;align-items:flex-start;gap:.6rem;font-size:.88rem;margin-bottom:.6rem;cursor:pointer">
+        <input type="checkbox" id="nl-bewertungen" style="margin-top:.2rem;accent-color:var(--accent)">
+        <span>Neue <strong>Bewertungen</strong> für <span class="nl-beruf-name">diesen Beruf</span></span>
+      </label>
+
+      <label style="display:flex;align-items:flex-start;gap:.6rem;font-size:.88rem;margin-bottom:.9rem;cursor:pointer">
+        <input type="checkbox" id="nl-stellen" style="margin-top:.2rem;accent-color:var(--accent)">
+        <span>Neue <strong>Stellenangebote</strong> für <span class="nl-beruf-name">diesen Beruf</span></span>
+      </label>
+
+      <input type="email" id="nl-email" class="form-input" placeholder="deine@email.de" style="margin-bottom:.5rem">
+      <p style="font-size:.72rem;color:var(--muted);line-height:1.5">Deine E-Mail wird <strong>nicht</strong> mit deiner Bewertung verknüpft. Abmeldung jederzeit möglich.</p>
+      <p id="nl-feedback" style="font-size:.8rem;margin-top:.4rem;display:none"></p>
+    </div>
+
+    <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+      <button class="modal-btn" onclick="submitNewsletter()">Abonnieren</button>
+      <button class="modal-btn" style="background:transparent;color:var(--muted);border:1.5px solid var(--border)" onclick="closeModalToBeruf()">Nein danke</button>
+    </div>
   </div>
 </div>
 
@@ -1153,7 +1185,7 @@ async function loadBewertungen(berufName) {
 
 function renderBewertung(b) {
   const stars = '★'.repeat(b.bewertung_gesamt || 0) + '☆'.repeat(5 - (b.bewertung_gesamt || 0));
-  const tags = (b.skills || []).map(s => `<span class="rc-tag">${s}</span>`).join('');
+  const tags = (b.skills || []).map(s => `<span class="rc-tag">${escHtml(s)}</span>`).join('');
   const datum = new Date(b.created_at).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
   const empf = b.weiterempfehlung ? '👍 Empfohlen' : '👎 Nicht empfohlen';
 
@@ -1164,7 +1196,7 @@ function renderBewertung(b) {
           <div class="rc-stars">${stars}</div>
           <div class="rc-title">${escHtml(b.freitext || 'Bewertung')}</div>
         </div>
-        <div class="rc-meta">${escHtml(b.anon_name || 'Anonym')}<br>${b.berufsjahre || ''}<br>${datum}</div>
+        <div class="rc-meta">${escHtml(b.anon_name || 'Anonym')}<br>${escHtml(b.berufsjahre || '')}<br>${datum}</div>
       </div>
       ${b.was_erwartet ? `<div class="rc-body"><strong>Erwartet:</strong> ${escHtml(b.was_erwartet)}</div>` : ''}
       ${b.alltag_vs_stelle ? `<div class="rc-body"><strong>Realität:</strong> ${escHtml(b.alltag_vs_stelle)}</div>` : ''}
@@ -1186,6 +1218,32 @@ function escHtml(str) {
 // ════════════════════════════════════════
 // BEWERTUNG SPEICHERN
 // ════════════════════════════════════════
+// ════════════════════════════════════════
+// SICHERES SCHREIBEN über Edge Function
+// (Rate Limiting + Validierung serverseitig)
+// ════════════════════════════════════════
+const SUBMIT_URL = SUPABASE_URL + '/functions/v1/submit';
+
+async function secureSubmit(action, data) {
+  try {
+    const res = await fetch(SUBMIT_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        action,
+        data,
+        website: document.getElementById('hp-website')?.value || '' // Honeypot
+      })
+    });
+    return await res.json();
+  } catch (err) {
+    return { ok: false, error: 'Netzwerkfehler – bitte erneut versuchen.' };
+  }
+}
+
 async function submitBewertung() {
   const berufName = document.getElementById('f-beruf')?.value?.trim();
 
@@ -1214,29 +1272,258 @@ async function submitBewertung() {
     bewertung_gesamt: formStars.overall,
     weiterempfehlung,
     freitext: document.getElementById('f-freitext')?.value || null,
-    anon_name: generateAnonName(berufName),
-    hilfreich: 0
+    anon_name: generateAnonName(berufName)
   };
 
   const btn = document.querySelector('.btn-submit');
   btn.textContent = 'Wird gespeichert…';
   btn.disabled = true;
 
-  console.log('Sende Bewertung:', payload);
-
-  const { data, error } = await sb.from('bewertungen').insert([payload]).select();
+  const result = await secureSubmit('bewertung', payload);
 
   btn.textContent = 'Anonym einreichen →';
   btn.disabled = false;
 
-  if (error) {
-    console.error('Supabase Fehler:', error);
-    alert('Fehler: ' + error.message);
+  if (!result.ok) {
+    alert(result.error || 'Etwas ist schiefgelaufen.');
     return;
   }
 
-  console.log('Bewertung gespeichert:', data);
+  // Berufsname ins Newsletter-Modal übernehmen
+  document.querySelectorAll('.nl-beruf-name').forEach(el => el.textContent = berufName);
+  window._nlBeruf = berufName;
   document.getElementById('modal').classList.add('open');
+}
+
+// ════════════════════════════════════════
+// NEWSLETTER-ABO (optional, nach Bewertung)
+// ════════════════════════════════════════
+function closeModalToBeruf() {
+  document.getElementById('modal').classList.remove('open');
+  // Felder zurücksetzen
+  const fb = document.getElementById('nl-feedback');
+  if (fb) { fb.style.display = 'none'; }
+  showPage('beruf');
+}
+
+async function submitNewsletter() {
+  const email = document.getElementById('nl-email')?.value?.trim();
+  const aboBewertungen = document.getElementById('nl-bewertungen')?.checked || false;
+  const aboStellen = document.getElementById('nl-stellen')?.checked || false;
+  const fb = document.getElementById('nl-feedback');
+
+  function feedback(msg, ok) {
+    if (!fb) return;
+    fb.textContent = msg;
+    fb.style.color = ok ? 'var(--green)' : '#e8552d';
+    fb.style.display = 'block';
+  }
+
+  if (!aboBewertungen && !aboStellen) {
+    feedback('Bitte wähle mindestens eine Benachrichtigung aus.', false);
+    return;
+  }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    feedback('Bitte gib eine gültige E-Mail-Adresse ein.', false);
+    return;
+  }
+
+  const result = await secureSubmit('newsletter', {
+    email: email.toLowerCase(),
+    beruf_name: window._nlBeruf || 'Allgemein',
+    abo_bewertungen: aboBewertungen,
+    abo_stellen: aboStellen
+  });
+
+  if (!result.ok) {
+    feedback(result.error || 'Etwas ist schiefgelaufen.', false);
+    return;
+  }
+
+  if (result.duplicate) {
+    feedback('Du bist für diesen Beruf bereits eingetragen. ✓', true);
+    setTimeout(closeModalToBeruf, 1800);
+    return;
+  }
+
+  feedback('✓ Eingetragen! Du hörst von uns sobald es Neuigkeiten gibt.', true);
+  setTimeout(closeModalToBeruf, 2000);
+}
+
+// ════════════════════════════════════════
+// DISKUSSIONEN
+// Anonymer Nickname wird einmalig generiert und
+// im Browser gespeichert – kein Login nötig
+// ════════════════════════════════════════
+function getNickname(beruf) {
+  let nick = localStorage.getItem('ji_nickname');
+  if (!nick) {
+    const wort = (beruf || 'Nutzer').split(/[\s\/–-]/)[0].replace(/[^a-zA-ZäöüÄÖÜ]/g,'') || 'Nutzer';
+    nick = wort + '_' + (Math.floor(Math.random() * 900) + 100);
+    localStorage.setItem('ji_nickname', nick);
+  }
+  return nick;
+}
+
+function zeitAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return 'gerade eben';
+  if (min < 60) return `vor ${min} Min.`;
+  const std = Math.floor(min / 60);
+  if (std < 24) return `vor ${std} Std.`;
+  const tage = Math.floor(std / 24);
+  if (tage < 7) return `vor ${tage} Tag${tage > 1 ? 'en' : ''}`;
+  const wochen = Math.floor(tage / 7);
+  if (wochen < 5) return `vor ${wochen} Woche${wochen > 1 ? 'n' : ''}`;
+  return new Date(dateStr).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toggleNewDiscussion() {
+  const form = document.getElementById('disc-form');
+  if (!form) return;
+  const offen = form.style.display !== 'none';
+  form.style.display = offen ? 'none' : 'block';
+  if (!offen) {
+    document.getElementById('disc-nickname').textContent = getNickname(currentBeruf?.name);
+    document.getElementById('disc-titel')?.focus();
+  }
+}
+
+async function loadDiskussionen(berufName) {
+  const liste = document.getElementById('disc-liste');
+  if (!liste) return;
+  liste.innerHTML = `<div style="color:var(--muted);font-size:.9rem;padding:1rem 0">Lade Diskussionen…</div>`;
+
+  try {
+    const { data: threads, error } = await sb
+      .from('diskussionen')
+      .select('id, created_at, titel, inhalt, anon_name, upvotes')
+      .eq('beruf_name', berufName)
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    if (error) throw error;
+
+    if (!threads || !threads.length) {
+      liste.innerHTML = `<div style="border:2px dashed var(--border);border-radius:16px;padding:2rem;text-align:center">
+        <div style="font-size:1.6rem;margin-bottom:.5rem">💬</div>
+        <div style="font-weight:700;margin-bottom:.25rem">Noch keine Diskussionen</div>
+        <div style="font-size:.85rem;color:var(--muted)">Stell die erste Frage zu diesem Beruf!</div>
+      </div>`;
+      return;
+    }
+
+    // Antwortanzahl pro Thread laden
+    const ids = threads.map(t => t.id);
+    const { data: antworten } = await sb
+      .from('diskussion_antworten')
+      .select('diskussion_id')
+      .in('diskussion_id', ids);
+
+    const counts = {};
+    (antworten || []).forEach(a => { counts[a.diskussion_id] = (counts[a.diskussion_id] || 0) + 1; });
+
+    liste.innerHTML = threads.map(t => `
+      <div class="disc-thread fade-in" onclick="toggleThread('${t.id}')">
+        <div class="dt-title">${escapeHtml(t.titel)}</div>
+        ${t.inhalt ? `<div style="font-size:.85rem;color:var(--muted);margin:.4rem 0;line-height:1.5">${escapeHtml(t.inhalt)}</div>` : ''}
+        <div class="dt-meta">
+          <span>${counts[t.id] || 0} Antwort${(counts[t.id] || 0) === 1 ? '' : 'en'}</span>
+          <span>${escapeHtml(t.anon_name || 'Anonym')}</span>
+          <span>${zeitAgo(t.created_at)}</span>
+        </div>
+        <div id="thread-${t.id}" style="display:none;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)" onclick="event.stopPropagation()"></div>
+      </div>
+    `).join('');
+  } catch (err) {
+    liste.innerHTML = `<div style="color:var(--muted);font-size:.9rem;padding:1rem 0">Diskussionen konnten nicht geladen werden.</div>`;
+  }
+}
+
+async function submitDiskussion() {
+  const titel = document.getElementById('disc-titel')?.value?.trim();
+  const inhalt = document.getElementById('disc-inhalt')?.value?.trim();
+
+  if (!titel) {
+    alert('Bitte gib einen Titel für deine Diskussion ein.');
+    return;
+  }
+
+  const result = await secureSubmit('diskussion', {
+    beruf_name: currentBeruf?.name || 'Allgemein',
+    titel,
+    inhalt: inhalt || null,
+    anon_name: getNickname(currentBeruf?.name)
+  });
+
+  if (!result.ok) {
+    alert(result.error || 'Etwas ist schiefgelaufen.');
+    return;
+  }
+
+  document.getElementById('disc-titel').value = '';
+  document.getElementById('disc-inhalt').value = '';
+  toggleNewDiscussion();
+  loadDiskussionen(currentBeruf?.name);
+}
+
+// Thread aufklappen: Antworten + Antwortformular
+async function toggleThread(id) {
+  const box = document.getElementById('thread-' + id);
+  if (!box) return;
+
+  if (box.style.display !== 'none') {
+    box.style.display = 'none';
+    return;
+  }
+  box.style.display = 'block';
+  box.innerHTML = `<div style="color:var(--muted);font-size:.85rem">Lade Antworten…</div>`;
+
+  const { data: antworten } = await sb
+    .from('diskussion_antworten')
+    .select('created_at, inhalt, anon_name')
+    .eq('diskussion_id', id)
+    .order('created_at', { ascending: true });
+
+  const antwortenHtml = (antworten || []).map(a => `
+    <div style="background:var(--bg-soft);border-radius:12px;padding:.8rem 1rem;margin-bottom:.6rem">
+      <div style="font-size:.88rem;line-height:1.55">${escapeHtml(a.inhalt)}</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:.4rem">${escapeHtml(a.anon_name || 'Anonym')} · ${zeitAgo(a.created_at)}</div>
+    </div>
+  `).join('') || `<div style="font-size:.85rem;color:var(--muted);margin-bottom:.6rem">Noch keine Antworten – sei die erste Person!</div>`;
+
+  box.innerHTML = antwortenHtml + `
+    <div style="display:flex;gap:.5rem;margin-top:.75rem">
+      <input id="antwort-${id}" class="form-input" placeholder="Deine Antwort…" style="flex:1" onkeydown="if(event.key==='Enter')submitAntwort('${id}')">
+      <button class="modal-btn" style="padding:.6rem 1.2rem;font-size:.85rem;flex-shrink:0" onclick="submitAntwort('${id}')">Senden</button>
+    </div>`;
+}
+
+async function submitAntwort(diskussionId) {
+  const input = document.getElementById('antwort-' + diskussionId);
+  const inhalt = input?.value?.trim();
+  if (!inhalt) return;
+
+  const result = await secureSubmit('antwort', {
+    diskussion_id: diskussionId,
+    inhalt,
+    anon_name: getNickname(currentBeruf?.name)
+  });
+
+  if (!result.ok) {
+    alert(result.error || 'Etwas ist schiefgelaufen.');
+    return;
+  }
+
+  // Thread neu laden (zu, dann wieder auf)
+  const box = document.getElementById('thread-' + diskussionId);
+  box.style.display = 'none';
+  toggleThread(diskussionId);
 }
 
 function generateAnonName(beruf) {
@@ -1260,8 +1547,8 @@ async function markHilfreich(id, btn) {
 
 async function meldenBewertung(id) {
   if (confirm('Diese Bewertung als unangemessen melden?')) {
-    await sb.from('meldungen').insert([{ bewertung_id: id }]);
-    alert('Danke – wir prüfen die Bewertung.');
+    const result = await secureSubmit('meldung', { bewertung_id: id });
+    alert(result.ok ? 'Danke – wir prüfen die Bewertung.' : (result.error || 'Etwas ist schiefgelaufen.'));
   }
 }
 
@@ -1320,6 +1607,9 @@ function showBeruf(name, berufsgruppe, dkzId) {
   // Echte Bewertungen aus Supabase laden
   loadBewertungen(name);
 
+  // Diskussionen laden
+  loadDiskussionen(name);
+
   // Spezialisierungen laden (verwandte Berufe mit gleichem Stamm)
   loadSpezialisierungen(name);
 
@@ -1350,15 +1640,31 @@ async function loadSpezialisierungen(name) {
       .from('berufe')
       .select('name, berufsgruppe, dkz_id')
       .ilike('name_lower', basis.toLowerCase() + '%')
-      .limit(12);
+      .limit(24);
 
-    if (error || !data || data.length < 2) {
+    if (error || !data || !data.length) {
+      widget.style.display = 'none';
+      return;
+    }
+
+    // Duplikate entfernen: gleicher Name kann in mehreren Berufsgruppen
+    // vorkommen – jeden Namen nur einmal anzeigen
+    const gesehen = new Set();
+    const eindeutig = [];
+    for (const b of data) {
+      if (!gesehen.has(b.name)) {
+        gesehen.add(b.name);
+        eindeutig.push(b);
+      }
+    }
+
+    if (eindeutig.length < 2) {
       widget.style.display = 'none';
       return;
     }
 
     // Aktuellen Beruf nach oben, Rest danach
-    const sortiert = data.sort((a, b) => (a.name === name ? -1 : b.name === name ? 1 : 0));
+    const sortiert = eindeutig.sort((a, b) => (a.name === name ? -1 : b.name === name ? 1 : 0)).slice(0, 12);
 
     list.innerHTML = sortiert.map(b => {
       const aktiv = b.name === name;
@@ -1371,6 +1677,69 @@ async function loadSpezialisierungen(name) {
   } catch {
     widget.style.display = 'none';
   }
+}
+
+// ════════════════════════════════════════
+// AUTOCOMPLETE im Bewertungsformular
+// Schlägt Berufe aus der Datenbank vor während der Eingabe
+// ════════════════════════════════════════
+let formBerufTimer = null;
+
+function handleFormBerufSearch(wert) {
+  clearTimeout(formBerufTimer);
+  const dd = document.getElementById('f-beruf-dropdown');
+  if (!dd) return;
+
+  const suchbegriff = (wert || '').trim();
+  if (suchbegriff.length < 2) {
+    dd.classList.remove('open');
+    return;
+  }
+
+  // Kurze Verzögerung damit nicht bei jedem Tastendruck gesucht wird
+  formBerufTimer = setTimeout(async () => {
+    try {
+      const { data, error } = await sb
+        .from('berufe')
+        .select('name, berufsgruppe')
+        .ilike('name_lower', `%${suchbegriff.toLowerCase()}%`)
+        .limit(8);
+
+      if (error || !data || !data.length) {
+        dd.innerHTML = `<div class="search-item" style="color:var(--muted)">Kein Treffer – du kannst den Beruf trotzdem frei eintragen</div>`;
+        dd.classList.add('open');
+        return;
+      }
+
+      // Duplikate nach Name entfernen
+      const gesehen = new Set();
+      const eindeutig = data.filter(b => {
+        if (gesehen.has(b.name)) return false;
+        gesehen.add(b.name);
+        return true;
+      });
+
+      dd.innerHTML = eindeutig.map(b =>
+        `<div class="search-item" onmousedown="selectFormBeruf('${b.name.replace(/'/g,"\\'")}')">
+          <span>${b.name}</span><span class="tag">${b.berufsgruppe}</span>
+        </div>`
+      ).join('');
+      dd.classList.add('open');
+    } catch {
+      dd.classList.remove('open');
+    }
+  }, 250);
+}
+
+function selectFormBeruf(name) {
+  const input = document.getElementById('f-beruf');
+  if (input) input.value = name;
+  closeFormBerufDropdown();
+}
+
+function closeFormBerufDropdown() {
+  const dd = document.getElementById('f-beruf-dropdown');
+  if (dd) dd.classList.remove('open');
 }
 
 // Init beim Seitenstart
@@ -1672,12 +2041,15 @@ function selectToggle(el, group) {
       <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
         <strong style="color:var(--ink)">Server-Logs:</strong> Beim Besuch der Website werden automatisch technische Daten (IP-Adresse, Browsertyp, Datum/Uhrzeit) in Server-Logs gespeichert. Diese werden nach 7 Tagen automatisch gelöscht.
       </p>
+      <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
+        <strong style="color:var(--ink)">Spam-Schutz:</strong> Beim Absenden von Bewertungen, Diskussionsbeiträgen oder Newsletter-Anmeldungen wird ein pseudonymisierter Prüfwert (kryptografischer Hash) deiner IP-Adresse für maximal 48 Stunden gespeichert, um Missbrauch und automatisierte Massenzugriffe zu verhindern (Art. 6 Abs. 1 lit. f DSGVO). Ein Rückschluss auf deine IP-Adresse ist daraus nicht möglich.
+      </p>
     </div>
 
     <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
       <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">4. Hosting & Datenbank</h3>
       <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
-        Diese Website wird gehostet bei <strong style="color:var(--ink)">Netlify Inc.</strong> (USA). Die Datenbank wird betrieben von <strong style="color:var(--ink)">Supabase Inc.</strong> auf Servern in der EU (Frankfurt). Mit beiden Anbietern besteht ein Auftragsverarbeitungsvertrag gemäß Art. 28 DSGVO.
+        Diese Website wird gehostet bei <strong style="color:var(--ink)">Netlify Inc.</strong> (USA). Die Datenbank wird betrieben von <strong style="color:var(--ink)">Supabase Inc.</strong> auf Servern im Vereinigten Königreich (London); für das Vereinigte Königreich besteht ein Angemessenheitsbeschluss der EU-Kommission. Mit beiden Anbietern besteht ein Auftragsverarbeitungsvertrag gemäß Art. 28 DSGVO.
       </p>
     </div>
 

@@ -1115,7 +1115,7 @@ h1 em { color: var(--accent); font-style: normal; }
       </label>
 
       <input type="email" id="nl-email" class="form-input" placeholder="deine@email.de" style="margin-bottom:.5rem">
-      <p style="font-size:.72rem;color:var(--muted);line-height:1.5">Deine E-Mail wird <strong>nicht</strong> mit deiner Bewertung verknüpft. Abmeldung jederzeit möglich.</p>
+      <p style="font-size:.72rem;color:var(--muted);line-height:1.5">Du erhältst eine kurze Bestätigungs-Mail. Deine E-Mail wird <strong>nicht</strong> mit deiner Bewertung verknüpft. Abmeldung jederzeit mit einem Klick.</p>
       <p id="nl-feedback" style="font-size:.8rem;margin-top:.4rem;display:none"></p>
     </div>
 
@@ -1328,26 +1328,44 @@ async function submitNewsletter() {
     return;
   }
 
-  const result = await secureSubmit('newsletter', {
-    email: email.toLowerCase(),
-    beruf_name: window._nlBeruf || 'Allgemein',
-    abo_bewertungen: aboBewertungen,
-    abo_stellen: aboStellen
-  });
+  const btn = document.querySelector('#modal .modal-btn');
+  if (btn) { btn.textContent = 'Wird gesendet…'; btn.disabled = true; }
+
+  let result;
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/newsletter', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: email.toLowerCase(),
+        beruf_name: window._nlBeruf || 'Allgemein',
+        abo_bewertungen: aboBewertungen,
+        abo_stellen: aboStellen
+      })
+    });
+    result = await res.json();
+  } catch {
+    result = { ok: false, error: 'Netzwerkfehler – bitte erneut versuchen.' };
+  }
+
+  if (btn) { btn.textContent = 'Abonnieren'; btn.disabled = false; }
 
   if (!result.ok) {
     feedback(result.error || 'Etwas ist schiefgelaufen.', false);
     return;
   }
 
-  if (result.duplicate) {
-    feedback('Du bist für diesen Beruf bereits eingetragen. ✓', true);
-    setTimeout(closeModalToBeruf, 1800);
+  if (result.alreadyConfirmed) {
+    feedback('Du bist für diesen Beruf bereits angemeldet. ✓', true);
+    setTimeout(closeModalToBeruf, 2000);
     return;
   }
 
-  feedback('✓ Eingetragen! Du hörst von uns sobald es Neuigkeiten gibt.', true);
-  setTimeout(closeModalToBeruf, 2000);
+  feedback('📬 Fast geschafft! Wir haben dir eine Bestätigungs-Mail geschickt. Bitte klick auf den Link darin.', true);
+  setTimeout(closeModalToBeruf, 4000);
 }
 
 // ════════════════════════════════════════
@@ -2036,7 +2054,7 @@ function selectToggle(el, group) {
         <strong style="color:var(--ink)">Bewertungen (anonym):</strong> Beim Abgeben einer Bewertung speichern wir den Berufsbezeichnung, Bewertungsinhalt, ausgewählte Skills, optionale Gehaltsangabe sowie einen automatisch generierten anonymen Nutzernamen (z.B. "Elektroniker_472"). Es werden keine personenbezogenen Daten gespeichert.
       </p>
       <p style="font-size:.9rem;line-height:1.7;color:var(--muted);margin-bottom:.75rem">
-        <strong style="color:var(--ink)">Newsletter (optional):</strong> Wenn du dich für Benachrichtigungen anmeldest, speichern wir ausschließlich deine E-Mail-Adresse und den gewählten Beruf. Diese Daten werden nicht mit deiner Bewertung verknüpft.
+        <strong style="color:var(--ink)">Newsletter (optional, Double-Opt-in):</strong> Wenn du dich für Benachrichtigungen anmeldest, speichern wir ausschließlich deine E-Mail-Adresse und den gewählten Beruf. Du erhältst zunächst eine Bestätigungs-Mail; erst nach deinem Klick auf den Bestätigungslink werden dir Benachrichtigungen zugesandt (Art. 6 Abs. 1 lit. a DSGVO). Diese Daten werden nicht mit deiner Bewertung verknüpft. In jeder Mail befindet sich ein Abmeldelink, über den du deine Einwilligung jederzeit mit einem Klick widerrufen kannst. Der Mailversand erfolgt über Resend (Resend, Inc., USA; Server in der EU).
       </p>
       <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
         <strong style="color:var(--ink)">Server-Logs:</strong> Beim Besuch der Website werden automatisch technische Daten (IP-Adresse, Browsertyp, Datum/Uhrzeit) in Server-Logs gespeichert. Diese werden nach 7 Tagen automatisch gelöscht.

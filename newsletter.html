@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Newsletter – JobInsides</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--accent:#00bfa6;--accent-deep:#009e88;--ink:#0d1b1a;--muted:#66756f;--border:#e6ece9;--bg:#f3f7f6}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+  .card{background:#fff;border:1px solid var(--border);border-radius:28px;padding:3.5rem 2.5rem;
+    max-width:460px;width:100%;text-align:center;box-shadow:0 16px 50px rgba(13,27,26,.10)}
+  .brand{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.3rem;margin-bottom:2rem}
+  .brand span{color:var(--accent)}
+  .emoji{font-size:3.5rem;margin-bottom:1rem;line-height:1}
+  h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.7rem;margin-bottom:.6rem;letter-spacing:-.02em}
+  p{color:var(--muted);line-height:1.6;margin-bottom:1.75rem;font-size:.98rem}
+  a.btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;
+    padding:.9rem 2.2rem;border-radius:99px;font-weight:700;transition:background .2s}
+  a.btn:hover{background:var(--accent-deep)}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">Job<span>Insides</span></div>
+    <div class="emoji" id="emoji">⏳</div>
+    <h1 id="titel">Einen Moment…</h1>
+    <p id="text">Wir verarbeiten deine Anfrage.</p>
+    <a class="btn" href="https://jobinsides.de">Zu JobInsides</a>
+  </div>
+
+<script>
+  const status = new URLSearchParams(location.search).get('status');
+  const inhalte = {
+    bestaetigt: {
+      emoji: '🎉',
+      titel: 'Anmeldung bestätigt!',
+      text: 'Perfekt – du erhältst ab jetzt Benachrichtigungen. Du kannst dich jederzeit mit einem Klick wieder abmelden.'
+    },
+    abgemeldet: {
+      emoji: '👋',
+      titel: 'Erfolgreich abgemeldet',
+      text: 'Du erhältst ab sofort keine Benachrichtigungen mehr. Schade, dass du gehst!'
+    },
+    abgelaufen: {
+      emoji: '⚠️',
+      titel: 'Link abgelaufen',
+      text: 'Dieser Bestätigungslink ist nicht mehr gültig. Melde dich einfach neu an.'
+    },
+    ungueltig: {
+      emoji: '⚠️',
+      titel: 'Ungültiger Link',
+      text: 'Dieser Link ist nicht mehr gültig.'
+    }
+  };
+  const c = inhalte[status] || inhalte.ungueltig;
+  document.getElementById('emoji').textContent = c.emoji;
+  document.getElementById('titel').textContent = c.titel;
+  document.getElementById('text').textContent = c.text;
+  document.title = c.titel + ' – JobInsides';
+</script>
+</body>
+</html>

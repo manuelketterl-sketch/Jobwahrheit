@@ -649,11 +649,11 @@ h1 em { color: var(--accent); font-style: normal; }
 
     <div class="stats-bar">
       <div class="stat">
-        <div class="stat-num">3.500+</div>
+        <div class="stat-num" id="stat-berufe">–</div>
         <div class="stat-label">Berufe gelistet</div>
       </div>
       <div class="stat">
-        <div class="stat-num">0</div>
+        <div class="stat-num" id="stat-bewertungen">–</div>
         <div class="stat-label">Bewertungen bisher</div>
       </div>
       <div class="stat">
@@ -681,19 +681,19 @@ h1 em { color: var(--accent); font-style: normal; }
     </div>
     <div class="beruf-score-row">
       <div class="score-item">
-        <div class="score-big yellow">4.1</div>
+        <div class="score-big yellow" id="score-gesamt">–</div>
         <div class="score-label">Gesamtbewertung</div>
       </div>
       <div class="score-item">
-        <div class="score-big green">72%</div>
+        <div class="score-big green" id="score-empfehlung">–</div>
         <div class="score-label">Würden weiterempfehlen</div>
       </div>
       <div class="score-item">
-        <div class="score-big" style="color:#a78bfa">3.8</div>
+        <div class="score-big" style="color:#a78bfa" id="score-erwartung">–</div>
         <div class="score-label">Versprechen ≈ Realität</div>
       </div>
       <div class="score-item">
-        <div class="score-big green">3.200€</div>
+        <div class="score-big green" id="score-gehalt">–</div>
         <div class="score-label">Ø Bruttogehalt</div>
       </div>
     </div>
@@ -712,28 +712,23 @@ h1 em { color: var(--accent); font-style: normal; }
 
       <!-- TAB: Bewertungen -->
       <div id="tab-bewertungen">
-        <div class="rating-overview fade-in">
+        <div class="rating-overview fade-in" id="rating-overview">
           <div class="sec-title">Bewertungsübersicht</div>
           <div class="rating-bars">
             <div class="rbar-row">
               <span class="rbar-label">Erwartung eingehalten</span>
-              <div class="rbar-track"><div class="rbar-fill" style="width:72%"></div></div>
-              <span class="rbar-val">3.6</span>
+              <div class="rbar-track"><div class="rbar-fill" id="bar-erwartung" style="width:0%"></div></div>
+              <span class="rbar-val" id="val-erwartung">–</span>
             </div>
             <div class="rbar-row">
-              <span class="rbar-label">Alltag = Stellenbeschreibung</span>
-              <div class="rbar-track"><div class="rbar-fill" style="width:58%"></div></div>
-              <span class="rbar-val">2.9</span>
-            </div>
-            <div class="rbar-row">
-              <span class="rbar-label">Work-Life-Balance</span>
-              <div class="rbar-track"><div class="rbar-fill" style="width:66%"></div></div>
-              <span class="rbar-val">3.3</span>
+              <span class="rbar-label">Gesamtbewertung</span>
+              <div class="rbar-track"><div class="rbar-fill" id="bar-gesamt" style="width:0%"></div></div>
+              <span class="rbar-val" id="val-gesamt">–</span>
             </div>
             <div class="rbar-row">
               <span class="rbar-label">Weiterempfehlung</span>
-              <div class="rbar-track"><div class="rbar-fill" style="width:72%"></div></div>
-              <span class="rbar-val">72%</span>
+              <div class="rbar-track"><div class="rbar-fill" id="bar-empfehlung" style="width:0%"></div></div>
+              <span class="rbar-val" id="val-empfehlung">–</span>
             </div>
           </div>
         </div>
@@ -748,22 +743,22 @@ h1 em { color: var(--accent); font-style: normal; }
       <!-- TAB: Gehalt -->
       <div id="tab-gehalt" style="display:none">
         <div class="sec-title">Gehaltsübersicht</div>
-        <div class="rating-overview">
+        <div class="rating-overview" id="gehalt-box">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;text-align:center;margin-bottom:1.5rem">
             <div>
-              <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:1.8rem;font-weight:900;color:var(--muted)">2.400€</div>
-              <div style="font-size:.75rem;color:var(--muted)">Einstieg</div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:1.8rem;font-weight:900;color:var(--muted)" id="gehalt-min">–</div>
+              <div style="font-size:.75rem;color:var(--muted)">Niedrigste Angabe</div>
             </div>
             <div>
-              <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:1.8rem;font-weight:900;color:var(--green)">3.200€</div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:1.8rem;font-weight:900;color:var(--green)" id="gehalt-median">–</div>
               <div style="font-size:.75rem;color:var(--muted)">Median</div>
             </div>
             <div>
-              <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:1.8rem;font-weight:900;color:var(--ink)">4.500€</div>
-              <div style="font-size:.75rem;color:var(--muted)">Mit Meister</div>
+              <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:1.8rem;font-weight:900;color:var(--ink)" id="gehalt-max">–</div>
+              <div style="font-size:.75rem;color:var(--muted)">Höchste Angabe</div>
             </div>
           </div>
-          <div style="font-size:.82rem;color:var(--muted);text-align:center">Basierend auf 24 anonymen Angaben · Stand April 2025</div>
+          <div style="font-size:.82rem;color:var(--muted);text-align:center" id="gehalt-basis">Noch keine Gehaltsangaben vorhanden.</div>
         </div>
       </div>
 
@@ -772,17 +767,8 @@ h1 em { color: var(--accent); font-style: normal; }
         <div class="sec-title">Skills die im Job wirklich gefragt sind</div>
         <div class="rating-overview">
           <p style="font-size:.85rem;color:var(--muted);margin-bottom:1rem">Aus echten Bewertungen extrahiert – je größer, desto häufiger genannt.</p>
-          <div class="skill-cloud">
-            <span class="skill-bubble big">Technisches Verständnis</span>
-            <span class="skill-bubble big">Problemlösung</span>
-            <span class="skill-bubble med">Körperliche Ausdauer</span>
-            <span class="skill-bubble med">Selbstorganisation</span>
-            <span class="skill-bubble med">Teamarbeit</span>
-            <span class="skill-bubble">Stressresistenz</span>
-            <span class="skill-bubble">Dokumentation</span>
-            <span class="skill-bubble">Kundenumgang</span>
-            <span class="skill-bubble">Lernbereitschaft</span>
-            <span class="skill-bubble">Geduld</span>
+          <div class="skill-cloud" id="skill-cloud">
+            <span style="font-size:.88rem;color:var(--muted)">Noch keine Skills genannt.</span>
           </div>
         </div>
       </div>
@@ -813,26 +799,26 @@ h1 em { color: var(--accent); font-style: normal; }
 
       <!-- TAB: Stellen -->
       <div id="tab-stellen" style="display:none">
-        <div class="sec-title">Offene Stellen als Elektroniker/in</div>
-        <p style="font-size:.82rem;color:var(--muted);margin-bottom:1.25rem">Stellen aus der Jobbörse der Bundesagentur für Arbeit</p>
-        <div class="stellenanzeige">
-          <div class="sa-badge">NEU</div>
-          <div class="sa-company">Mustermann Elektro GmbH</div>
-          <div class="sa-title">Elektroniker/in für Energie- und Gebäudetechnik (m/w/d)</div>
-          <div class="sa-detail">📍 München · 💰 3.000–3.500 € · Vollzeit</div>
+        <div class="sec-title">Offene Stellen</div>
+        <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">Stellenangebote aus der Jobbörse der Bundesagentur für Arbeit</p>
+
+        <div style="display:flex;gap:.5rem;margin-bottom:1.25rem;flex-wrap:wrap">
+          <input type="text" id="job-plz" class="form-input" placeholder="PLZ (optional)"
+            inputmode="numeric" maxlength="5" style="flex:1;min-width:120px;padding:.65rem .9rem;font-size:.9rem"
+            onkeydown="if(event.key==='Enter')ladeStellen()">
+          <select id="job-umkreis" class="form-select" style="flex:1;min-width:110px;padding:.65rem .9rem;font-size:.9rem">
+            <option value="25">25 km</option>
+            <option value="50" selected>50 km</option>
+            <option value="100">100 km</option>
+            <option value="200">200 km</option>
+          </select>
+          <button onclick="ladeStellen()" style="background:var(--accent);color:#fff;border:none;padding:.65rem 1.4rem;border-radius:99px;font-weight:700;font-size:.88rem;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif">Filtern</button>
         </div>
-        <div class="stellenanzeige">
-          <div class="sa-company">Stadtwerke Beispielstadt</div>
-          <div class="sa-title">Servicetechniker Elektro (m/w/d)</div>
-          <div class="sa-detail">📍 Hamburg · 💰 3.200 € + Zulagen · Vollzeit</div>
-        </div>
-        <div class="stellenanzeige">
-          <div class="sa-company">TechBau AG</div>
-          <div class="sa-title">Elektriker für Industrieanlagen</div>
-          <div class="sa-detail">📍 Stuttgart · 💰 3.400–4.000 € · Vollzeit</div>
-        </div>
-        <div style="text-align:center;margin-top:1rem">
-          <button onclick="showPage('arbeitgeber')" style="background:none;border:1px solid var(--border);border-radius:8px;padding:.6rem 1.5rem;cursor:pointer;font-size:.85rem;color:var(--muted)">Stelle schalten → Jetzt Arbeitgeber werden</button>
+
+        <div id="stellen-liste"></div>
+
+        <div style="text-align:center;margin-top:1.25rem">
+          <button onclick="showPage('arbeitgeber')" style="background:none;border:1px solid var(--border);border-radius:99px;padding:.6rem 1.5rem;cursor:pointer;font-size:.85rem;color:var(--muted)">Stelle schalten → Jetzt Arbeitgeber werden</button>
         </div>
       </div>
 
@@ -853,37 +839,20 @@ h1 em { color: var(--accent); font-style: normal; }
         <div id="spezi-list"></div>
       </div>
 
-      <div class="widget">
+      <div class="widget" id="similar-widget" style="display:none">
         <div class="widget-title">Ähnliche Berufe</div>
-        <div id="similar-jobs-list">
-        <div class="similar-job" onclick="showBeruf('Mechatroniker/in',100,'')">
-          <span class="sj-name">Mechatroniker/in</span>
-          <span class="sj-match">92% Match</span>
-        </div>
-        <div class="similar-job" onclick="showBeruf('Elektrotechniker/in',100,'')">
-          <span class="sj-name">Elektrotechniker/in</span>
-          <span class="sj-match">87% Match</span>
-        </div>
-        <div class="similar-job">
-          <span class="sj-name">Anlagenmechaniker/in</span>
-          <span class="sj-match">74% Match</span>
-        </div>
-        <div class="similar-job">
-          <span class="sj-name">Industrieelektriker/in</span>
-          <span class="sj-match">68% Match</span>
-        </div>
-        </div>
+        <div id="similar-jobs-list"></div>
       </div>
 
-      <div class="widget">
+      <div class="widget" id="gehalt-widget" style="display:none">
         <div class="widget-title">💰 Gehalt</div>
         <div class="gehalt-range">
-          <span>2.400 €</span><span>4.500 €</span>
+          <span id="w-gehalt-min">–</span><span id="w-gehalt-max">–</span>
         </div>
         <div class="gehalt-bar">
-          <div class="gehalt-fill" style="left:20%;width:50%"></div>
+          <div class="gehalt-fill" id="w-gehalt-fill" style="left:0%;width:0%"></div>
         </div>
-        <div class="gehalt-median">3.200 €</div>
+        <div class="gehalt-median" id="w-gehalt-median">–</div>
         <div class="gehalt-label">Ø Bruttogehalt / Monat</div>
       </div>
 
@@ -1021,30 +990,18 @@ h1 em { color: var(--accent); font-style: normal; }
   <div class="vergleich-page">
     <h2>Berufe vergleichen</h2>
     <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap">
-      <input class="search-input" style="max-width:280px" type="text" value="Elektroniker/in" placeholder="Beruf 1">
-      <input class="search-input" style="max-width:280px" type="text" value="Mechatroniker/in" placeholder="Beruf 2">
-      <button class="search-btn" style="position:static;transform:none">Vergleichen</button>
+      <input id="v-input-1" class="search-input" style="max-width:280px" type="text" placeholder="Beruf 1 eingeben">
+      <input id="v-input-2" class="search-input" style="max-width:280px" type="text" placeholder="Beruf 2 eingeben">
+      <button class="search-btn" style="position:static;transform:none" onclick="vergleicheBerufe()">Vergleichen</button>
     </div>
-    <div class="vergleich-grid">
-      <div class="v-card">
-        <h3>Elektroniker/in</h3>
-        <div class="v-row"><span class="v-label">Gesamtbewertung</span><span class="v-val">4.1 / 5 ★</span></div>
-        <div class="v-row"><span class="v-label">Ø Gehalt</span><span class="v-val good">3.200 €</span></div>
-        <div class="v-row"><span class="v-label">Weiterempfehlung</span><span class="v-val good">72%</span></div>
-        <div class="v-row"><span class="v-label">Versprechen ≈ Realität</span><span class="v-val mid">3.8 / 5</span></div>
-        <div class="v-row"><span class="v-label">Work-Life-Balance</span><span class="v-val mid">3.3 / 5</span></div>
-        <div class="v-row"><span class="v-label">Ausbildungsdauer</span><span class="v-val">3,5 Jahre</span></div>
-        <div class="v-row"><span class="v-label">Bewertungen</span><span class="v-val">24</span></div>
+    <div class="vergleich-grid" id="vergleich-grid">
+      <div class="v-card" id="v-card-1">
+        <h3 style="color:var(--muted)">Beruf 1</h3>
+        <p style="font-size:.88rem;color:var(--muted)">Gib oben einen Beruf ein.</p>
       </div>
-      <div class="v-card">
-        <h3>Mechatroniker/in</h3>
-        <div class="v-row"><span class="v-label">Gesamtbewertung</span><span class="v-val">4.3 / 5 ★</span></div>
-        <div class="v-row"><span class="v-label">Ø Gehalt</span><span class="v-val good">3.500 €</span></div>
-        <div class="v-row"><span class="v-label">Weiterempfehlung</span><span class="v-val good">81%</span></div>
-        <div class="v-row"><span class="v-label">Versprechen ≈ Realität</span><span class="v-val good">4.1 / 5</span></div>
-        <div class="v-row"><span class="v-label">Work-Life-Balance</span><span class="v-val good">3.7 / 5</span></div>
-        <div class="v-row"><span class="v-label">Ausbildungsdauer</span><span class="v-val">3,5 Jahre</span></div>
-        <div class="v-row"><span class="v-label">Bewertungen</span><span class="v-val">31</span></div>
+      <div class="v-card" id="v-card-2">
+        <h3 style="color:var(--muted)">Beruf 2</h3>
+        <p style="font-size:.88rem;color:var(--muted)">Gib oben einen zweiten Beruf ein.</p>
       </div>
     </div>
   </div>
@@ -1174,28 +1131,121 @@ async function loadBewertungen(berufName) {
         <button onclick="showPage('bewerten')" style="background:var(--ink);color:#fff;border:none;padding:.6rem 1.4rem;border-radius:8px;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;cursor:pointer">Jetzt bewerten →</button>
       </div>`;
     if (counter) counter.textContent = '(0)';
+    resetStatistiken();
     return;
   }
 
   if (counter) counter.textContent = `(${data.length})`;
+  updateStatistiken(data);
+  container.innerHTML = data.map(b => renderBewertung(b)).join('');
+}
 
-  // Rating-Bars aktualisieren
-  const avgGesamt = (data.reduce((s,b) => s + (b.bewertung_gesamt||0), 0) / data.length).toFixed(1);
-  const avgErwartung = (data.reduce((s,b) => s + (b.bewertung_erwartung||0), 0) / data.length).toFixed(1);
-  const empfRate = Math.round(data.filter(b => b.weiterempfehlung).length / data.length * 100);
+// ════════════════════════════════════════
+// STATISTIKEN – nur echte Werte, keine Platzhalter
+// ════════════════════════════════════════
+function setText(id, wert) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = wert;
+}
 
-  // Header-Scores aktualisieren
-  document.querySelector('.score-big.yellow').textContent = avgGesamt;
-  document.querySelector('.score-big.green').textContent = empfRate + '%';
+function resetStatistiken() {
+  ['score-gesamt','score-empfehlung','score-erwartung','score-gehalt'].forEach(id => setText(id, '–'));
+  ['val-erwartung','val-gesamt','val-empfehlung'].forEach(id => setText(id, '–'));
+  ['bar-erwartung','bar-gesamt','bar-empfehlung'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.width = '0%';
+  });
+  setText('gehalt-min','–'); setText('gehalt-median','–'); setText('gehalt-max','–');
+  setText('gehalt-basis','Noch keine Gehaltsangaben vorhanden.');
+  const gw = document.getElementById('gehalt-widget'); if (gw) gw.style.display = 'none';
+  const sc = document.getElementById('skill-cloud');
+  if (sc) sc.innerHTML = '<span style="font-size:.88rem;color:var(--muted)">Noch keine Skills genannt.</span>';
+}
 
-  // Gehalt berechnen
-  const mitGehalt = data.filter(b => b.gehalt_brutto > 0);
-  if (mitGehalt.length) {
-    const avgGehalt = Math.round(mitGehalt.reduce((s,b) => s + b.gehalt_brutto, 0) / mitGehalt.length);
-    document.querySelectorAll('.score-big')[3].textContent = avgGehalt.toLocaleString('de') + '€';
+function updateStatistiken(data) {
+  const n = data.length;
+
+  // ── Gesamtbewertung ──
+  const avgGesamt = data.reduce((s,b) => s + (b.bewertung_gesamt||0), 0) / n;
+  setText('score-gesamt', avgGesamt.toFixed(1));
+  setText('val-gesamt', avgGesamt.toFixed(1));
+  const bg = document.getElementById('bar-gesamt');
+  if (bg) bg.style.width = (avgGesamt / 5 * 100) + '%';
+
+  // ── Weiterempfehlung ──
+  const empfRate = Math.round(data.filter(b => b.weiterempfehlung).length / n * 100);
+  setText('score-empfehlung', empfRate + '%');
+  setText('val-empfehlung', empfRate + '%');
+  const be = document.getElementById('bar-empfehlung');
+  if (be) be.style.width = empfRate + '%';
+
+  // ── Erwartung (nur Bewertungen die das angegeben haben) ──
+  const mitErwartung = data.filter(b => b.bewertung_erwartung > 0);
+  if (mitErwartung.length) {
+    const avgErw = mitErwartung.reduce((s,b) => s + b.bewertung_erwartung, 0) / mitErwartung.length;
+    setText('score-erwartung', avgErw.toFixed(1));
+    setText('val-erwartung', avgErw.toFixed(1));
+    const bar = document.getElementById('bar-erwartung');
+    if (bar) bar.style.width = (avgErw / 5 * 100) + '%';
+  } else {
+    setText('score-erwartung', '–');
+    setText('val-erwartung', '–');
+    const bar = document.getElementById('bar-erwartung');
+    if (bar) bar.style.width = '0%';
   }
 
-  container.innerHTML = data.map(b => renderBewertung(b)).join('');
+  // ── Gehalt ──
+  const gehaelter = data.filter(b => b.gehalt_brutto > 0).map(b => b.gehalt_brutto).sort((a,b) => a-b);
+  const gw = document.getElementById('gehalt-widget');
+  if (gehaelter.length) {
+    const min = gehaelter[0];
+    const max = gehaelter[gehaelter.length - 1];
+    const mid = Math.floor(gehaelter.length / 2);
+    const median = gehaelter.length % 2 ? gehaelter[mid] : Math.round((gehaelter[mid-1] + gehaelter[mid]) / 2);
+    const fmt = v => v.toLocaleString('de') + ' €';
+
+    setText('score-gehalt', median.toLocaleString('de') + '€');
+    setText('gehalt-min', fmt(min));
+    setText('gehalt-median', fmt(median));
+    setText('gehalt-max', fmt(max));
+    setText('gehalt-basis', `Basierend auf ${gehaelter.length} anonyme${gehaelter.length === 1 ? 'r Angabe' : 'n Angaben'}`);
+
+    // Sidebar-Widget
+    setText('w-gehalt-min', fmt(min));
+    setText('w-gehalt-max', fmt(max));
+    setText('w-gehalt-median', fmt(median));
+    const fill = document.getElementById('w-gehalt-fill');
+    if (fill) {
+      const spanne = max - min;
+      const pos = spanne > 0 ? ((median - min) / spanne) * 100 : 50;
+      fill.style.left = Math.max(0, pos - 15) + '%';
+      fill.style.width = '30%';
+    }
+    if (gw) gw.style.display = 'block';
+  } else {
+    setText('score-gehalt', '–');
+    setText('gehalt-min','–'); setText('gehalt-median','–'); setText('gehalt-max','–');
+    setText('gehalt-basis', 'Noch keine Gehaltsangaben vorhanden.');
+    if (gw) gw.style.display = 'none';
+  }
+
+  // ── Skills-Wolke: Häufigkeit bestimmt Größe ──
+  const sc = document.getElementById('skill-cloud');
+  if (sc) {
+    const zaehler = {};
+    data.forEach(b => (b.skills || []).forEach(s => { zaehler[s] = (zaehler[s] || 0) + 1; }));
+    const sortiert = Object.entries(zaehler).sort((a,b) => b[1] - a[1]).slice(0, 20);
+
+    if (!sortiert.length) {
+      sc.innerHTML = '<span style="font-size:.88rem;color:var(--muted)">Noch keine Skills genannt.</span>';
+    } else {
+      const maxAnzahl = sortiert[0][1];
+      sc.innerHTML = sortiert.map(([skill, anzahl]) => {
+        const anteil = anzahl / maxAnzahl;
+        const klasse = anteil > 0.66 ? 'big' : anteil > 0.33 ? 'med' : '';
+        return `<span class="skill-bubble ${klasse}" title="${anzahl}× genannt">${escHtml(skill)}</span>`;
+      }).join('');
+    }
+  }
 }
 
 function renderBewertung(b) {
@@ -1605,13 +1655,158 @@ async function meldenBewertung(id) {
 }
 
 // ════════════════════════════════════════
+// STELLENANGEBOTE (Jobbörse der Bundesagentur)
+// ════════════════════════════════════════
+let stellenGeladenFuer = null;
+
+async function ladeStellen(force) {
+  const liste = document.getElementById('stellen-liste');
+  if (!liste || !currentBeruf) return;
+
+  const plz = document.getElementById('job-plz')?.value?.trim() || '';
+  const umkreis = parseInt(document.getElementById('job-umkreis')?.value) || 50;
+  const schluessel = currentBeruf.name + '|' + plz + '|' + umkreis;
+
+  // Nicht unnötig neu laden
+  if (!force && stellenGeladenFuer === schluessel) return;
+  stellenGeladenFuer = schluessel;
+
+  if (plz && !/^\d{5}$/.test(plz)) {
+    liste.innerHTML = `<div style="color:#e8552d;font-size:.88rem;padding:1rem 0">Bitte gib eine gültige 5-stellige Postleitzahl ein (oder lass das Feld leer).</div>`;
+    return;
+  }
+
+  liste.innerHTML = `<div style="color:var(--muted);font-size:.9rem;padding:1rem 0"><span class="search-spinner"></span> Suche Stellenangebote…</div>`;
+
+  let result;
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/jobs', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        beruf: currentBeruf.name,
+        plz: plz || null,
+        umkreis,
+        size: 12
+      })
+    });
+    result = await res.json();
+  } catch {
+    result = { ok: false, error: 'Netzwerkfehler' };
+  }
+
+  if (!result.ok) {
+    liste.innerHTML = `<div style="border:2px dashed var(--border);border-radius:16px;padding:2rem;text-align:center">
+      <div style="font-size:1.6rem;margin-bottom:.5rem">⚠️</div>
+      <div style="font-weight:700;margin-bottom:.25rem">Stellen konnten nicht geladen werden</div>
+      <div style="font-size:.85rem;color:var(--muted)">Bitte versuch es später nochmal.</div>
+    </div>`;
+    return;
+  }
+
+  const stellen = result.stellen || [];
+  if (!stellen.length) {
+    liste.innerHTML = `<div style="border:2px dashed var(--border);border-radius:16px;padding:2rem;text-align:center">
+      <div style="font-size:1.6rem;margin-bottom:.5rem">🔎</div>
+      <div style="font-weight:700;margin-bottom:.25rem">Aktuell keine Stellen gefunden</div>
+      <div style="font-size:.85rem;color:var(--muted)">${plz ? 'Versuch es mit einem größeren Umkreis oder ohne PLZ.' : 'Für diesen Beruf sind derzeit keine Angebote ausgeschrieben.'}</div>
+    </div>`;
+    return;
+  }
+
+  const kopf = `<div style="font-size:.82rem;color:var(--muted);margin-bottom:.75rem">${result.gesamt > stellen.length
+    ? `${stellen.length} von ${result.gesamt.toLocaleString('de')} Angeboten`
+    : `${stellen.length} Angebot${stellen.length === 1 ? '' : 'e'}`}${plz ? ` · im Umkreis von ${umkreis} km um ${escHtml(plz)}` : ' · bundesweit'}</div>`;
+
+  liste.innerHTML = kopf + stellen.map(s => {
+    const ort = [s.plz, s.ort].filter(Boolean).join(' ');
+    const details = [
+      ort ? '📍 ' + escHtml(ort) : null,
+      s.entfernung != null ? `${s.entfernung} km entfernt` : null,
+      s.eintrittsdatum ? 'ab ' + new Date(s.eintrittsdatum).toLocaleDateString('de-DE', { month: '2-digit', year: 'numeric' }) : null
+    ].filter(Boolean).join(' · ');
+
+    const neu = s.veroeffentlicht && (Date.now() - new Date(s.veroeffentlicht).getTime()) < 7 * 864e5;
+
+    return `<div class="stellenanzeige" ${s.url ? `onclick="window.open('${s.url}','_blank','noopener')"` : ''}>
+      ${neu ? '<div class="sa-badge">NEU</div>' : ''}
+      <div class="sa-company">${escHtml(s.arbeitgeber)}</div>
+      <div class="sa-title">${escHtml(s.titel)}</div>
+      ${details ? `<div class="sa-detail">${details}</div>` : ''}
+    </div>`;
+  }).join('') + `<div style="font-size:.72rem;color:var(--muted);text-align:center;margin-top:1rem">Quelle: Jobbörse der Bundesagentur für Arbeit</div>`;
+}
+
+// ════════════════════════════════════════
+// BERUFSVERGLEICH – mit echten Bewertungsdaten
+// ════════════════════════════════════════
+async function berufStatistik(name) {
+  const { data, error } = await sb
+    .from('bewertungen').select('*').ilike('beruf_name', name);
+  if (error || !data?.length) return null;
+
+  const n = data.length;
+  const gesamt = data.reduce((s,b) => s + (b.bewertung_gesamt||0), 0) / n;
+  const empf = Math.round(data.filter(b => b.weiterempfehlung).length / n * 100);
+  const mitErw = data.filter(b => b.bewertung_erwartung > 0);
+  const erwartung = mitErw.length ? mitErw.reduce((s,b) => s + b.bewertung_erwartung, 0) / mitErw.length : null;
+  const geh = data.filter(b => b.gehalt_brutto > 0).map(b => b.gehalt_brutto).sort((a,b) => a-b);
+  const median = geh.length ? (geh.length % 2 ? geh[Math.floor(geh.length/2)]
+    : Math.round((geh[geh.length/2 - 1] + geh[geh.length/2]) / 2)) : null;
+
+  return { n, gesamt, empf, erwartung, median };
+}
+
+function renderVergleichKarte(el, name, stat) {
+  if (!stat) {
+    el.innerHTML = `<h3>${escHtml(name)}</h3>
+      <p style="font-size:.88rem;color:var(--muted)">Für diesen Beruf gibt es noch keine Bewertungen.
+      <span onclick="showPage('bewerten')" style="color:var(--accent-deep);cursor:pointer;font-weight:600">Jetzt bewerten →</span></p>`;
+    return;
+  }
+  const farbe = v => v >= 4 ? 'good' : v >= 3 ? 'mid' : '';
+  el.innerHTML = `<h3>${escHtml(name)}</h3>
+    <div class="v-row"><span class="v-label">Gesamtbewertung</span><span class="v-val ${farbe(stat.gesamt)}">${stat.gesamt.toFixed(1)} / 5 ★</span></div>
+    <div class="v-row"><span class="v-label">Weiterempfehlung</span><span class="v-val ${stat.empf >= 70 ? 'good' : stat.empf >= 50 ? 'mid' : ''}">${stat.empf}%</span></div>
+    <div class="v-row"><span class="v-label">Versprechen ≈ Realität</span><span class="v-val ${stat.erwartung ? farbe(stat.erwartung) : ''}">${stat.erwartung ? stat.erwartung.toFixed(1) + ' / 5' : '–'}</span></div>
+    <div class="v-row"><span class="v-label">Ø Gehalt (Median)</span><span class="v-val good">${stat.median ? stat.median.toLocaleString('de') + ' €' : '–'}</span></div>
+    <div class="v-row"><span class="v-label">Bewertungen</span><span class="v-val">${stat.n}</span></div>`;
+}
+
+async function vergleicheBerufe() {
+  const n1 = document.getElementById('v-input-1')?.value?.trim();
+  const n2 = document.getElementById('v-input-2')?.value?.trim();
+  const c1 = document.getElementById('v-card-1');
+  const c2 = document.getElementById('v-card-2');
+
+  if (!n1 || !n2) {
+    alert('Bitte gib zwei Berufe ein die du vergleichen möchtest.');
+    return;
+  }
+
+  c1.innerHTML = '<p style="color:var(--muted)">Lade…</p>';
+  c2.innerHTML = '<p style="color:var(--muted)">Lade…</p>';
+
+  const [s1, s2] = await Promise.all([berufStatistik(n1), berufStatistik(n2)]);
+  renderVergleichKarte(c1, n1, s1);
+  renderVergleichKarte(c2, n2, s2);
+}
+
+// ════════════════════════════════════════
 // STATISTIKEN HOMEPAGE
 // ════════════════════════════════════════
 async function loadStats() {
-  const { count } = await sb.from('bewertungen').select('*', { count: 'exact', head: true });
-  const el = document.querySelector('.stat-num:nth-child(1)');
-  const countEl = document.querySelectorAll('.stat-num')[1];
-  if (countEl && count !== null) countEl.textContent = count.toLocaleString('de');
+  const [bew, ber] = await Promise.all([
+    sb.from('bewertungen').select('*', { count: 'exact', head: true }),
+    sb.from('berufe').select('*', { count: 'exact', head: true })
+  ]);
+  const bewEl = document.getElementById('stat-bewertungen');
+  const berEl = document.getElementById('stat-berufe');
+  if (bewEl && bew.count !== null) bewEl.textContent = bew.count.toLocaleString('de');
+  if (berEl && ber.count !== null) berEl.textContent = ber.count.toLocaleString('de');
 }
 
 // ════════════════════════════════════════
@@ -1659,14 +1854,19 @@ function showBeruf(name, berufsgruppe, dkzId) {
   // Echte Bewertungen aus Supabase laden
   loadBewertungen(name);
 
+  // Stellen-Cache zurücksetzen (werden beim Tab-Öffnen neu geladen)
+  stellenGeladenFuer = null;
+  const sl = document.getElementById('stellen-liste');
+  if (sl) sl.innerHTML = '';
+
   // Diskussionen laden
   loadDiskussionen(name);
 
   // Spezialisierungen laden (verwandte Berufe mit gleichem Stamm)
   loadSpezialisierungen(name);
 
-  // Ähnliche Berufe laden wenn dkzId vorhanden
-  if (dkzId) loadAehnlicheBerufe(dkzId);
+  // Ähnliche Berufe laden
+  loadAehnlicheBerufe(dkzId);
 }
 
 // ════════════════════════════════════════
@@ -1812,6 +2012,9 @@ function switchTabByName(tabId) {
     const el = document.getElementById(t);
     if (el) el.style.display = t === tabId ? 'block' : 'none';
   });
+
+  // Stellen erst laden wenn der Tab wirklich geöffnet wird
+  if (tabId === 'tab-stellen') ladeStellen();
 }
 
 // ════════════════════════════════════════
@@ -1896,57 +2099,49 @@ function closeSearch() {
 // ÄHNLICHE BERUFE – BERUFENET API
 // ════════════════════════════════════════
 async function loadAehnlicheBerufe(dkzId) {
+  // Ähnliche Berufe aus der eigenen Datenbank:
+  // gleiche Berufsgruppe + ähnlicher Wortstamm
+  const widget = document.getElementById('similar-widget');
   const container = document.getElementById('similar-jobs-list');
-  if (!container) return;
+  if (!widget || !container || !currentBeruf) return;
 
-  container.innerHTML = '<div style="font-size:.8rem;color:var(--muted)">Lade ähnliche Berufe…</div>';
+  const name = currentBeruf.name;
+  const stamm = basisName(name).split(/\s+/)[0];
+  if (!stamm || stamm.length < 4) { widget.style.display = 'none'; return; }
 
   try {
-    // Erst KldbCode holen
-    const r1 = await fetch(`https://rest.arbeitsagentur.de/infosysbub/dkz-rest/pc/v1/berufe/${dkzId}/`, {
-      headers: { 'X-API-Key': BERUFENET_KEY }
-    });
-    const d1 = await r1.json();
-    const kldbCode = d1?.kldbCode;
-    if (!kldbCode) throw new Error('Kein kldbCode');
+    // Wortanfang suchen, aber den aktuellen Beruf ausschließen
+    const { data, error } = await sb
+      .from('berufe')
+      .select('name, berufsgruppe, dkz_id')
+      .ilike('name_lower', '%' + stamm.toLowerCase().slice(0, Math.max(4, stamm.length - 2)) + '%')
+      .limit(30);
 
-    // Dann DkzId holen
-    const r2 = await fetch(`https://rest.arbeitsagentur.de/infosysbub/dkz-rest/pc/v1/berufe?kldb=${kldbCode}`, {
-      headers: { 'X-API-Key': BERUFENET_KEY }
-    });
-    const d2 = await r2.json();
-    const dkzIdFinal = d2?.[0]?.id;
-    if (!dkzIdFinal) throw new Error('Kein dkzId');
+    if (error || !data?.length) { widget.style.display = 'none'; return; }
 
-    // Ähnliche Berufe holen
-    const r3 = await fetch(
-      `https://rest.arbeitsagentur.de/sete/suggest/pc/v1/inspiration/gattungen/${dkzIdFinal}?ausgangsberufDkzId=${dkzId}`,
-      { headers: { 'X-API-Key': BERUFENET_KEY } }
-    );
-    const d3 = await r3.json();
-    const aehnliche = d3?.naheBerufe || d3?.berufe || [];
+    // Duplikate und den aktuellen Beruf entfernen
+    const gesehen = new Set([name]);
+    const treffer = [];
+    for (const b of data) {
+      if (gesehen.has(b.name)) continue;
+      // Spezialisierungen (gleicher Stamm mit Bindestrich) hat schon das andere Widget
+      if (basisName(b.name) === basisName(name)) continue;
+      gesehen.add(b.name);
+      treffer.push(b);
+      if (treffer.length >= 5) break;
+    }
 
-    if (!aehnliche.length) throw new Error('Keine ähnlichen Berufe');
+    if (!treffer.length) { widget.style.display = 'none'; return; }
 
-    container.innerHTML = aehnliche.slice(0, 5).map(b => `
-      <div class="similar-job" onclick="showBeruf('${(b.bezeichnung||b.name||'').replace(/'/g,"\\'")}', '', '')">
-        <span class="sj-name">${b.bezeichnung || b.name}</span>
-        <span class="sj-match">${b.wechselanteil ? Math.round(b.wechselanteil * 100) + '% wechseln' : 'Ähnlich'}</span>
+    container.innerHTML = treffer.map(b =>
+      `<div class="similar-job" onclick="showBeruf('${b.name.replace(/'/g, "\\'")}', '${b.berufsgruppe}', '${b.dkz_id || ''}')">
+        <span class="sj-name">${escHtml(b.name)}</span>
       </div>`
     ).join('');
+    widget.style.display = 'block';
 
-  } catch(e) {
-    // Fallback: statische ähnliche Berufe
-    container.innerHTML = `
-      <div class="similar-job" onclick="showBeruf('Mechatroniker/in', 100, '')">
-        <span class="sj-name">Mechatroniker/in</span><span class="sj-match">92% Match</span>
-      </div>
-      <div class="similar-job" onclick="showBeruf('Elektrotechniker/in', 100, '')">
-        <span class="sj-name">Elektrotechniker/in</span><span class="sj-match">87% Match</span>
-      </div>
-      <div class="similar-job">
-        <span class="sj-name">Anlagenmechaniker/in</span><span class="sj-match">74% Match</span>
-      </div>`;
+  } catch {
+    widget.style.display = 'none';
   }
 }
 
@@ -2102,6 +2297,9 @@ function selectToggle(el, group) {
       <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:.75rem">4. Hosting & Datenbank</h3>
       <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
         Diese Website wird gehostet bei <strong style="color:var(--ink)">Netlify Inc.</strong> (USA). Die Datenbank wird betrieben von <strong style="color:var(--ink)">Supabase Inc.</strong> auf Servern im Vereinigten Königreich (London); für das Vereinigte Königreich besteht ein Angemessenheitsbeschluss der EU-Kommission. Mit beiden Anbietern besteht ein Auftragsverarbeitungsvertrag gemäß Art. 28 DSGVO.
+      </p>
+      <p style="font-size:.9rem;line-height:1.7;color:var(--muted);margin-top:1rem">
+        <strong style="color:var(--ink)">Berufs- und Stellendaten:</strong> Die Berufsbezeichnungen stammen aus BERUFENET, die angezeigten Stellenangebote aus der Jobbörse der <strong style="color:var(--ink)">Bundesagentur für Arbeit</strong>. Die Abfrage der Stellenangebote erfolgt serverseitig über unsere eigene Infrastruktur – deine IP-Adresse wird dabei nicht an die Bundesagentur übermittelt. Eingegebene Postleitzahlen werden ausschließlich für die Suchanfrage verwendet und nicht gespeichert.
       </p>
     </div>
 

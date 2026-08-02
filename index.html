@@ -1110,9 +1110,24 @@ h1 em { color: var(--accent); font-style: normal; }
       </label>
 
       <label style="display:flex;align-items:flex-start;gap:.6rem;font-size:.88rem;margin-bottom:.9rem;cursor:pointer">
-        <input type="checkbox" id="nl-stellen" style="margin-top:.2rem;accent-color:var(--accent)">
+        <input type="checkbox" id="nl-stellen" style="margin-top:.2rem;accent-color:var(--accent)" onchange="toggleStellenFelder()">
         <span>Neue <strong>Stellenangebote</strong> für <span class="nl-beruf-name">diesen Beruf</span></span>
       </label>
+
+      <!-- Regionsfilter: nur sichtbar wenn Stellen abonniert werden -->
+      <div id="nl-region-felder" style="display:none;background:#fff;border:1px solid var(--border);border-radius:12px;padding:.9rem;margin-bottom:.9rem">
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:.6rem">📍 Wo suchst du?</div>
+        <div style="display:flex;gap:.5rem">
+          <input type="text" id="nl-plz" class="form-input" placeholder="PLZ, z.B. 94374"
+            inputmode="numeric" maxlength="5" style="flex:1;padding:.6rem .8rem;font-size:.9rem">
+          <select id="nl-umkreis" class="form-select" style="flex:1;padding:.6rem .8rem;font-size:.9rem">
+            <option value="25">25 km</option>
+            <option value="50" selected>50 km</option>
+            <option value="100">100 km</option>
+            <option value="200">200 km</option>
+          </select>
+        </div>
+      </div>
 
       <input type="email" id="nl-email" class="form-input" placeholder="deine@email.de" style="margin-bottom:.5rem">
       <p style="font-size:.72rem;color:var(--muted);line-height:1.5">Du erhältst eine kurze Bestätigungs-Mail. Deine E-Mail wird <strong>nicht</strong> mit deiner Bewertung verknüpft. Abmeldung jederzeit mit einem Klick.</p>
@@ -1303,13 +1318,25 @@ function closeModalToBeruf() {
   // Felder zurücksetzen
   const fb = document.getElementById('nl-feedback');
   if (fb) { fb.style.display = 'none'; }
+  ['nl-bewertungen','nl-stellen'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = false; });
+  ['nl-email','nl-plz'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  toggleStellenFelder();
   showPage('beruf');
+}
+
+// Blendet die Regionsfelder ein/aus je nach Stellen-Häkchen
+function toggleStellenFelder() {
+  const box = document.getElementById('nl-region-felder');
+  const checked = document.getElementById('nl-stellen')?.checked;
+  if (box) box.style.display = checked ? 'block' : 'none';
 }
 
 async function submitNewsletter() {
   const email = document.getElementById('nl-email')?.value?.trim();
   const aboBewertungen = document.getElementById('nl-bewertungen')?.checked || false;
   const aboStellen = document.getElementById('nl-stellen')?.checked || false;
+  const plz = document.getElementById('nl-plz')?.value?.trim() || null;
+  const umkreis = parseInt(document.getElementById('nl-umkreis')?.value) || 50;
   const fb = document.getElementById('nl-feedback');
 
   function feedback(msg, ok) {
@@ -1321,6 +1348,11 @@ async function submitNewsletter() {
 
   if (!aboBewertungen && !aboStellen) {
     feedback('Bitte wähle mindestens eine Benachrichtigung aus.', false);
+    return;
+  }
+  if (aboStellen && (!plz || !/^\d{5}$/.test(plz))) {
+    feedback('Bitte gib eine gültige 5-stellige Postleitzahl ein.', false);
+    document.getElementById('nl-plz')?.focus();
     return;
   }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -1343,7 +1375,9 @@ async function submitNewsletter() {
         email: email.toLowerCase(),
         beruf_name: window._nlBeruf || 'Allgemein',
         abo_bewertungen: aboBewertungen,
-        abo_stellen: aboStellen
+        abo_stellen: aboStellen,
+        plz: aboStellen ? plz : null,
+        umkreis_km: aboStellen ? umkreis : null
       })
     });
     result = await res.json();

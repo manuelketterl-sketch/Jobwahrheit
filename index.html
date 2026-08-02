@@ -1951,29 +1951,28 @@ function handleFormBerufSearch(wert) {
   // Kurze Verzögerung damit nicht bei jedem Tastendruck gesucht wird
   formBerufTimer = setTimeout(async () => {
     try {
-      const { data, error } = await sb
-        .from('berufe')
-        .select('name, berufsgruppe')
-        .ilike('name_lower', `%${suchbegriff.toLowerCase()}%`)
-        .limit(8);
+      const q = suchbegriff.toLowerCase();
+      const varianten = erweitereSuchbegriff(q);
 
-      if (error || !data || !data.length) {
+      const abfragen = [];
+      for (const v of varianten) {
+        abfragen.push(sb.from('berufe').select('name, berufsgruppe').ilike('name_lower', `${v}%`).limit(12));
+        abfragen.push(sb.from('berufe').select('name, berufsgruppe').ilike('name_lower', `%${v}%`).limit(20));
+      }
+
+      const ergebnisse = await Promise.all(abfragen);
+      const zusammen = ergebnisse.flatMap(r => r.data || []);
+      const treffer = sortiereNachRelevanz(entdupliziere(zusammen), q, varianten).slice(0, 8);
+
+      if (!treffer.length) {
         dd.innerHTML = `<div class="search-item" style="color:var(--muted)">Kein Treffer – du kannst den Beruf trotzdem frei eintragen</div>`;
         dd.classList.add('open');
         return;
       }
 
-      // Duplikate nach Name entfernen
-      const gesehen = new Set();
-      const eindeutig = data.filter(b => {
-        if (gesehen.has(b.name)) return false;
-        gesehen.add(b.name);
-        return true;
-      });
-
-      dd.innerHTML = eindeutig.map(b =>
+      dd.innerHTML = treffer.map(b =>
         `<div class="search-item" onmousedown="selectFormBeruf('${b.name.replace(/'/g,"\\'")}')">
-          <span>${b.name}</span><span class="tag">${b.berufsgruppe}</span>
+          <span>${escHtml(b.name)}</span><span class="tag">${escHtml(b.berufsgruppe)}</span>
         </div>`
       ).join('');
       dd.classList.add('open');
@@ -2033,6 +2032,199 @@ async function handleSearch(val) {
   searchTimeout = setTimeout(() => fetchBerufe(val), 300);
 }
 
+// ════════════════════════════════════════
+// UMGANGSSPRACHE → OFFIZIELLE BERUFSBEZEICHNUNG
+// Menschen suchen wie sie sprechen ("KFZler"), nicht wie
+// BERUFENET schreibt ("Kraftfahrzeugmechatroniker/in").
+// Diese Liste übersetzt beim Suchen – einfach erweiterbar.
+// ════════════════════════════════════════
+const SYNONYME = {
+  // Fahrzeug & Technik
+  'kfz': ['kraftfahrzeug'],
+  'kfzler': ['kraftfahrzeug'],
+  'automechaniker': ['kraftfahrzeugmechatroniker'],
+  'autoschlosser': ['kraftfahrzeugmechatroniker'],
+  'automechatroniker': ['kraftfahrzeugmechatroniker'],
+  'schrauber': ['kraftfahrzeugmechatroniker'],
+  'lkw fahrer': ['berufskraftfahrer'],
+  'lkwfahrer': ['berufskraftfahrer'],
+  'trucker': ['berufskraftfahrer'],
+  'busfahrer': ['berufskraftfahrer'],
+  'zugführer': ['triebfahrzeugführer'],
+  'lokführer': ['triebfahrzeugführer'],
+  'pilot': ['luftfahrzeugführer', 'pilot'],
+
+  // IT & Büro
+  'it': ['informationstechnik', 'informatik'],
+  'itler': ['informatik', 'informationstechnik'],
+  'programmierer': ['fachinformatiker', 'informatik', 'softwareentwickl'],
+  'entwickler': ['fachinformatiker', 'softwareentwickl'],
+  'softwareentwickler': ['fachinformatiker', 'softwareentwickl'],
+  'informatiker': ['informatik', 'fachinformatiker'],
+  'admin': ['systemadministrator', 'fachinformatiker'],
+  'sekretärin': ['büromanagement', 'sekretär'],
+  'sekretär': ['büromanagement', 'sekretär'],
+  'bürokaufmann': ['büromanagement'],
+  'bürokauffrau': ['büromanagement'],
+  'bürokraft': ['büromanagement'],
+  'buchhalter': ['buchhaltung', 'finanzbuchhalter'],
+  'sachbearbeiter': ['sachbearbeit'],
+
+  // Gesundheit & Pflege
+  'krankenschwester': ['pflegefachfrau', 'pflegefach', 'gesundheits- und krankenpfleg'],
+  'krankenpfleger': ['pflegefachmann', 'pflegefach', 'gesundheits- und krankenpfleg'],
+  'pfleger': ['pflegefach', 'altenpfleg'],
+  'pflegerin': ['pflegefach', 'altenpfleg'],
+  'altenpfleger': ['altenpfleg', 'pflegefach'],
+  'arzthelferin': ['medizinische fachangestellte', 'medizinisch'],
+  'sprechstundenhilfe': ['medizinische fachangestellte'],
+  'zahnarzthelferin': ['zahnmedizinische fachangestellte'],
+  'apothekenhelferin': ['pharmazeutisch-kaufmännische'],
+  'hebamme': ['hebamme', 'entbindungspfleger'],
+  'sanitäter': ['rettungssanitäter', 'notfallsanitäter'],
+  'physio': ['physiotherapeut'],
+
+  // Handwerk & Bau
+  'elektriker': ['elektroniker', 'elektro'],
+  'elektro': ['elektroniker'],
+  'installateur': ['anlagenmechaniker'],
+  'klempner': ['anlagenmechaniker', 'klempner'],
+  'heizungsbauer': ['anlagenmechaniker'],
+  'sanitär': ['anlagenmechaniker'],
+  'schreiner': ['tischler', 'schreiner'],
+  'maurer': ['maurer'],
+  'zimmermann': ['zimmerer'],
+  'dachdecker': ['dachdecker'],
+  'schlosser': ['metallbauer', 'industriemechaniker'],
+  'schweißer': ['schweiß', 'metallbauer'],
+  'gärtner': ['gärtner', 'garten- und landschaftsbau'],
+  'landschaftsgärtner': ['garten- und landschaftsbau'],
+
+  // Handel & Gastro
+  'verkäufer': ['verkäufer', 'kaufmann im einzelhandel'],
+  'verkäuferin': ['verkäufer', 'kauffrau im einzelhandel'],
+  'kassiererin': ['verkäufer', 'einzelhandel'],
+  'einzelhandelskaufmann': ['einzelhandel'],
+  'koch': ['koch', 'köchin'],
+  'kellner': ['restaurantfachmann', 'fachkraft für gastronomie'],
+  'kellnerin': ['restaurantfachfrau', 'fachkraft für gastronomie'],
+  'bäcker': ['bäcker'],
+  'metzger': ['fleischer', 'metzger'],
+  'friseur': ['friseur'],
+  'frisör': ['friseur'],
+
+  // Soziales & Bildung
+  'erzieher': ['erzieher'],
+  'kindergärtnerin': ['erzieher', 'kinderpfleg'],
+  'lehrer': ['lehrer', 'lehramt'],
+  'sozialarbeiter': ['sozialarbeit', 'sozialpädagog'],
+  'sozialpädagoge': ['sozialpädagog', 'sozialarbeit'],
+
+  // Wirtschaft & Recht
+  'anwalt': ['rechtsanwalt', 'jurist'],
+  'rechtsanwaltsgehilfin': ['rechtsanwaltsfachangestellte'],
+  'steuerberater': ['steuerberater', 'steuerfachangestellte'],
+  'banker': ['bankkaufmann', 'bankkauffrau'],
+  'versicherungsmakler': ['versicherungskaufmann', 'versicherung'],
+  'schadenregulierer': ['schadensregulierer'],
+  'schadensregulierer': ['schadensregulierer'],
+  'personaler': ['personal', 'human resources'],
+  'hr': ['personal', 'human resources'],
+  'controller': ['controlling'],
+  'einkäufer': ['einkauf'],
+
+  // Logistik & Sicherheit
+  'lagerist': ['fachkraft für lagerlogistik', 'fachlagerist'],
+  'lagerarbeiter': ['fachlagerist', 'lagerlogistik'],
+  'staplerfahrer': ['fachlagerist', 'lagerlogistik'],
+  'paketbote': ['zusteller', 'post'],
+  'postbote': ['zusteller', 'post'],
+  'wachmann': ['schutz und sicherheit', 'werkschutz'],
+  'sicherheitsmann': ['schutz und sicherheit'],
+  'polizist': ['polizeivollzugsdienst', 'polizei'],
+  'feuerwehrmann': ['brandmeister', 'feuerwehr'],
+  'soldat': ['soldat', 'bundeswehr'],
+
+  // Medien & Design
+  'grafiker': ['mediengestalter', 'grafikdesign'],
+  'grafikdesigner': ['grafikdesign', 'mediengestalter'],
+  'fotograf': ['fotograf'],
+  'journalist': ['journalis', 'redakteur'],
+  'texter': ['redakteur', 'text']
+};
+
+// Erweitert einen Suchbegriff um passende Fachbegriffe
+function erweitereSuchbegriff(begriff) {
+  const q = begriff.toLowerCase().trim();
+  const varianten = new Set([q]);
+
+  // Direkter Treffer im Verzeichnis
+  if (SYNONYME[q]) {
+    SYNONYME[q].forEach(v => varianten.add(v));
+    return [...varianten];
+  }
+
+  // Teiltreffer nur ab 4 Zeichen und nur wenn der Eintrag
+  // mit der Eingabe beginnt ("kfzme" → "kfz" nein, "kfz" → "kfzler" ja).
+  // So löst "sch" nicht schreiner/schweißer/schadensregulierer gleichzeitig aus.
+  if (q.length >= 4) {
+    for (const [umgangssprachlich, fachbegriffe] of Object.entries(SYNONYME)) {
+      if (umgangssprachlich.startsWith(q)) {
+        fachbegriffe.forEach(v => varianten.add(v));
+      }
+    }
+  }
+
+  // Mehrwortsuche: erstes Wort prüfen ("kfz mechaniker" → "kfz")
+  const ersterTeil = q.split(/\s+/)[0];
+  if (ersterTeil !== q && SYNONYME[ersterTeil]) {
+    SYNONYME[ersterTeil].forEach(v => varianten.add(v));
+  }
+
+  // Nie mehr als 4 Varianten – schont die Datenbank
+  return [...varianten].slice(0, 4);
+}
+
+// Sortiert Treffer nach Relevanz:
+// 1. Name beginnt mit dem Suchbegriff
+// 2. Ein Wort im Namen beginnt damit
+// 3. Rest (kommt irgendwo vor)
+// Bei gleichem Rang: kürzere Namen zuerst
+function sortiereNachRelevanz(liste, suchbegriff, varianten) {
+  const q = suchbegriff.toLowerCase().trim();
+  const alle = varianten && varianten.length ? varianten : [q];
+
+  const rang = (name) => {
+    const n = name.toLowerCase();
+    // Bester Rang über alle Suchvarianten
+    let best = 4;
+    for (const v of alle) {
+      // Originalbegriff bekommt Vorrang vor Synonymen
+      const bonus = v === q ? 0 : 0.5;
+      if (n.startsWith(v)) best = Math.min(best, 0 + bonus);
+      else if (new RegExp('[\\s\\-/(,]' + v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(n)) best = Math.min(best, 1 + bonus);
+      else if (n.includes(v)) best = Math.min(best, 2 + bonus);
+    }
+    return best;
+  };
+
+  return liste.sort((a, b) => {
+    const ra = rang(a.name), rb = rang(b.name);
+    if (ra !== rb) return ra - rb;
+    return a.name.length - b.name.length;
+  });
+}
+
+// Entfernt Duplikate (gleicher Name in mehreren Berufsgruppen)
+function entdupliziere(liste) {
+  const gesehen = new Set();
+  return liste.filter(b => {
+    if (gesehen.has(b.name)) return false;
+    gesehen.add(b.name);
+    return true;
+  });
+}
+
 async function fetchBerufe(suchbegriff) {
   const dd = document.getElementById('search-dropdown');
 
@@ -2041,23 +2233,28 @@ async function fetchBerufe(suchbegriff) {
   dd.classList.add('open');
 
   try {
-    // Suche in eigener Supabase-Datenbank (alle Berufe lokal gespeichert)
-    const { data, error } = await sb
-      .from('berufe')
-      .select('name, berufsgruppe, dkz_id')
-      .ilike('name_lower', `%${suchbegriff.toLowerCase()}%`)
-      .limit(10);
+    const q = suchbegriff.toLowerCase().trim();
+    const varianten = erweitereSuchbegriff(q);
 
-    if (error) throw error;
+    // Für jede Variante zwei Abfragen: "beginnt mit" und "enthält"
+    const abfragen = [];
+    for (const v of varianten) {
+      abfragen.push(sb.from('berufe').select('name, berufsgruppe, dkz_id').ilike('name_lower', `${v}%`).limit(15));
+      abfragen.push(sb.from('berufe').select('name, berufsgruppe, dkz_id').ilike('name_lower', `%${v}%`).limit(25));
+    }
 
-    if (!data || !data.length) {
+    const ergebnisse = await Promise.all(abfragen);
+    const zusammen = ergebnisse.flatMap(r => r.data || []);
+    const treffer = sortiereNachRelevanz(entdupliziere(zusammen), q, varianten).slice(0, 10);
+
+    if (!treffer.length) {
       dd.innerHTML = `<div class="search-item" style="color:var(--muted)">Kein Beruf gefunden – <strong onclick="showPage('bewerten')" style="cursor:pointer;color:var(--accent)">trotzdem bewerten?</strong></div>`;
       return;
     }
 
-    dd.innerHTML = data.map(b =>
+    dd.innerHTML = treffer.map(b =>
       `<div class="search-item" onmousedown="showBeruf('${b.name.replace(/'/g,"\\'")}', '${b.berufsgruppe}', '${b.dkz_id||''}')">
-        <span>${b.name}</span><span class="tag">${b.berufsgruppe}</span>
+        <span>${escHtml(b.name)}</span><span class="tag">${escHtml(b.berufsgruppe)}</span>
       </div>`
     ).join('');
 

@@ -1753,7 +1753,8 @@ async function ladeStellen(force) {
 
     return `<div class="stellenanzeige" ${s.url ? `onclick="window.open('${s.url}','_blank','noopener')"` : ''}>
       ${neu ? '<div class="sa-badge">NEU</div>' : ''}
-      <div class="sa-company">${escHtml(s.arbeitgeber)}</div>
+      ${s.arbeitgeber && s.arbeitgeber !== 'Arbeitgeber nicht genannt'
+        ? `<div class="sa-company">${escHtml(s.arbeitgeber)}</div>` : ''}
       <div class="sa-title">${escHtml(s.titel)}</div>
       ${details ? `<div class="sa-detail">${details}</div>` : ''}
     </div>`;

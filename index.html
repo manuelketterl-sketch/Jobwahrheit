@@ -671,7 +671,7 @@ h1 em { color: var(--accent); font-style: normal; }
   <div class="beruf-header">
     <div class="breadcrumb">
       <span onclick="showPage('home')">Startseite</span> › 
-      <span>Handwerk & Technik</span> › 
+      <span id="beruf-breadcrumb-gruppe">Berufe</span> › 
       <span id="beruf-breadcrumb">Elektroniker/in</span>
     </div>
     <h2 id="beruf-title">Elektroniker/in</h2>
@@ -679,7 +679,7 @@ h1 em { color: var(--accent); font-style: normal; }
       <div class="beruf-pill">🎓 Ausbildungsberuf</div>
       <div class="beruf-pill">📍 Bundesweit</div>
     </div>
-    <div class="beruf-score-row">
+    <div class="beruf-score-row" id="score-row" style="display:none">
       <div class="score-item">
         <div class="score-big yellow" id="score-gesamt">–</div>
         <div class="score-label">Gesamtbewertung</div>
@@ -695,6 +695,14 @@ h1 em { color: var(--accent); font-style: normal; }
       <div class="score-item">
         <div class="score-big green" id="score-gehalt">–</div>
         <div class="score-label">Ø Bruttogehalt</div>
+      </div>
+    </div>
+    <div id="score-leer" style="display:none;margin-top:2rem;position:relative;z-index:1">
+      <div style="display:inline-flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:99px;padding:.7rem 1.3rem;backdrop-filter:blur(8px)">
+        <span style="font-size:1.1rem">✍️</span>
+        <span style="font-size:.9rem;color:rgba(255,255,255,.85)">Noch keine Bewertungen –
+          <span onclick="showPage('bewerten')" style="color:#2ee6a8;cursor:pointer;font-weight:700">sei die erste Person!</span>
+        </span>
       </div>
     </div>
   </div>
@@ -827,10 +835,10 @@ h1 em { color: var(--accent); font-style: normal; }
     <!-- SIDEBAR -->
     <div class="beruf-sidebar">
       <div class="ad-banner">
-        <div class="ad-label">Anzeige</div>
-        <h4>Jetzt Elektriker werden</h4>
-        <p>Ausbildungsplätze 2025 noch verfügbar</p>
-        <button class="ad-banner-btn">Mehr erfahren</button>
+        <div class="ad-label">Für Arbeitgeber</div>
+        <h4>Stelle hier ausschreiben</h4>
+        <p>Erreiche Menschen die sich gerade über diesen Beruf informieren.</p>
+        <button class="ad-banner-btn" onclick="showPage('arbeitgeber')">Mehr erfahren</button>
       </div>
 
       <div class="widget" id="spezi-widget" style="display:none">
@@ -1149,6 +1157,12 @@ function setText(id, wert) {
 }
 
 function resetStatistiken() {
+  // Kennzahlen-Zeile ausblenden, Hinweis zeigen
+  const row = document.getElementById('score-row');
+  const leer = document.getElementById('score-leer');
+  if (row) row.style.display = 'none';
+  if (leer) leer.style.display = 'block';
+
   ['score-gesamt','score-empfehlung','score-erwartung','score-gehalt'].forEach(id => setText(id, '–'));
   ['val-erwartung','val-gesamt','val-empfehlung'].forEach(id => setText(id, '–'));
   ['bar-erwartung','bar-gesamt','bar-empfehlung'].forEach(id => {
@@ -1163,6 +1177,12 @@ function resetStatistiken() {
 
 function updateStatistiken(data) {
   const n = data.length;
+
+  // Kennzahlen-Zeile einblenden, Hinweis ausblenden
+  const row = document.getElementById('score-row');
+  const leer = document.getElementById('score-leer');
+  if (row) row.style.display = 'flex';
+  if (leer) leer.style.display = 'none';
 
   // ── Gesamtbewertung ──
   const avgGesamt = data.reduce((s,b) => s + (b.bewertung_gesamt||0), 0) / n;
@@ -1843,6 +1863,18 @@ function showBeruf(name, berufsgruppe, dkzId) {
   // Berufsgruppe im Header aktualisieren (akzeptiert Code ODER lesbaren Namen)
   const bgLabel = BERUFSGRUPPEN[String(berufsgruppe)] || berufsgruppe || 'Beruf';
   document.querySelector('.beruf-pill').textContent = '🎓 ' + bgLabel;
+  const bcGruppe = document.getElementById('beruf-breadcrumb-gruppe');
+  if (bcGruppe) {
+    const plural = {
+      'Ausbildungsberuf': 'Ausbildungsberufe',
+      'Weiterbildung': 'Weiterbildungen',
+      'Studium': 'Studiengänge',
+      'Hochschulberuf': 'Hochschulberufe',
+      'Beamtenlaufbahn': 'Beamtenlaufbahnen',
+      'Tätigkeitsfeld': 'Tätigkeitsfelder'
+    };
+    bcGruppe.textContent = plural[bgLabel] || 'Berufe';
+  }
 
   // Bewertungsformular: Berufsfeld vorausfüllen
   const berufInput = document.getElementById('f-beruf');

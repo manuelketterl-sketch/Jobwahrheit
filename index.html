@@ -519,14 +519,39 @@ h1 em { color: var(--accent); font-style: normal; }
   position: fixed; inset: 0; background: rgba(13,27,26,.5);
   backdrop-filter: blur(4px);
   z-index: 500; display: none;
-  align-items: center; justify-content: center; padding: 2rem;
+  align-items: center; justify-content: center;
+  padding: 1.25rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .modal-overlay.open { display: flex; }
 .modal {
   background: #fff; border-radius: 28px;
-  padding: 2.75rem; max-width: 440px; width: 100%;
+  padding: 2.25rem; max-width: 440px; width: 100%;
   text-align: center; box-shadow: var(--shadow-lg);
   animation: popIn .3s ease both;
+  max-height: calc(100vh - 2.5rem);
+  max-height: calc(100dvh - 2.5rem);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+@media (max-width: 560px) {
+  .modal-overlay {
+    align-items: flex-start;
+    padding: .75rem .75rem calc(.75rem + env(safe-area-inset-bottom));
+  }
+  .modal {
+    padding: 1.5rem 1.25rem;
+    border-radius: 20px;
+    max-height: calc(100vh - 1.5rem);
+    max-height: calc(100dvh - 1.5rem);
+  }
+  .modal .modal-icon { font-size: 2rem; margin-bottom: .4rem; }
+  .modal h3 { font-size: 1.25rem; margin-bottom: .35rem; }
+  .modal p { font-size: .88rem; line-height: 1.5; margin-bottom: 1rem; }
+  .modal .form-input { padding: .7rem .9rem; font-size: 16px; }
+  .modal-btn { padding: .75rem 1.6rem; font-size: .95rem; }
 }
 @keyframes popIn {
   from { opacity: 0; transform: scale(.9) translateY(10px); }
@@ -1063,29 +1088,30 @@ h1 em { color: var(--accent); font-style: normal; }
     <div style="text-align:center">
       <div class="modal-icon">🎉</div>
       <h3>Danke für deine Bewertung!</h3>
-      <p style="margin-bottom:1.25rem">Deine anonyme Erfahrung hilft anderen, den richtigen Beruf zu finden.</p>
+      <p style="margin-bottom:1rem">Deine Erfahrung hilft anderen bei der Berufswahl.</p>
     </div>
 
-    <div style="background:var(--bg-soft);border-radius:16px;padding:1.25rem;margin-bottom:1.25rem">
-      <div style="font-weight:700;font-size:.95rem;margin-bottom:.75rem">📬 Auf dem Laufenden bleiben? <span style="font-weight:500;color:var(--muted)">(optional)</span></div>
+    <div style="background:var(--bg-soft);border-radius:16px;padding:1rem;margin-bottom:1rem">
+      <div style="font-weight:700;font-size:.95rem;margin-bottom:.2rem">📬 Auf dem Laufenden bleiben?</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem;overflow-wrap:anywhere">Optional – für <strong class="nl-beruf-name" style="color:var(--ink)">diesen Beruf</strong></div>
 
-      <label style="display:flex;align-items:flex-start;gap:.6rem;font-size:.88rem;margin-bottom:.6rem;cursor:pointer">
-        <input type="checkbox" id="nl-bewertungen" style="margin-top:.2rem;accent-color:var(--accent)">
-        <span>Neue <strong>Bewertungen</strong> für <span class="nl-beruf-name">diesen Beruf</span></span>
+      <label style="display:flex;align-items:center;gap:.6rem;font-size:.88rem;margin-bottom:.5rem;cursor:pointer">
+        <input type="checkbox" id="nl-bewertungen" style="accent-color:var(--accent);flex-shrink:0">
+        <span>Neue <strong>Bewertungen</strong></span>
       </label>
 
-      <label style="display:flex;align-items:flex-start;gap:.6rem;font-size:.88rem;margin-bottom:.9rem;cursor:pointer">
-        <input type="checkbox" id="nl-stellen" style="margin-top:.2rem;accent-color:var(--accent)" onchange="toggleStellenFelder()">
-        <span>Neue <strong>Stellenangebote</strong> für <span class="nl-beruf-name">diesen Beruf</span></span>
+      <label style="display:flex;align-items:center;gap:.6rem;font-size:.88rem;margin-bottom:.75rem;cursor:pointer">
+        <input type="checkbox" id="nl-stellen" style="accent-color:var(--accent);flex-shrink:0" onchange="toggleStellenFelder()">
+        <span>Neue <strong>Stellenangebote</strong></span>
       </label>
 
       <!-- Regionsfilter: nur sichtbar wenn Stellen abonniert werden -->
-      <div id="nl-region-felder" style="display:none;background:#fff;border:1px solid var(--border);border-radius:12px;padding:.9rem;margin-bottom:.9rem">
-        <div style="font-size:.78rem;color:var(--muted);margin-bottom:.6rem">📍 Wo suchst du?</div>
+      <div id="nl-region-felder" style="display:none;background:#fff;border:1px solid var(--border);border-radius:12px;padding:.7rem;margin-bottom:.75rem">
+        <div style="font-size:.76rem;color:var(--muted);margin-bottom:.45rem;text-align:left">📍 Wo suchst du?</div>
         <div style="display:flex;gap:.5rem">
-          <input type="text" id="nl-plz" class="form-input" placeholder="PLZ, z.B. 94374"
-            inputmode="numeric" maxlength="5" style="flex:1;padding:.6rem .8rem;font-size:.9rem">
-          <select id="nl-umkreis" class="form-select" style="flex:1;padding:.6rem .8rem;font-size:.9rem">
+          <input type="text" id="nl-plz" class="form-input" placeholder="PLZ"
+            inputmode="numeric" maxlength="5" style="flex:1;min-width:0;padding:.55rem .7rem;font-size:.88rem">
+          <select id="nl-umkreis" class="form-select" style="flex:1;min-width:0;padding:.55rem .7rem;font-size:.88rem">
             <option value="25">25 km</option>
             <option value="50" selected>50 km</option>
             <option value="100">100 km</option>
@@ -1094,14 +1120,14 @@ h1 em { color: var(--accent); font-style: normal; }
         </div>
       </div>
 
-      <input type="email" id="nl-email" class="form-input" placeholder="deine@email.de" style="margin-bottom:.5rem">
-      <p style="font-size:.72rem;color:var(--muted);line-height:1.5">Du erhältst eine kurze Bestätigungs-Mail. Deine E-Mail wird <strong>nicht</strong> mit deiner Bewertung verknüpft. Abmeldung jederzeit mit einem Klick.</p>
+      <input type="email" id="nl-email" class="form-input" placeholder="deine@email.de" style="margin-bottom:.45rem;padding:.65rem .9rem;font-size:.9rem">
+      <p style="font-size:.68rem;color:var(--muted);line-height:1.4;text-align:left">Du erhältst eine Bestätigungs-Mail. Deine Adresse wird <strong>nicht</strong> mit der Bewertung verknüpft – Abmeldung jederzeit.</p>
       <p id="nl-feedback" style="font-size:.8rem;margin-top:.4rem;display:none"></p>
     </div>
 
-    <div style="display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
-      <button class="modal-btn" onclick="submitNewsletter()">Abonnieren</button>
-      <button class="modal-btn" style="background:transparent;color:var(--muted);border:1.5px solid var(--border)" onclick="closeModalToBeruf()">Nein danke</button>
+    <div style="display:flex;gap:.6rem;justify-content:center">
+      <button class="modal-btn" style="flex:1" onclick="submitNewsletter()">Abonnieren</button>
+      <button class="modal-btn" style="flex:1;background:transparent;color:var(--muted);border:1.5px solid var(--border)" onclick="closeModalToBeruf()">Nein danke</button>
     </div>
   </div>
 </div>
@@ -1378,6 +1404,7 @@ async function submitBewertung() {
   document.querySelectorAll('.nl-beruf-name').forEach(el => el.textContent = berufName);
   window._nlBeruf = berufName;
   document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
 
 // ════════════════════════════════════════
@@ -1385,6 +1412,7 @@ async function submitBewertung() {
 // ════════════════════════════════════════
 function closeModalToBeruf() {
   document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
   // Felder zurücksetzen
   const fb = document.getElementById('nl-feedback');
   if (fb) { fb.style.display = 'none'; }
@@ -2027,8 +2055,23 @@ function closeFormBerufDropdown() {
 }
 
 // Init beim Seitenstart
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   loadStats();
+
+  // Direktlink aus Newsletter-Mails: ?beruf=Name öffnet die Berufsseite
+  const gewuenscht = new URLSearchParams(location.search).get('beruf');
+  if (gewuenscht) {
+    try {
+      const { data } = await sb
+        .from('berufe')
+        .select('name, berufsgruppe, dkz_id')
+        .ilike('name', gewuenscht)
+        .limit(1);
+      if (data?.length) {
+        showBeruf(data[0].name, data[0].berufsgruppe, data[0].dkz_id || '');
+      }
+    } catch { /* stillschweigend auf Startseite bleiben */ }
+  }
 });
 
 // ── Tabs

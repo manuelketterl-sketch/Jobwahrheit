@@ -1726,6 +1726,18 @@ async function ladeStellen(force) {
 
   liste.innerHTML = `<div style="color:var(--muted);font-size:.9rem;padding:1rem 0"><span class="search-spinner"></span> Suche Stellenangebote…</div>`;
 
+  // Eigene Anzeigen von Partnerfirmen zuerst laden
+  let eigene = [];
+  try {
+    let q = sb.from('stellenanzeigen')
+      .select('id, titel, beruf_name, plz, ort, beschaeftigungsart, gehalt_von, gehalt_bis, bewerbung_url, bewerbung_email, firma_id')
+      .ilike('beruf_name', currentBeruf.name)
+      .eq('freigegeben', true).eq('aktiv', true)
+      .order('created_at', { ascending: false }).limit(5);
+    const { data } = await q;
+    eigene = data || [];
+  } catch { /* nicht kritisch */ }
+
   let result;
   try {
     const res = await fetch(SUPABASE_URL + '/functions/v1/jobs', {
@@ -1755,8 +1767,24 @@ async function ladeStellen(force) {
     return;
   }
 
+  // Eigene Anzeigen hervorgehoben darstellen
+  const eigeneHtml = eigene.length ? eigene.map(s => {
+    const ort = [s.plz, s.ort].filter(Boolean).join(' ');
+    const gehalt = s.gehalt_von || s.gehalt_bis
+      ? `💰 ${s.gehalt_von ? s.gehalt_von.toLocaleString('de') : '?'}–${s.gehalt_bis ? s.gehalt_bis.toLocaleString('de') : '?'} €` : null;
+    const details = [ort ? '📍 ' + escHtml(ort) : null, s.beschaeftigungsart ? escHtml(s.beschaeftigungsart) : null, gehalt]
+      .filter(Boolean).join(' · ');
+    const ziel = s.bewerbung_url || (s.bewerbung_email ? 'mailto:' + s.bewerbung_email : null);
+    return `<div class="stellenanzeige" style="border-color:var(--accent)"
+      ${ziel ? `onclick="stelleGeklickt('${s.id}');window.open('${escHtml(ziel)}','_blank','noopener')"` : ''}>
+      <div class="sa-badge">DIREKT</div>
+      <div class="sa-title">${escHtml(s.titel)}</div>
+      ${details ? `<div class="sa-detail">${details}</div>` : ''}
+    </div>`;
+  }).join('') : '';
+
   const stellen = result.stellen || [];
-  if (!stellen.length) {
+  if (!stellen.length && !eigene.length) {
     liste.innerHTML = `<div style="border:2px dashed var(--border);border-radius:16px;padding:2rem;text-align:center">
       <div style="font-size:1.6rem;margin-bottom:.5rem">🔎</div>
       <div style="font-weight:700;margin-bottom:.25rem">Aktuell keine Stellen gefunden</div>
@@ -1769,7 +1797,7 @@ async function ladeStellen(force) {
     ? `${stellen.length} von ${result.gesamt.toLocaleString('de')} Angeboten`
     : `${stellen.length} Angebot${stellen.length === 1 ? '' : 'e'}`}${plz ? ` · im Umkreis von ${umkreis} km um ${escHtml(plz)}` : ' · bundesweit'}</div>`;
 
-  liste.innerHTML = kopf + stellen.map(s => {
+  liste.innerHTML = eigeneHtml + kopf + stellen.map(s => {
     const ort = [s.plz, s.ort].filter(Boolean).join(' ');
     const details = [
       ort ? '📍 ' + escHtml(ort) : null,
@@ -1787,6 +1815,11 @@ async function ladeStellen(force) {
       ${details ? `<div class="sa-detail">${details}</div>` : ''}
     </div>`;
   }).join('') + `<div style="font-size:.72rem;color:var(--muted);text-align:center;margin-top:1rem">Quelle: Jobbörse der Bundesagentur für Arbeit</div>`;
+}
+
+// Zählt Klicks auf eigene Stellenanzeigen (für die Arbeitgeber-Statistik)
+async function stelleGeklickt(id) {
+  try { await sb.rpc('stelle_geklickt', { stelle_id: id }); } catch { /* nicht kritisch */ }
 }
 
 // ════════════════════════════════════════

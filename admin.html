@@ -52,6 +52,15 @@
   .tag.rot{background:#fee9e3;color:var(--rot)}
   .tag.gruen{background:rgba(0,168,120,.12);color:var(--gruen)}
   .leer{color:var(--muted);font-size:.88rem;padding:.5rem 0}
+  .schalter{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}
+  .schalter input{opacity:0;width:0;height:0}
+  .schieber{position:absolute;cursor:pointer;inset:0;background:#cfd8d5;border-radius:99px;
+            transition:background .2s}
+  .schieber:before{position:absolute;content:"";height:20px;width:20px;left:3px;top:3px;
+                   background:#fff;border-radius:50%;transition:transform .2s;
+                   box-shadow:0 1px 3px rgba(0,0,0,.2)}
+  .schalter input:checked + .schieber{background:var(--accent)}
+  .schalter input:checked + .schieber:before{transform:translateX(20px)}
   .fehler{color:var(--rot);font-size:.85rem;margin-top:.75rem;min-height:1.2em}
   @media(max-width:600px){body{padding:1rem}.zeile{flex-direction:column;gap:.5rem}}
 </style>
@@ -105,6 +114,9 @@
 
   <h2>📬 Newsletter</h2>
   <div class="karte" id="abos"></div>
+
+  <h2>🔔 Meine Benachrichtigungen</h2>
+  <div class="karte" id="einstellungen"></div>
 </div>
 
 <script>
@@ -173,6 +185,19 @@ async function stelleLoeschen(id){
   if(!confirm('Diese Stellenanzeige wirklich löschen?')) return;
   const d = await ruf({aktion:'stelle_status', id, loeschen:true});
   if(d.ok) laden(); else alert('Fehler: '+(d.error||''));
+}
+
+async function schalte(schluessel, wert){
+  const d = await ruf({aktion:'einstellung', schluessel, wert});
+  if(!d.ok){ alert('Fehler: '+(d.error||'')); laden(); }
+}
+
+async function testmail(){
+  const btn = document.getElementById('testmail-btn');
+  if(btn){ btn.textContent='Wird gesendet…'; btn.disabled=true; }
+  const d = await ruf({aktion:'testmail'});
+  if(btn){ btn.textContent = d.ok ? '✓ Verschickt' : 'Fehler'; }
+  setTimeout(()=>{ if(btn){ btn.textContent='Testmail senden'; btn.disabled=false; } }, 2500);
 }
 
 function zeichne(d){
@@ -350,6 +375,32 @@ function zeichne(d){
     <div class="zeile"><span>Bestätigungsquote</span><strong>${quote}%</strong></div>
     <div class="zeile"><span>Möchten Bewertungen</span><strong>${a.fuerBewertungen}</strong></div>
     <div class="zeile"><span>Möchten Stellenangebote</span><strong>${a.fuerStellen}</strong></div>`;
+
+  // Benachrichtigungs-Schalter
+  const e = d.einstellungen || {};
+  const schalter = (schluessel, titel, text) => `
+    <div class="zeile" style="align-items:center">
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:.92rem">${titel}</div>
+        <div style="font-size:.78rem;color:var(--muted)">${text}</div>
+      </div>
+      <label class="schalter">
+        <input type="checkbox" ${e[schluessel] !== false ? 'checked' : ''}
+               onchange="schalte('${schluessel}', this.checked)">
+        <span class="schieber"></span>
+      </label>
+    </div>`;
+
+  document.getElementById('einstellungen').innerHTML =
+    schalter('mail_tagesbericht','Tagesbericht','Einmal täglich eine Zusammenfassung') +
+    schalter('mail_sofort_meldung','Gemeldete Inhalte','Sofort, wenn etwas gemeldet wird') +
+    schalter('mail_sofort_firma','Neue Firmen','Sofort bei einer neuen Registrierung') +
+    schalter('mail_sofort_stelle','Neue Anzeigen','Sofort, wenn eine Anzeige geprüft werden muss') +
+    `<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--bg);
+                display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+       <div style="font-size:.82rem;color:var(--muted)">Alle Mails gehen an info@jobinsides.de</div>
+       <button class="btn-klein ok" id="testmail-btn" onclick="testmail()">Testmail senden</button>
+     </div>`;
 }
 
 // Automatisch anmelden wenn Passwort in dieser Sitzung schon geprüft wurde

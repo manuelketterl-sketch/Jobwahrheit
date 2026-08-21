@@ -85,6 +85,12 @@
   <h2 id="meldungen-titel">🚩 Gemeldete Inhalte</h2>
   <div id="meldungen"></div>
 
+  <h2 id="firmen-titel">🏢 Arbeitgeber</h2>
+  <div id="firmen"></div>
+
+  <h2 id="stellen-titel">💼 Stellenanzeigen</h2>
+  <div id="stellen"></div>
+
   <h2>🔎 Meistgesuchte Begriffe <span style="font-size:.75rem;font-weight:400;color:var(--muted)">letzte 7 Tage</span></h2>
   <div class="karte" id="suchen"></div>
 
@@ -153,6 +159,22 @@ async function meldungErledigt(id){
   if(d.ok) laden(); else alert('Fehler: '+(d.error||''));
 }
 
+async function firmaStatus(id, feld, wert){
+  const d = await ruf({aktion:'firma_status', id, [feld]: wert});
+  if(d.ok) laden(); else alert('Fehler: '+(d.error||''));
+}
+
+async function stelleStatus(id, freigeben){
+  const d = await ruf({aktion:'stelle_status', id, freigeben});
+  if(d.ok) laden(); else alert('Fehler: '+(d.error||''));
+}
+
+async function stelleLoeschen(id){
+  if(!confirm('Diese Stellenanzeige wirklich löschen?')) return;
+  const d = await ruf({aktion:'stelle_status', id, loeschen:true});
+  if(d.ok) laden(); else alert('Fehler: '+(d.error||''));
+}
+
 function zeichne(d){
   const s = d.statistik;
   document.getElementById('stand').textContent = 'Stand: ' + new Date().toLocaleString('de-DE');
@@ -165,6 +187,8 @@ function zeichne(d){
     <div class="kachel"><div class="zahl">${s.bewertungenGesamt}</div><div class="label">Bewertungen gesamt</div></div>
     <div class="kachel"><div class="zahl">${s.bewertungenWoche}</div><div class="label">diese Woche · ${trendText}</div></div>
     <div class="kachel ${s.offeneMeldungen ? 'warn' : ''}"><div class="zahl">${s.offeneMeldungen}</div><div class="label">offene Meldungen</div></div>
+    <div class="kachel ${s.offeneFirmen ? 'warn' : ''}"><div class="zahl">${s.offeneFirmen ?? 0}</div><div class="label">Firmen zu prüfen</div></div>
+    <div class="kachel ${s.offeneStellen ? 'warn' : ''}"><div class="zahl">${s.offeneStellen ?? 0}</div><div class="label">Anzeigen zu prüfen</div></div>
     <div class="kachel"><div class="zahl">${d.aboStats.bestaetigt}</div><div class="label">Newsletter bestätigt</div></div>
     <div class="kachel"><div class="zahl">${s.berufeGesamt.toLocaleString('de')}</div><div class="label">Berufe gelistet</div></div>`;
 
@@ -194,6 +218,73 @@ function zeichne(d){
           </div></div>`;
       }).join('')
     : '<div class="karte"><div class="leer">Keine offenen Meldungen ✓</div></div>';
+
+  // Firmen
+  const firmen = d.firmen || [];
+  const offeneFirmen = firmen.filter(f=>!f.freigegeben && !f.gesperrt).length;
+  document.getElementById('firmen-titel').innerHTML =
+    `🏢 Arbeitgeber ${offeneFirmen ? `<span class="tag rot">${offeneFirmen} zu prüfen</span>` : ''}`;
+  document.getElementById('firmen').innerHTML = firmen.length
+    ? firmen.map(f=>{
+        const status = f.gesperrt ? '<span class="tag rot">gesperrt</span>'
+                     : f.freigegeben ? '<span class="tag gruen">freigegeben</span>'
+                     : '<span class="tag rot">wartet auf Prüfung</span>';
+        const ort = [f.plz,f.ort].filter(Boolean).join(' ');
+        return `<div class="karte" ${!f.freigegeben && !f.gesperrt ? 'style="border-color:#f5c6b8"' : ''}>
+          <div class="zeile">
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+                <strong>${esc(f.name)}</strong>${status}
+              </div>
+              <div class="meta">
+                ${f.ansprechpartner?esc(f.ansprechpartner)+' · ':''}${f.telefon?esc(f.telefon)+' · ':''}${ort?esc(ort)+' · ':''}registriert ${datum(f.created_at)}
+                ${f.website?`<br><a href="${esc(f.website)}" target="_blank" rel="noopener" style="color:var(--accent-deep)">${esc(f.website)}</a>`:''}
+              </div>
+              ${f.beschreibung?`<div style="font-size:.85rem;color:var(--muted);margin-top:.35rem">${esc(f.beschreibung)}</div>`:''}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:.4rem">
+              ${!f.freigegeben
+                ? `<button class="btn-klein ok" onclick="firmaStatus('${f.id}','freigeben',true)">Freigeben</button>`
+                : `<button class="btn-klein" onclick="firmaStatus('${f.id}','freigeben',false)">Freigabe zurück</button>`}
+              ${!f.gesperrt
+                ? `<button class="btn-klein" onclick="firmaStatus('${f.id}','sperren',true)">Sperren</button>`
+                : `<button class="btn-klein ok" onclick="firmaStatus('${f.id}','sperren',false)">Entsperren</button>`}
+            </div>
+          </div></div>`;
+      }).join('')
+    : '<div class="karte"><div class="leer">Noch keine Arbeitgeber registriert.</div></div>';
+
+  // Stellenanzeigen
+  const stellen = d.stellen || [];
+  const offeneStellen = stellen.filter(s=>!s.freigegeben).length;
+  document.getElementById('stellen-titel').innerHTML =
+    `💼 Stellenanzeigen ${offeneStellen ? `<span class="tag rot">${offeneStellen} zu prüfen</span>` : ''}`;
+  document.getElementById('stellen').innerHTML = stellen.length
+    ? stellen.map(s=>{
+        const status = !s.aktiv ? '<span class="tag">pausiert</span>'
+                     : s.freigegeben ? '<span class="tag gruen">online</span>'
+                     : '<span class="tag rot">wartet auf Prüfung</span>';
+        const ort = [s.plz,s.ort].filter(Boolean).join(' ');
+        const gehalt = s.gehalt_von||s.gehalt_bis
+          ? ` · ${s.gehalt_von||'?'}–${s.gehalt_bis||'?'} €` : '';
+        return `<div class="karte" ${!s.freigegeben ? 'style="border-color:#f5c6b8"' : ''}>
+          <div class="zeile">
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+                <strong>${esc(s.titel)}</strong>${status}
+              </div>
+              <div class="meta">${esc(s.firma_name)} · ${esc(s.beruf_name)}${ort?' · '+esc(ort):''}${s.beschaeftigungsart?' · '+esc(s.beschaeftigungsart):''}${gehalt} · ${datum(s.created_at)} · ${s.klicks||0} Klicks</div>
+              ${s.beschreibung?`<div style="font-size:.85rem;color:var(--muted);margin-top:.35rem">${esc(String(s.beschreibung).slice(0,220))}${String(s.beschreibung).length>220?'…':''}</div>`:''}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:.4rem">
+              ${!s.freigegeben
+                ? `<button class="btn-klein ok" onclick="stelleStatus('${s.id}',true)">Freigeben</button>`
+                : `<button class="btn-klein" onclick="stelleStatus('${s.id}',false)">Offline nehmen</button>`}
+              <button class="btn-klein" onclick="stelleLoeschen('${s.id}')">Löschen</button>
+            </div>
+          </div></div>`;
+      }).join('')
+    : '<div class="karte"><div class="leer">Noch keine Stellenanzeigen.</div></div>';
 
   // Suchbegriffe
   const maxSuche = d.topSuchen[0]?.anzahl || 1;

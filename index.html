@@ -2301,6 +2301,27 @@ function entdupliziere(liste) {
   });
 }
 
+// ════════════════════════════════════════
+// SUCHPROTOKOLL (anonym, ohne Personenbezug)
+// Speichert nur den Suchbegriff – hilft zu erkennen
+// welche Berufe gesucht aber noch nicht bewertet sind
+// ════════════════════════════════════════
+let suchProtokollTimer = null;
+let zuletztProtokolliert = '';
+
+function protokolliereSuche(begriff, trefferAnzahl) {
+  // Nur den finalen Suchbegriff protokollieren, nicht jeden Tastendruck
+  clearTimeout(suchProtokollTimer);
+  suchProtokollTimer = setTimeout(async () => {
+    const q = (begriff || '').trim();
+    if (q.length < 3 || q === zuletztProtokolliert) return;
+    zuletztProtokolliert = q;
+    try {
+      await secureSubmit('suche', { begriff: q, treffer: trefferAnzahl });
+    } catch { /* Protokoll ist nicht kritisch */ }
+  }, 1200);
+}
+
 async function fetchBerufe(suchbegriff) {
   const dd = document.getElementById('search-dropdown');
 
@@ -2325,6 +2346,7 @@ async function fetchBerufe(suchbegriff) {
 
     if (!treffer.length) {
       dd.innerHTML = `<div class="search-item" style="color:var(--muted)">Kein Beruf gefunden – <strong onclick="showPage('bewerten')" style="cursor:pointer;color:var(--accent)">trotzdem bewerten?</strong></div>`;
+      protokolliereSuche(q, 0);
       return;
     }
 
@@ -2333,6 +2355,8 @@ async function fetchBerufe(suchbegriff) {
         <span>${escHtml(b.name)}</span><span class="tag">${escHtml(b.berufsgruppe)}</span>
       </div>`
     ).join('');
+
+    protokolliereSuche(q, treffer.length);
 
   } catch (err) {
     dd.innerHTML = `<div class="search-item" style="color:var(--muted)">Suche nicht verfügbar</div>${getFallbackBerufe(suchbegriff)}`;
@@ -2563,6 +2587,9 @@ function selectToggle(el, group) {
       </p>
       <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
         <strong style="color:var(--ink)">Spam-Schutz:</strong> Beim Absenden von Bewertungen, Diskussionsbeiträgen oder Newsletter-Anmeldungen wird ein pseudonymisierter Prüfwert (kryptografischer Hash) deiner IP-Adresse für maximal 48 Stunden gespeichert, um Missbrauch und automatisierte Massenzugriffe zu verhindern (Art. 6 Abs. 1 lit. f DSGVO). Ein Rückschluss auf deine IP-Adresse ist daraus nicht möglich.
+      </p>
+      <p style="font-size:.9rem;line-height:1.7;color:var(--muted)">
+        <strong style="color:var(--ink)">Suchbegriffe:</strong> Eingegebene Suchbegriffe werden ohne Personenbezug gespeichert, um zu erkennen welche Berufe gesucht werden. Es erfolgt dabei keine Verknüpfung mit deiner IP-Adresse, Sitzung oder anderen Daten – die Begriffe sind keiner Person zuzuordnen.
       </p>
     </div>
 

@@ -254,6 +254,17 @@ function zeigeTab(t){
   document.getElementById('tab-registrieren').style.display = t==='registrieren'?'block':'none';
 }
 
+// Informiert den Betreiber über etwas Neues (still, blockiert nie)
+async function melde(typ, daten){
+  try{
+    await fetch(SUPABASE_URL+'/functions/v1/benachrichtigung',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({art:'sofort',typ,daten})
+    });
+  }catch{/* nicht kritisch */}
+}
+
 // ════════ ANMELDUNG ════════
 async function registrieren(){
   const firma = document.getElementById('reg-firma').value.trim();
@@ -281,6 +292,7 @@ async function registrieren(){
   // Firmeneintrag anlegen (falls Sitzung direkt aktiv ist)
   if(data.session){
     await sb.from('firmen').insert([{ user_id: data.user.id, name: firma }]);
+    melde('firma', {name: firma, email});
     return start();
   }
 
@@ -335,6 +347,7 @@ async function start(){
     const {data:neu} = await sb.from('firmen')
       .insert([{user_id: session.user.id, name}]).select().single();
     firma = neu;
+    if(firma) melde('firma', {name: firma.name, email: session.user.email});
   }
   meineFirma = firma;
 
@@ -495,6 +508,10 @@ async function speichereStelle(){
   }
 
   if(error) return zeige('stelle-hinweis','Fehler: '+error.message,'fehler');
+
+  // Betreiber über die zu prüfende Anzeige informieren
+  melde('stelle', {...daten, firma_name: meineFirma.name});
+
   schliesseStelle();
   ladeStellen();
 }

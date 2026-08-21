@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin – JobInsides</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--accent:#00bfa6;--accent-deep:#009e88;--ink:#0d1b1a;--muted:#66756f;
+        --border:#e6ece9;--bg:#f3f7f6;--rot:#e8552d;--gruen:#00a878}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);
+       line-height:1.5;padding:1.5rem}
+  .wrap{max-width:1100px;margin:0 auto}
+  h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.6rem;
+     letter-spacing:-.02em;margin-bottom:.25rem}
+  h1 span{color:var(--accent)}
+  h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.15rem;
+     margin:2rem 0 .85rem;display:flex;align-items:center;gap:.5rem}
+  .karte{background:#fff;border:1px solid var(--border);border-radius:16px;padding:1.25rem;margin-bottom:.75rem}
+  .kacheln{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem}
+  .kachel{background:#fff;border:1px solid var(--border);border-radius:16px;padding:1.1rem;text-align:center}
+  .kachel .zahl{font-family:'Bricolage Grotesque',sans-serif;font-size:1.9rem;font-weight:800;
+                color:var(--accent-deep);line-height:1.1}
+  .kachel .label{font-size:.76rem;color:var(--muted);margin-top:.2rem}
+  .kachel.warn .zahl{color:var(--rot)}
+  input,button{font-family:inherit;font-size:1rem}
+  input[type=password]{width:100%;padding:.85rem 1.1rem;border:1.5px solid var(--border);
+                       border-radius:12px;outline:none}
+  input[type=password]:focus{border-color:var(--accent)}
+  .btn{background:var(--accent);color:#fff;border:none;padding:.8rem 1.8rem;border-radius:99px;
+       font-weight:700;cursor:pointer;transition:background .2s}
+  .btn:hover{background:var(--accent-deep)}
+  .btn-klein{padding:.35rem .8rem;font-size:.78rem;border-radius:99px;border:1px solid var(--border);
+             background:#fff;color:var(--muted);cursor:pointer;font-weight:600}
+  .btn-klein:hover{border-color:var(--rot);color:var(--rot)}
+  .btn-klein.ok:hover{border-color:var(--gruen);color:var(--gruen)}
+  .login{max-width:380px;margin:15vh auto;background:#fff;border:1px solid var(--border);
+         border-radius:24px;padding:2.5rem;text-align:center}
+  .zeile{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;
+         padding:.7rem 0;border-bottom:1px solid var(--bg)}
+  .zeile:last-child{border-bottom:none}
+  .meta{font-size:.74rem;color:var(--muted);margin-top:.25rem}
+  .sterne{color:#ffb020;font-size:.9rem}
+  .balken{height:6px;background:var(--bg);border-radius:99px;overflow:hidden;margin-top:.3rem}
+  .balken div{height:100%;background:var(--accent);border-radius:99px}
+  .tag{font-size:.68rem;background:var(--bg);border-radius:99px;padding:.15rem .6rem;
+       color:var(--muted);font-weight:600;white-space:nowrap}
+  .tag.rot{background:#fee9e3;color:var(--rot)}
+  .tag.gruen{background:rgba(0,168,120,.12);color:var(--gruen)}
+  .leer{color:var(--muted);font-size:.88rem;padding:.5rem 0}
+  .fehler{color:var(--rot);font-size:.85rem;margin-top:.75rem;min-height:1.2em}
+  @media(max-width:600px){body{padding:1rem}.zeile{flex-direction:column;gap:.5rem}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login" id="login">
+  <h1 style="margin-bottom:1.5rem">Job<span>Insides</span></h1>
+  <div style="font-size:.9rem;color:var(--muted);margin-bottom:1.25rem">Admin-Bereich</div>
+  <input type="password" id="pw" placeholder="Passwort" onkeydown="if(event.key==='Enter')anmelden()">
+  <div class="fehler" id="login-fehler"></div>
+  <button class="btn" style="width:100%;margin-top:.75rem" onclick="anmelden()">Anmelden</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="wrap" id="dash" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1>Job<span>Insides</span> Admin</h1>
+      <div style="font-size:.82rem;color:var(--muted)" id="stand"></div>
+    </div>
+    <div style="display:flex;gap:.5rem">
+      <button class="btn-klein ok" onclick="laden()">↻ Aktualisieren</button>
+      <button class="btn-klein" onclick="abmelden()">Abmelden</button>
+    </div>
+  </div>
+
+  <div class="kacheln" style="margin-top:1.25rem" id="kacheln"></div>
+
+  <h2 id="meldungen-titel">🚩 Gemeldete Inhalte</h2>
+  <div id="meldungen"></div>
+
+  <h2>🔎 Meistgesuchte Begriffe <span style="font-size:.75rem;font-weight:400;color:var(--muted)">letzte 7 Tage</span></h2>
+  <div class="karte" id="suchen"></div>
+
+  <h2>⭐ Top-Berufe nach Bewertungen</h2>
+  <div class="karte" id="topberufe"></div>
+
+  <h2>✍️ Neueste Bewertungen</h2>
+  <div id="bewertungen"></div>
+
+  <h2>💬 Neueste Diskussionen</h2>
+  <div id="diskussionen"></div>
+
+  <h2>📬 Newsletter</h2>
+  <div class="karte" id="abos"></div>
+</div>
+
+<script>
+const ADMIN_URL = 'https://kvqdgcixmdnrarlaskyb.supabase.co/functions/v1/admin';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2cWRnY2l4bWRucmFybGFza3liIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NzUwMTQsImV4cCI6MjA5MTU1MTAxNH0.ngU8OG7cFC7ZWRrt0ZxlUBDIbtv-cEa-rFJbjZII2wk';
+
+let passwort = sessionStorage.getItem('ji_admin') || '';
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function datum(d){return new Date(d).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}
+
+async function ruf(daten){
+  const res = await fetch(ADMIN_URL,{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+ANON_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify({passwort,...daten})
+  });
+  return res.json();
+}
+
+async function anmelden(){
+  passwort = document.getElementById('pw').value;
+  const fehler = document.getElementById('login-fehler');
+  fehler.textContent = 'Prüfe…';
+  const d = await ruf({aktion:'uebersicht'});
+  if(!d.ok){ fehler.textContent = d.error || 'Fehler'; return; }
+  sessionStorage.setItem('ji_admin', passwort);
+  document.getElementById('login').style.display='none';
+  document.getElementById('dash').style.display='block';
+  zeichne(d);
+}
+
+function abmelden(){
+  sessionStorage.removeItem('ji_admin');
+  location.reload();
+}
+
+async function laden(){
+  const d = await ruf({aktion:'uebersicht'});
+  if(!d.ok){ abmelden(); return; }
+  zeichne(d);
+}
+
+async function loeschen(tabelle,id,was){
+  if(!confirm(`${was} wirklich löschen? Das lässt sich nicht rückgängig machen.`)) return;
+  const d = await ruf({aktion:'loeschen',tabelle,id});
+  if(d.ok) laden(); else alert('Fehler: '+(d.error||''));
+}
+
+async function meldungErledigt(id){
+  const d = await ruf({aktion:'meldung_erledigt',id});
+  if(d.ok) laden(); else alert('Fehler: '+(d.error||''));
+}
+
+function zeichne(d){
+  const s = d.statistik;
+  document.getElementById('stand').textContent = 'Stand: ' + new Date().toLocaleString('de-DE');
+
+  // Kacheln
+  const trend = s.bewertungenWoche - s.bewertungenVorwoche;
+  const trendText = trend > 0 ? `↑ ${trend} mehr als Vorwoche`
+                  : trend < 0 ? `↓ ${Math.abs(trend)} weniger` : 'wie Vorwoche';
+  document.getElementById('kacheln').innerHTML = `
+    <div class="kachel"><div class="zahl">${s.bewertungenGesamt}</div><div class="label">Bewertungen gesamt</div></div>
+    <div class="kachel"><div class="zahl">${s.bewertungenWoche}</div><div class="label">diese Woche · ${trendText}</div></div>
+    <div class="kachel ${s.offeneMeldungen ? 'warn' : ''}"><div class="zahl">${s.offeneMeldungen}</div><div class="label">offene Meldungen</div></div>
+    <div class="kachel"><div class="zahl">${d.aboStats.bestaetigt}</div><div class="label">Newsletter bestätigt</div></div>
+    <div class="kachel"><div class="zahl">${s.berufeGesamt.toLocaleString('de')}</div><div class="label">Berufe gelistet</div></div>`;
+
+  // Meldungen
+  document.getElementById('meldungen-titel').innerHTML =
+    `🚩 Gemeldete Inhalte ${d.gemeldet.length ? `<span class="tag rot">${d.gemeldet.length}</span>` : ''}`;
+  document.getElementById('meldungen').innerHTML = d.gemeldet.length
+    ? d.gemeldet.map(g => {
+        const b = g.bewertung;
+        if(!b) return `<div class="karte"><div class="zeile">
+          <div><em style="color:var(--muted)">Bewertung existiert nicht mehr</em>
+          <div class="meta">gemeldet ${datum(g.gemeldet_am)}</div></div>
+          <button class="btn-klein ok" onclick="meldungErledigt('${g.meldung_id}')">Meldung entfernen</button>
+        </div></div>`;
+        return `<div class="karte" style="border-color:#f5c6b8">
+          <div class="zeile">
+            <div style="flex:1">
+              <div class="sterne">${'★'.repeat(b.bewertung_gesamt||0)}${'☆'.repeat(5-(b.bewertung_gesamt||0))}</div>
+              <div style="font-weight:700;margin:.2rem 0">${esc(b.beruf_name)}</div>
+              <div style="font-size:.88rem">${esc(b.freitext||'(kein Text)')}</div>
+              <div class="meta">${esc(b.anon_name||'Anonym')} · ${datum(b.created_at)} · gemeldet ${datum(g.gemeldet_am)}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:.4rem">
+              <button class="btn-klein" onclick="loeschen('bewertungen','${b.id}','Bewertung')">Löschen</button>
+              <button class="btn-klein ok" onclick="meldungErledigt('${g.meldung_id}')">Behalten</button>
+            </div>
+          </div></div>`;
+      }).join('')
+    : '<div class="karte"><div class="leer">Keine offenen Meldungen ✓</div></div>';
+
+  // Suchbegriffe
+  const maxSuche = d.topSuchen[0]?.anzahl || 1;
+  document.getElementById('suchen').innerHTML = d.topSuchen.length
+    ? d.topSuchen.map(t => `<div class="zeile">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+            <strong style="font-size:.9rem">${esc(t.begriff)}</strong>
+            ${t.treffer === 0 ? '<span class="tag rot">kein Beruf gefunden</span>' : ''}
+            ${t.treffer > 0 && !t.hatBewertung ? '<span class="tag">noch unbewertet</span>' : ''}
+            ${t.hatBewertung ? '<span class="tag gruen">hat Bewertungen</span>' : ''}
+          </div>
+          <div class="balken"><div style="width:${t.anzahl/maxSuche*100}%"></div></div>
+        </div>
+        <span style="font-weight:700;font-size:.9rem">${t.anzahl}×</span>
+      </div>`).join('')
+    : '<div class="leer">Noch keine Suchanfragen protokolliert.</div>';
+
+  // Top-Berufe
+  const maxBeruf = d.topBerufe[0]?.anzahl || 1;
+  document.getElementById('topberufe').innerHTML = d.topBerufe.length
+    ? d.topBerufe.map(t => `<div class="zeile">
+        <div style="flex:1;min-width:0">
+          <strong style="font-size:.9rem">${esc(t.name)}</strong>
+          <div class="balken"><div style="width:${t.anzahl/maxBeruf*100}%"></div></div>
+        </div>
+        <span style="font-weight:700;font-size:.9rem">${t.anzahl}</span>
+      </div>`).join('')
+    : '<div class="leer">Noch keine Bewertungen vorhanden.</div>';
+
+  // Bewertungen
+  document.getElementById('bewertungen').innerHTML = d.bewertungen.length
+    ? d.bewertungen.map(b => `<div class="karte"><div class="zeile">
+        <div style="flex:1">
+          <div class="sterne">${'★'.repeat(b.bewertung_gesamt||0)}${'☆'.repeat(5-(b.bewertung_gesamt||0))}
+            ${b.weiterempfehlung ? '<span class="tag gruen" style="margin-left:.4rem">empfiehlt</span>' : ''}</div>
+          <div style="font-weight:700;margin:.2rem 0">${esc(b.beruf_name)}</div>
+          <div style="font-size:.88rem">${esc(b.freitext||'(kein Text)')}</div>
+          <div class="meta">${esc(b.anon_name||'Anonym')}${b.berufsjahre?' · '+esc(b.berufsjahre):''}${b.region?' · '+esc(b.region):''}${b.gehalt_brutto?' · '+b.gehalt_brutto+' €':''} · ${datum(b.created_at)}</div>
+        </div>
+        <button class="btn-klein" onclick="loeschen('bewertungen','${b.id}','Bewertung')">Löschen</button>
+      </div></div>`).join('')
+    : '<div class="karte"><div class="leer">Noch keine Bewertungen.</div></div>';
+
+  // Diskussionen
+  document.getElementById('diskussionen').innerHTML = d.diskussionen.length
+    ? d.diskussionen.map(t => `<div class="karte"><div class="zeile">
+        <div style="flex:1">
+          <div style="font-weight:700">${esc(t.titel)}</div>
+          ${t.inhalt ? `<div style="font-size:.88rem;color:var(--muted)">${esc(t.inhalt)}</div>` : ''}
+          <div class="meta">${esc(t.beruf_name)} · ${esc(t.anon_name||'Anonym')} · ${datum(t.created_at)}</div>
+        </div>
+        <button class="btn-klein" onclick="loeschen('diskussionen','${t.id}','Diskussion')">Löschen</button>
+      </div></div>`).join('')
+    : '<div class="karte"><div class="leer">Noch keine Diskussionen.</div></div>';
+
+  // Newsletter
+  const a = d.aboStats;
+  const quote = a.gesamt ? Math.round(a.bestaetigt/a.gesamt*100) : 0;
+  document.getElementById('abos').innerHTML = `
+    <div class="zeile"><span>Bestätigt</span><strong>${a.bestaetigt}</strong></div>
+    <div class="zeile"><span>Warten auf Bestätigung</span><strong>${a.offen}</strong></div>
+    <div class="zeile"><span>Bestätigungsquote</span><strong>${quote}%</strong></div>
+    <div class="zeile"><span>Möchten Bewertungen</span><strong>${a.fuerBewertungen}</strong></div>
+    <div class="zeile"><span>Möchten Stellenangebote</span><strong>${a.fuerStellen}</strong></div>`;
+}
+
+// Automatisch anmelden wenn Passwort in dieser Sitzung schon geprüft wurde
+if(passwort){
+  document.getElementById('pw').value = passwort;
+  anmelden();
+}
+</script>
+</body>
+</html>

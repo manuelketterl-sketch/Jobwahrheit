@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Arbeitgeber – JobInsides</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--accent:#00bfa6;--accent-deep:#009e88;--ink:#0d1b1a;--muted:#66756f;
+        --border:#e6ece9;--bg:#f3f7f6;--rot:#e8552d;--gruen:#00a878;
+        --shadow:0 4px 24px rgba(13,27,26,.06);--shadow-lg:0 16px 50px rgba(13,27,26,.10)}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+
+  nav{background:rgba(255,255,255,.9);backdrop-filter:blur(12px);height:64px;display:flex;
+      align-items:center;justify-content:space-between;padding:0 5vw;border-bottom:1px solid var(--border);
+      position:sticky;top:0;z-index:100}
+  .logo{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.3rem;
+        letter-spacing:-.03em;cursor:pointer}
+  .logo span{color:var(--accent)}
+  .logo small{font-weight:600;font-size:.7rem;color:var(--muted);margin-left:.4rem;letter-spacing:0}
+
+  .wrap{max-width:920px;margin:0 auto;padding:2.5rem 5vw}
+  h1{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:2rem;
+     letter-spacing:-.03em;margin-bottom:.4rem}
+  h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.2rem;margin-bottom:1rem}
+  .sub{color:var(--muted);margin-bottom:2rem}
+
+  .karte{background:#fff;border:1px solid var(--border);border-radius:20px;padding:1.75rem;
+         margin-bottom:1rem;box-shadow:var(--shadow)}
+  .auth-karte{max-width:420px;margin:8vh auto;background:#fff;border:1px solid var(--border);
+              border-radius:24px;padding:2.5rem;box-shadow:var(--shadow-lg)}
+
+  label{display:block;font-size:.78rem;font-weight:700;color:var(--muted);
+        text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem}
+  input,textarea,select{width:100%;padding:.8rem 1rem;border:1.5px solid var(--border);
+        border-radius:12px;font-family:inherit;font-size:16px;background:#fff;color:var(--ink);outline:none;
+        transition:border-color .2s,box-shadow .2s}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,191,166,.1)}
+  textarea{resize:vertical;min-height:110px}
+  .feld{margin-bottom:1.1rem}
+  .reihe{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+
+  .btn{background:var(--accent);color:#fff;border:none;padding:.85rem 2rem;border-radius:99px;
+       font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;
+       transition:background .2s,transform .2s}
+  .btn:hover{background:var(--accent-deep);transform:translateY(-1px)}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .btn-zweit{background:transparent;color:var(--muted);border:1.5px solid var(--border)}
+  .btn-zweit:hover{background:var(--bg);color:var(--ink)}
+  .btn-klein{padding:.4rem .9rem;font-size:.8rem;border-radius:99px;border:1px solid var(--border);
+             background:#fff;color:var(--muted);cursor:pointer;font-weight:600;font-family:inherit}
+  .btn-klein:hover{border-color:var(--accent);color:var(--accent-deep)}
+  .btn-klein.gefahr:hover{border-color:var(--rot);color:var(--rot)}
+  .link{color:var(--accent-deep);cursor:pointer;font-weight:600;font-size:.88rem}
+
+  .hinweis{font-size:.88rem;padding:.85rem 1.1rem;border-radius:12px;margin-bottom:1rem;display:none}
+  .hinweis.fehler{background:#fee9e3;color:#b03d1c;display:block}
+  .hinweis.ok{background:rgba(0,168,120,.12);color:#00754f;display:block}
+  .hinweis.info{background:#fff4d6;color:#8a6100;display:block}
+
+  .tag{font-size:.7rem;border-radius:99px;padding:.2rem .7rem;font-weight:700;white-space:nowrap}
+  .tag.wartet{background:#fff4d6;color:#8a6100}
+  .tag.live{background:rgba(0,168,120,.12);color:var(--gruen)}
+  .tag.aus{background:var(--bg);color:var(--muted)}
+
+  .stelle{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;
+          padding:1.1rem 0;border-bottom:1px solid var(--bg)}
+  .stelle:last-child{border-bottom:none}
+  .meta{font-size:.78rem;color:var(--muted);margin-top:.3rem}
+  .leer{text-align:center;padding:2.5rem 1rem;border:2px dashed var(--border);border-radius:16px}
+
+  .dropdown{position:absolute;top:calc(100% + .4rem);left:0;right:0;background:#fff;
+            border:1px solid var(--border);border-radius:14px;max-height:260px;overflow-y:auto;
+            box-shadow:var(--shadow-lg);display:none;z-index:50}
+  .dropdown.offen{display:block}
+  .dropdown div{padding:.7rem 1rem;cursor:pointer;font-size:.9rem;display:flex;
+                justify-content:space-between;gap:.75rem}
+  .dropdown div:hover{background:var(--bg)}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(13,27,26,.5);backdrop-filter:blur(4px);
+            z-index:200;display:none;align-items:flex-start;justify-content:center;
+            padding:1.5rem;overflow-y:auto}
+  .modal-bg.offen{display:flex}
+  .modal{background:#fff;border-radius:24px;padding:2rem;max-width:560px;width:100%;
+         box-shadow:var(--shadow-lg);margin:auto}
+
+  @media(max-width:640px){.reihe{grid-template-columns:1fr}.wrap{padding:1.5rem 5vw}
+    h1{font-size:1.6rem}.karte{padding:1.35rem}.auth-karte{padding:1.75rem;margin:4vh auto}
+    .stelle{flex-direction:column}.modal{padding:1.5rem}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo" onclick="location.href='/'">Job<span>Insides</span><small>ARBEITGEBER</small></div>
+  <div id="nav-rechts"></div>
+</nav>
+
+<!-- ══ ANMELDEN / REGISTRIEREN ══ -->
+<div id="seite-auth">
+  <div class="auth-karte">
+    <div id="tab-login">
+      <h1 style="font-size:1.5rem">Willkommen zurück</h1>
+      <p class="sub" style="margin-bottom:1.5rem;font-size:.9rem">Melde dich an, um deine Stellenanzeigen zu verwalten.</p>
+      <div class="hinweis" id="login-hinweis"></div>
+      <div class="feld"><label>E-Mail</label>
+        <input type="email" id="login-email" autocomplete="email"></div>
+      <div class="feld"><label>Passwort</label>
+        <input type="password" id="login-pw" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter')anmelden()"></div>
+      <button class="btn" style="width:100%" onclick="anmelden()">Anmelden</button>
+      <div style="text-align:center;margin-top:1.25rem;font-size:.88rem;color:var(--muted)">
+        <span class="link" onclick="passwortVergessen()">Passwort vergessen?</span>
+        <div style="margin-top:.6rem">Noch kein Konto?
+          <span class="link" onclick="zeigeTab('registrieren')">Jetzt registrieren</span></div>
+      </div>
+    </div>
+
+    <div id="tab-registrieren" style="display:none">
+      <h1 style="font-size:1.5rem">Konto anlegen</h1>
+      <p class="sub" style="margin-bottom:1.5rem;font-size:.9rem">Kostenlos registrieren und Stellen ausschreiben.</p>
+      <div class="hinweis" id="reg-hinweis"></div>
+      <div class="feld"><label>Firmenname *</label>
+        <input type="text" id="reg-firma" autocomplete="organization"></div>
+      <div class="feld"><label>E-Mail *</label>
+        <input type="email" id="reg-email" autocomplete="email"></div>
+      <div class="feld"><label>Passwort * <span style="text-transform:none;font-weight:500">(mind. 8 Zeichen)</span></label>
+        <input type="password" id="reg-pw" autocomplete="new-password"
+          onkeydown="if(event.key==='Enter')registrieren()"></div>
+      <button class="btn" style="width:100%" onclick="registrieren()">Konto anlegen</button>
+      <p style="font-size:.72rem;color:var(--muted);margin-top:.85rem;line-height:1.5">
+        Mit der Registrierung stimmst du unserer
+        <a href="/#datenschutz" style="color:var(--accent-deep)">Datenschutzerklärung</a> zu.
+        Dein Konto wird vor der Freischaltung geprüft.</p>
+      <div style="text-align:center;margin-top:1.25rem;font-size:.88rem;color:var(--muted)">
+        Schon registriert? <span class="link" onclick="zeigeTab('login')">Anmelden</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div id="seite-dash" style="display:none">
+  <div class="wrap">
+    <div class="hinweis" id="freigabe-hinweis"></div>
+
+    <h1 id="begruessung">Dein Bereich</h1>
+    <p class="sub" id="firma-zeile"></p>
+
+    <!-- Stellenanzeigen -->
+    <div class="karte">
+      <div style="display:flex;justify-content:space-between;align-items:center;
+                  flex-wrap:wrap;gap:.75rem;margin-bottom:1rem">
+        <h2 style="margin:0">Deine Stellenanzeigen</h2>
+        <button class="btn" style="padding:.6rem 1.5rem;font-size:.9rem"
+                onclick="oeffneStelle()">+ Neue Anzeige</button>
+      </div>
+      <div id="stellen-liste"></div>
+    </div>
+
+    <!-- Firmenprofil -->
+    <div class="karte">
+      <h2>Firmenprofil</h2>
+      <div class="hinweis" id="profil-hinweis"></div>
+      <div class="feld"><label>Firmenname *</label><input type="text" id="p-name"></div>
+      <div class="reihe">
+        <div class="feld"><label>Ansprechpartner</label><input type="text" id="p-ansprech"></div>
+        <div class="feld"><label>Telefon</label><input type="tel" id="p-telefon"></div>
+      </div>
+      <div class="feld"><label>Website</label>
+        <input type="url" id="p-website" placeholder="https://…"></div>
+      <div class="reihe">
+        <div class="feld"><label>PLZ</label><input type="text" id="p-plz" maxlength="5" inputmode="numeric"></div>
+        <div class="feld"><label>Ort</label><input type="text" id="p-ort"></div>
+      </div>
+      <div class="feld"><label>Über das Unternehmen</label>
+        <textarea id="p-beschreibung" placeholder="Was macht euch als Arbeitgeber aus?"></textarea></div>
+      <button class="btn" onclick="speichereProfil()">Profil speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ STELLENANZEIGE BEARBEITEN ══ -->
+<div class="modal-bg" id="stelle-modal">
+  <div class="modal">
+    <h2 id="stelle-titel">Neue Stellenanzeige</h2>
+    <div class="hinweis" id="stelle-hinweis"></div>
+
+    <div class="feld" style="position:relative">
+      <label>Beruf * <span style="text-transform:none;font-weight:500">– bestimmt wo die Anzeige erscheint</span></label>
+      <input type="text" id="s-beruf" placeholder="z.B. Kfz-Mechatroniker" autocomplete="off"
+             oninput="sucheBeruf(this.value)" onblur="setTimeout(()=>schliesseBerufDropdown(),180)">
+      <div class="dropdown" id="beruf-dropdown"></div>
+    </div>
+
+    <div class="feld"><label>Titel der Anzeige *</label>
+      <input type="text" id="s-titel" placeholder="z.B. Kfz-Mechatroniker (m/w/d) in Vollzeit"></div>
+
+    <div class="feld"><label>Beschreibung</label>
+      <textarea id="s-beschreibung" placeholder="Aufgaben, Anforderungen, was ihr bietet…"></textarea></div>
+
+    <div class="reihe">
+      <div class="feld"><label>PLZ</label><input type="text" id="s-plz" maxlength="5" inputmode="numeric"></div>
+      <div class="feld"><label>Ort</label><input type="text" id="s-ort"></div>
+    </div>
+
+    <div class="reihe">
+      <div class="feld"><label>Beschäftigungsart</label>
+        <select id="s-art">
+          <option>Vollzeit</option><option>Teilzeit</option>
+          <option>Ausbildung</option><option>Minijob</option>
+          <option>Praktikum</option><option>Werkstudent</option>
+        </select></div>
+      <div class="feld"><label>Eintritt ab</label><input type="date" id="s-eintritt"></div>
+    </div>
+
+    <div class="reihe">
+      <div class="feld"><label>Gehalt von (€/Monat)</label>
+        <input type="number" id="s-gehalt-von" inputmode="numeric" placeholder="optional"></div>
+      <div class="feld"><label>Gehalt bis (€/Monat)</label>
+        <input type="number" id="s-gehalt-bis" inputmode="numeric" placeholder="optional"></div>
+    </div>
+
+    <div class="feld"><label>Bewerbungslink</label>
+      <input type="url" id="s-url" placeholder="https://…"></div>
+    <div class="feld"><label>oder Bewerbungs-E-Mail</label>
+      <input type="email" id="s-email" placeholder="bewerbung@firma.de"></div>
+
+    <div style="display:flex;gap:.75rem;margin-top:1.5rem;flex-wrap:wrap">
+      <button class="btn" onclick="speichereStelle()">Speichern</button>
+      <button class="btn btn-zweit" onclick="schliesseStelle()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://kvqdgcixmdnrarlaskyb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2cWRnY2l4bWRucmFybGFza3liIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NzUwMTQsImV4cCI6MjA5MTU1MTAxNH0.ngU8OG7cFC7ZWRrt0ZxlUBDIbtv-cEa-rFJbjZII2wk';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let meineFirma = null;
+let bearbeiteStelle = null;
+
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function zeige(id,text,art){const el=document.getElementById(id);el.textContent=text;el.className='hinweis '+art}
+function verstecke(id){const el=document.getElementById(id);if(el)el.style.display='none'}
+
+function zeigeTab(t){
+  document.getElementById('tab-login').style.display = t==='login'?'block':'none';
+  document.getElementById('tab-registrieren').style.display = t==='registrieren'?'block':'none';
+}
+
+// ════════ ANMELDUNG ════════
+async function registrieren(){
+  const firma = document.getElementById('reg-firma').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pw = document.getElementById('reg-pw').value;
+
+  if(!firma) return zeige('reg-hinweis','Bitte gib deinen Firmennamen an.','fehler');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return zeige('reg-hinweis','Bitte gib eine gültige E-Mail-Adresse an.','fehler');
+  if(pw.length < 8) return zeige('reg-hinweis','Das Passwort muss mindestens 8 Zeichen haben.','fehler');
+
+  zeige('reg-hinweis','Konto wird angelegt…','info');
+
+  const {data,error} = await sb.auth.signUp({
+    email, password: pw,
+    options:{ data:{ firmenname: firma }, emailRedirectTo: location.origin+'/arbeitgeber.html' }
+  });
+
+  if(error){
+    const t = /already registered|already exists/i.test(error.message)
+      ? 'Für diese E-Mail existiert bereits ein Konto. Melde dich stattdessen an.'
+      : error.message;
+    return zeige('reg-hinweis', t, 'fehler');
+  }
+
+  // Firmeneintrag anlegen (falls Sitzung direkt aktiv ist)
+  if(data.session){
+    await sb.from('firmen').insert([{ user_id: data.user.id, name: firma }]);
+    return start();
+  }
+
+  zeige('reg-hinweis','Fast geschafft! Wir haben dir eine Bestätigungs-Mail geschickt. Bitte klick auf den Link darin.','ok');
+}
+
+async function anmelden(){
+  const email = document.getElementById('login-email').value.trim();
+  const pw = document.getElementById('login-pw').value;
+  if(!email || !pw) return zeige('login-hinweis','Bitte E-Mail und Passwort eingeben.','fehler');
+
+  zeige('login-hinweis','Anmeldung läuft…','info');
+  const {error} = await sb.auth.signInWithPassword({email, password: pw});
+
+  if(error){
+    const t = /Invalid login/i.test(error.message) ? 'E-Mail oder Passwort stimmt nicht.'
+            : /Email not confirmed/i.test(error.message) ? 'Bitte bestätige zuerst deine E-Mail-Adresse.'
+            : error.message;
+    return zeige('login-hinweis', t, 'fehler');
+  }
+  start();
+}
+
+async function passwortVergessen(){
+  const email = document.getElementById('login-email').value.trim();
+  if(!email) return zeige('login-hinweis','Bitte trag zuerst deine E-Mail-Adresse ein.','fehler');
+  const {error} = await sb.auth.resetPasswordForEmail(email,
+    {redirectTo: location.origin+'/arbeitgeber.html'});
+  zeige('login-hinweis', error ? error.message
+    : 'Wir haben dir einen Link zum Zurücksetzen geschickt.', error?'fehler':'ok');
+}
+
+async function abmelden(){
+  await sb.auth.signOut();
+  location.reload();
+}
+
+// ════════ START ════════
+async function start(){
+  const {data:{session}} = await sb.auth.getSession();
+  if(!session){
+    document.getElementById('seite-auth').style.display='block';
+    document.getElementById('seite-dash').style.display='none';
+    document.getElementById('nav-rechts').innerHTML='';
+    return;
+  }
+
+  // Firma laden – oder anlegen falls die Registrierung sie nicht erstellt hat
+  let {data:firma} = await sb.from('firmen').select('*').eq('user_id', session.user.id).maybeSingle();
+  if(!firma){
+    const name = session.user.user_metadata?.firmenname || 'Mein Unternehmen';
+    const {data:neu} = await sb.from('firmen')
+      .insert([{user_id: session.user.id, name}]).select().single();
+    firma = neu;
+  }
+  meineFirma = firma;
+
+  document.getElementById('seite-auth').style.display='none';
+  document.getElementById('seite-dash').style.display='block';
+  document.getElementById('nav-rechts').innerHTML =
+    `<button class="btn-klein" onclick="abmelden()">Abmelden</button>`;
+
+  document.getElementById('begruessung').textContent = firma.name;
+  document.getElementById('firma-zeile').textContent = session.user.email;
+
+  // Freigabe-Status
+  const fh = document.getElementById('freigabe-hinweis');
+  if(firma.gesperrt){
+    zeige('freigabe-hinweis','Dein Konto wurde gesperrt. Bitte melde dich bei info@jobinsides.de.','fehler');
+  } else if(!firma.freigegeben){
+    zeige('freigabe-hinweis','Dein Konto wird derzeit geprüft. Du kannst schon Anzeigen anlegen – sie erscheinen öffentlich, sobald wir dich freigeschaltet haben.','info');
+  } else { fh.style.display='none'; }
+
+  // Profil füllen
+  const f = (id,wert)=>{const el=document.getElementById(id); if(el) el.value = wert ?? ''};
+  f('p-name',firma.name); f('p-ansprech',firma.ansprechpartner); f('p-telefon',firma.telefon);
+  f('p-website',firma.website); f('p-plz',firma.plz); f('p-ort',firma.ort);
+  f('p-beschreibung',firma.beschreibung);
+
+  ladeStellen();
+}
+
+// ════════ PROFIL ════════
+async function speichereProfil(){
+  const name = document.getElementById('p-name').value.trim();
+  if(!name) return zeige('profil-hinweis','Der Firmenname darf nicht leer sein.','fehler');
+
+  const wert = id => document.getElementById(id).value.trim() || null;
+  const {error} = await sb.from('firmen').update({
+    name,
+    ansprechpartner: wert('p-ansprech'),
+    telefon: wert('p-telefon'),
+    website: wert('p-website'),
+    plz: wert('p-plz'),
+    ort: wert('p-ort'),
+    beschreibung: wert('p-beschreibung')
+  }).eq('id', meineFirma.id);
+
+  if(error) return zeige('profil-hinweis','Fehler: '+error.message,'fehler');
+  meineFirma.name = name;
+  document.getElementById('begruessung').textContent = name;
+  zeige('profil-hinweis','Profil gespeichert ✓','ok');
+  setTimeout(()=>verstecke('profil-hinweis'),3000);
+}
+
+// ════════ STELLENANZEIGEN ════════
+async function ladeStellen(){
+  const liste = document.getElementById('stellen-liste');
+  liste.innerHTML = '<div style="color:var(--muted);font-size:.9rem">Lade…</div>';
+
+  const {data,error} = await sb.from('stellenanzeigen').select('*')
+    .eq('firma_id', meineFirma.id).order('created_at',{ascending:false});
+
+  if(error||!data?.length){
+    liste.innerHTML = `<div class="leer">
+      <div style="font-size:1.8rem;margin-bottom:.5rem">📋</div>
+      <div style="font-weight:700;margin-bottom:.25rem">Noch keine Anzeigen</div>
+      <div style="font-size:.88rem;color:var(--muted)">Leg deine erste Stellenanzeige an.</div>
+    </div>`;
+    return;
+  }
+
+  liste.innerHTML = data.map(s=>{
+    const abgelaufen = s.laeuft_ab && new Date(s.laeuft_ab) < new Date();
+    const status = !s.aktiv ? '<span class="tag aus">Pausiert</span>'
+                 : abgelaufen ? '<span class="tag aus">Abgelaufen</span>'
+                 : !s.freigegeben ? '<span class="tag wartet">Wird geprüft</span>'
+                 : '<span class="tag live">Online</span>';
+    const ort = [s.plz,s.ort].filter(Boolean).join(' ');
+    return `<div class="stelle">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+          <strong>${esc(s.titel)}</strong>${status}
+        </div>
+        <div class="meta">${esc(s.beruf_name)}${ort?' · 📍 '+esc(ort):''}${s.beschaeftigungsart?' · '+esc(s.beschaeftigungsart):''} · 👁 ${s.klicks||0} Klicks</div>
+      </div>
+      <div style="display:flex;gap:.4rem;flex-shrink:0">
+        <button class="btn-klein" onclick='oeffneStelle(${JSON.stringify(s.id)})'>Bearbeiten</button>
+        <button class="btn-klein" onclick='schalteStelle(${JSON.stringify(s.id)},${!s.aktiv})'>${s.aktiv?'Pausieren':'Aktivieren'}</button>
+        <button class="btn-klein gefahr" onclick='loescheStelle(${JSON.stringify(s.id)})'>Löschen</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function oeffneStelle(id){
+  bearbeiteStelle = null;
+  verstecke('stelle-hinweis');
+  const setz = (f,w)=>{document.getElementById(f).value = w ?? ''};
+  ['s-beruf','s-titel','s-beschreibung','s-plz','s-ort','s-eintritt',
+   's-gehalt-von','s-gehalt-bis','s-url','s-email'].forEach(f=>setz(f,''));
+  document.getElementById('s-art').value = 'Vollzeit';
+
+  if(id){
+    const {data} = await sb.from('stellenanzeigen').select('*').eq('id',id).single();
+    if(data){
+      bearbeiteStelle = data;
+      setz('s-beruf',data.beruf_name); setz('s-titel',data.titel);
+      setz('s-beschreibung',data.beschreibung); setz('s-plz',data.plz);
+      setz('s-ort',data.ort); setz('s-eintritt',data.eintritt_ab);
+      setz('s-gehalt-von',data.gehalt_von); setz('s-gehalt-bis',data.gehalt_bis);
+      setz('s-url',data.bewerbung_url); setz('s-email',data.bewerbung_email);
+      if(data.beschaeftigungsart) document.getElementById('s-art').value = data.beschaeftigungsart;
+    }
+    document.getElementById('stelle-titel').textContent = 'Anzeige bearbeiten';
+  } else {
+    document.getElementById('stelle-titel').textContent = 'Neue Stellenanzeige';
+    // Ort aus dem Firmenprofil vorbelegen
+    setz('s-plz', meineFirma.plz); setz('s-ort', meineFirma.ort);
+  }
+  document.getElementById('stelle-modal').classList.add('offen');
+  document.body.style.overflow='hidden';
+}
+
+function schliesseStelle(){
+  document.getElementById('stelle-modal').classList.remove('offen');
+  document.body.style.overflow='';
+}
+
+async function speichereStelle(){
+  const beruf = document.getElementById('s-beruf').value.trim();
+  const titel = document.getElementById('s-titel').value.trim();
+  if(!beruf) return zeige('stelle-hinweis','Bitte wähle einen Beruf – dadurch weiß die Anzeige wo sie erscheint.','fehler');
+  if(!titel) return zeige('stelle-hinweis','Bitte gib einen Titel für die Anzeige an.','fehler');
+
+  const wert = id => document.getElementById(id).value.trim() || null;
+  const zahl = id => { const v = parseInt(document.getElementById(id).value); return isNaN(v)?null:v };
+
+  const daten = {
+    firma_id: meineFirma.id,
+    beruf_name: beruf,
+    titel,
+    beschreibung: wert('s-beschreibung'),
+    plz: wert('s-plz'),
+    ort: wert('s-ort'),
+    beschaeftigungsart: document.getElementById('s-art').value,
+    eintritt_ab: wert('s-eintritt'),
+    gehalt_von: zahl('s-gehalt-von'),
+    gehalt_bis: zahl('s-gehalt-bis'),
+    bewerbung_url: wert('s-url'),
+    bewerbung_email: wert('s-email'),
+    aktualisiert_am: new Date().toISOString()
+  };
+
+  let error;
+  if(bearbeiteStelle){
+    // Bei Änderung erneut zur Prüfung stellen
+    ({error} = await sb.from('stellenanzeigen')
+      .update({...daten, freigegeben:false}).eq('id', bearbeiteStelle.id));
+  } else {
+    ({error} = await sb.from('stellenanzeigen').insert([daten]));
+  }
+
+  if(error) return zeige('stelle-hinweis','Fehler: '+error.message,'fehler');
+  schliesseStelle();
+  ladeStellen();
+}
+
+async function schalteStelle(id, aktiv){
+  await sb.from('stellenanzeigen').update({aktiv}).eq('id',id);
+  ladeStellen();
+}
+
+async function loescheStelle(id){
+  if(!confirm('Diese Anzeige wirklich löschen?')) return;
+  await sb.from('stellenanzeigen').delete().eq('id',id);
+  ladeStellen();
+}
+
+// ════════ BERUFSSUCHE ════════
+let berufTimer = null;
+function sucheBeruf(wert){
+  clearTimeout(berufTimer);
+  const dd = document.getElementById('beruf-dropdown');
+  const q = (wert||'').trim();
+  if(q.length < 2){ dd.classList.remove('offen'); return; }
+
+  berufTimer = setTimeout(async ()=>{
+    const [praefix,enthalten] = await Promise.all([
+      sb.from('berufe').select('name,berufsgruppe').ilike('name_lower',`${q.toLowerCase()}%`).limit(10),
+      sb.from('berufe').select('name,berufsgruppe').ilike('name_lower',`%${q.toLowerCase()}%`).limit(20)
+    ]);
+    const gesehen = new Set();
+    const treffer = [...(praefix.data||[]),...(enthalten.data||[])]
+      .filter(b=>{ if(gesehen.has(b.name)) return false; gesehen.add(b.name); return true; })
+      .slice(0,8);
+
+    dd.innerHTML = treffer.length
+      ? treffer.map(b=>`<div onmousedown="waehleBeruf(${JSON.stringify(b.name).replace(/"/g,'&quot;')})">
+          <span>${esc(b.name)}</span><span style="font-size:.72rem;color:var(--muted)">${esc(b.berufsgruppe)}</span>
+        </div>`).join('')
+      : '<div style="color:var(--muted)">Kein Treffer – du kannst den Beruf auch frei eintragen</div>';
+    dd.classList.add('offen');
+  }, 250);
+}
+function waehleBeruf(name){
+  document.getElementById('s-beruf').value = name;
+  schliesseBerufDropdown();
+}
+function schliesseBerufDropdown(){
+  document.getElementById('beruf-dropdown').classList.remove('offen');
+}
+
+// ════════ INIT ════════
+sb.auth.onAuthStateChange((event)=>{
+  if(event === 'SIGNED_IN' || event === 'SIGNED_OUT') start();
+});
+start();
+</script>
+</body>
+</html>

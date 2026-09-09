@@ -1461,7 +1461,13 @@ function closeModalToBeruf() {
   ['nl-bewertungen','nl-stellen'].forEach(id => { const el = document.getElementById(id); if (el) el.checked = false; });
   ['nl-email','nl-plz'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   toggleStellenFelder();
-  showPage('beruf');
+  // Zur Berufsseite zurück – ohne neuen Verlaufseintrag,
+  // damit Zurück weiterhin zur Suche führt
+  if (currentBeruf) {
+    showPage('beruf', true);
+  } else {
+    showPage('home');
+  }
 }
 
 // Blendet die Regionsfelder ein/aus je nach Stellen-Häkchen
@@ -1954,6 +1960,34 @@ let currentBeruf = null;
 
 // ── Navigation
 // ════════════════════════════════════════
+// SCHUTZ VOR DATENVERLUST
+// Warnt, wenn eine angefangene Bewertung verloren ginge
+// ════════════════════════════════════════
+function bewertungAngefangen() {
+  // Nur relevant, solange das Bewertungsformular offen ist
+  const seite = document.getElementById('page-bewerten');
+  if (!seite || !seite.classList.contains('active')) return false;
+
+  // Das Berufsfeld wird beim Öffnen einer Berufsseite automatisch
+  // vorbelegt – es allein zählt nicht als "angefangen"
+  const gefuellt = ['f-erwartet','f-alltag','f-freitext','f-gehalt']
+    .some(id => (document.getElementById(id)?.value || '').trim().length > 0);
+  const ausgewaehlt = document.querySelector('#page-bewerten .skill-opt.sel')
+    || document.querySelector('#page-bewerten .star-btn.active')
+    || document.querySelector('#page-bewerten .toggle-opt.sel');
+
+  return gefuellt || !!ausgewaehlt;
+}
+
+// Beim Schließen des Tabs oder Zurück aus der Seite heraus
+window.addEventListener('beforeunload', (e) => {
+  if (bewertungAngefangen()) {
+    e.preventDefault();
+    e.returnValue = '';   // Browser zeigen ihren eigenen Hinweistext
+  }
+});
+
+// ════════════════════════════════════════
 // SEITENWECHSEL mit Browser-Verlauf
 // Damit der Zurück-Knopf innerhalb der Seite funktioniert
 // statt JobInsides ganz zu verlassen
@@ -1961,6 +1995,18 @@ let currentBeruf = null;
 let verlaufAktiv = true;   // false, während wir auf ein Zurück reagieren
 
 function showPage(id, ausVerlauf) {
+  // Angefangene Bewertung schützen, wenn woanders hin gewechselt wird
+  if (!ausVerlauf && id !== 'bewerten' && bewertungAngefangen()) {
+    if (!confirm('Deine Bewertung ist noch nicht abgeschickt und geht verloren. Trotzdem wechseln?')) return;
+    formularZuruecksetzen();
+  }
+
+  // Sicherstellen, dass ein Grundzustand im Verlauf liegt –
+  // sonst führt der erste Zurück-Klick aus der Seite heraus
+  if (!ausVerlauf && verlaufAktiv && !history.state) {
+    history.replaceState({ seite: 'home' }, '', location.pathname);
+  }
+
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const ziel = document.getElementById('page-' + id);
   if (ziel) ziel.classList.add('active');
@@ -1976,6 +2022,17 @@ function showPage(id, ausVerlauf) {
 
 // Reagiert auf den Zurück- und Vorwärts-Knopf des Browsers
 window.addEventListener('popstate', (e) => {
+  // Angefangene Bewertung? Dann nachfragen bevor sie verloren geht
+  if (bewertungAngefangen()) {
+    const weiter = confirm('Deine Bewertung ist noch nicht abgeschickt und geht verloren. Trotzdem zurück?');
+    if (!weiter) {
+      // Auf der Bewertungsseite bleiben: Verlaufseintrag wiederherstellen
+      history.pushState({ seite: 'bewerten' }, '', '#bewerten');
+      return;
+    }
+    formularZuruecksetzen();
+  }
+
   const z = e.state;
   verlaufAktiv = false;
   if (!z || z.seite === 'home') {
@@ -2024,6 +2081,7 @@ function showBeruf(name, berufsgruppe, dkzId, ausVerlauf) {
   showPage('beruf', true);
   // Beruf im Verlauf ablegen, damit Zurück wieder zur Suche führt
   if (!ausVerlauf && verlaufAktiv) {
+    if (!history.state) history.replaceState({ seite: 'home' }, '', location.pathname);
     history.pushState(
       { seite: 'beruf', beruf: name, gruppe: berufsgruppe, dkz: dkzId },
       '', '#beruf=' + encodeURIComponent(name)

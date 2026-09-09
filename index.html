@@ -641,7 +641,6 @@ h1 em { color: var(--accent); font-style: normal; }
 <nav>
   <div class="nav-logo" onclick="showPage('home')">Job<span>Insides</span></div>
   <div class="nav-links">
-    <a onclick="showPage('home')">Berufe entdecken</a>
     <a onclick="showPage('vergleich')">Vergleichen</a>
     <a onclick="showPage('arbeitgeber')">Für Arbeitgeber</a>
   </div>
@@ -664,22 +663,10 @@ h1 em { color: var(--accent); font-style: normal; }
       <div class="search-dropdown" id="search-dropdown"></div>
     </div>
 
-    <div class="categories">
-      <button class="cat-btn" onclick="searchByKategorie('Ausbildungsberuf')">🎓 Ausbildungsberufe</button>
-      <button class="cat-btn" onclick="searchByKategorie('Studium')">📚 Studienberufe</button>
-      <button class="cat-btn" onclick="searchByKategorie('Weiterbildung')">📈 Weiterbildungen</button>
-      <button class="cat-btn" onclick="searchByKategorie('Hochschulberuf')">🔬 Hochschulberufe</button>
-      <button class="cat-btn" onclick="searchByKategorie('Tätigkeitsfeld')">💼 Tätigkeitsfelder</button>
-    </div>
-
     <div class="stats-bar">
       <div class="stat">
         <div class="stat-num" id="stat-berufe">–</div>
         <div class="stat-label">Berufe gelistet</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num" id="stat-bewertungen">–</div>
-        <div class="stat-label">Bewertungen bisher</div>
       </div>
       <div class="stat">
         <div class="stat-num">100%</div>
@@ -966,19 +953,60 @@ h1 em { color: var(--accent); font-style: normal; }
     <div class="form-section-title">03 — Skills & Gehalt</div>
     <div class="form-group">
       <label class="form-label">Welche Skills brauchst du wirklich?</label>
-      <div class="skill-select" id="f-skills">
-        <div class="skill-opt" onclick="this.classList.toggle('sel')">Teamarbeit</div>
-        <div class="skill-opt" onclick="this.classList.toggle('sel')">Eigeninitiative</div>
-        <div class="skill-opt" onclick="this.classList.toggle('sel')">Körperliche Ausdauer</div>
-        <div class="skill-opt" onclick="this.classList.toggle('sel')">Technisches Verständnis</div>
-        <div class="skill-opt" onclick="this.classList.toggle('sel')">Kommunikation</div>
+      <p style="font-size:.8rem;color:var(--muted);margin:-.2rem 0 .75rem">Wähl aus, was in deinem Alltag wirklich zählt – nicht was in der Stellenanzeige steht.</p>
+
+      <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">Persönlich</div>
+      <div class="skill-select" id="f-skills" style="margin-bottom:1rem">
         <div class="skill-opt" onclick="this.classList.toggle('sel')">Stressresistenz</div>
-        <div class="skill-opt" onclick="this.classList.toggle('sel')">Problemlösung</div>
-        <div class="skill-opt" onclick="this.classList.toggle('sel')">Kundenumgang</div>
-        <div class="skill-opt" onclick="this.classList.toggle('sel')">Selbstorganisation</div>
         <div class="skill-opt" onclick="this.classList.toggle('sel')">Geduld</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Eigeninitiative</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Selbstorganisation</div>
         <div class="skill-opt" onclick="this.classList.toggle('sel')">Lernbereitschaft</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Durchsetzungsvermögen</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Flexibilität</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Sorgfalt</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Entscheidungsfreude</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Frustrationstoleranz</div>
+      </div>
+
+      <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">Mit Menschen</div>
+      <div class="skill-select" style="margin-bottom:1rem">
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Teamarbeit</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Kommunikation</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Kundenumgang</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Konfliktfähigkeit</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Empathie</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Verhandlungsgeschick</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Führung</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Beratung</div>
+      </div>
+
+      <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">Fachlich</div>
+      <div class="skill-select" style="margin-bottom:1rem">
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Technisches Verständnis</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Handwerkliches Geschick</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Problemlösung</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Analytisches Denken</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Zahlenverständnis</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Rechtskenntnisse</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">IT-Kenntnisse</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Fremdsprachen</div>
         <div class="skill-opt" onclick="this.classList.toggle('sel')">Dokumentation</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Planung & Koordination</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Kreativität</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Verkaufstalent</div>
+      </div>
+
+      <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">Rahmenbedingungen</div>
+      <div class="skill-select">
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Körperliche Ausdauer</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Schichtdienst</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Überstunden</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Reisebereitschaft</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Zeitdruck</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Verantwortung</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Alleinarbeit</div>
+        <div class="skill-opt" onclick="this.classList.toggle('sel')">Bildschirmarbeit</div>
       </div>
     </div>
     <div class="form-group">
@@ -1368,7 +1396,8 @@ async function submitBewertung() {
     return;
   }
 
-  const selectedSkills = [...document.querySelectorAll('#f-skills .skill-opt.sel')].map(s => s.textContent);
+  // Skills aus allen vier Gruppen einsammeln
+  const selectedSkills = [...document.querySelectorAll('#page-bewerten .skill-opt.sel')].map(s => s.textContent);
   const weiterempfehlung = document.querySelector('#f-empfehlung .toggle-opt.yes.sel') !== null;
 
   const payload = {
@@ -1405,6 +1434,19 @@ async function submitBewertung() {
   window._nlBeruf = berufName;
   document.getElementById('modal').classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  formularZuruecksetzen();
+}
+
+// Leert das Bewertungsformular nach dem Absenden
+function formularZuruecksetzen() {
+  ['f-erwartet','f-alltag','f-freitext','f-gehalt'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.querySelectorAll('#page-bewerten .skill-opt.sel').forEach(el => el.classList.remove('sel'));
+  document.querySelectorAll('#page-bewerten .star-btn.active').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('#page-bewerten .toggle-opt.sel').forEach(el => el.classList.remove('sel'));
+  formStars.expect = 0; formStars.overall = 0;
 }
 
 // ════════════════════════════════════════
@@ -1881,14 +1923,14 @@ async function vergleicheBerufe() {
 // STATISTIKEN HOMEPAGE
 // ════════════════════════════════════════
 async function loadStats() {
-  const [bew, ber] = await Promise.all([
-    sb.from('bewertungen').select('*', { count: 'exact', head: true }),
-    sb.from('berufe').select('*', { count: 'exact', head: true })
-  ]);
-  const bewEl = document.getElementById('stat-bewertungen');
   const berEl = document.getElementById('stat-berufe');
-  if (bewEl && bew.count !== null) bewEl.textContent = bew.count.toLocaleString('de');
-  if (berEl && ber.count !== null) berEl.textContent = ber.count.toLocaleString('de');
+  if (!berEl) return;
+  try {
+    const { count } = await sb.from('berufe').select('*', { count: 'exact', head: true });
+    berEl.textContent = (count ?? 0).toLocaleString('de');
+  } catch {
+    berEl.textContent = '–';
+  }
 }
 
 // ════════════════════════════════════════
@@ -1911,13 +1953,50 @@ let searchTimeout = null;
 let currentBeruf = null;
 
 // ── Navigation
-function showPage(id) {
+// ════════════════════════════════════════
+// SEITENWECHSEL mit Browser-Verlauf
+// Damit der Zurück-Knopf innerhalb der Seite funktioniert
+// statt JobInsides ganz zu verlassen
+// ════════════════════════════════════════
+let verlaufAktiv = true;   // false, während wir auf ein Zurück reagieren
+
+function showPage(id, ausVerlauf) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
+  const ziel = document.getElementById('page-' + id);
+  if (ziel) ziel.classList.add('active');
   window.scrollTo(0, 0);
+
+  if (!ausVerlauf && verlaufAktiv) {
+    const zustand = { seite: id };
+    // Startseite als Grundzustand, alles andere kommt obendrauf
+    if (id === 'home') history.replaceState(zustand, '', location.pathname);
+    else history.pushState(zustand, '', '#' + id);
+  }
 }
 
-function showBeruf(name, berufsgruppe, dkzId) {
+// Reagiert auf den Zurück- und Vorwärts-Knopf des Browsers
+window.addEventListener('popstate', (e) => {
+  const z = e.state;
+  verlaufAktiv = false;
+  if (!z || z.seite === 'home') {
+    showPage('home', true);
+  } else if (z.seite === 'beruf' && z.beruf) {
+    zeigeBerufOhneVerlauf(z.beruf, z.gruppe, z.dkz);
+  } else {
+    showPage(z.seite, true);
+  }
+  verlaufAktiv = true;
+});
+
+// Öffnet einen Beruf, ohne einen neuen Verlaufseintrag anzulegen
+function zeigeBerufOhneVerlauf(name, gruppe, dkz) {
+  const merker = verlaufAktiv;
+  verlaufAktiv = false;
+  showBeruf(name, gruppe, dkz, true);
+  verlaufAktiv = merker;
+}
+
+function showBeruf(name, berufsgruppe, dkzId, ausVerlauf) {
   currentBeruf = { name, berufsgruppe, dkzId };
   document.getElementById('beruf-title').textContent = name;
   document.getElementById('beruf-breadcrumb').textContent = name;
@@ -1942,7 +2021,14 @@ function showBeruf(name, berufsgruppe, dkzId) {
   const berufInput = document.getElementById('f-beruf');
   if (berufInput) berufInput.value = name;
 
-  showPage('beruf');
+  showPage('beruf', true);
+  // Beruf im Verlauf ablegen, damit Zurück wieder zur Suche führt
+  if (!ausVerlauf && verlaufAktiv) {
+    history.pushState(
+      { seite: 'beruf', beruf: name, gruppe: berufsgruppe, dkz: dkzId },
+      '', '#beruf=' + encodeURIComponent(name)
+    );
+  }
   switchTabByName('tab-bewertungen');
 
   // Echte Bewertungen aus Supabase laden
@@ -2090,6 +2176,9 @@ function closeFormBerufDropdown() {
 // Init beim Seitenstart
 window.addEventListener('DOMContentLoaded', async () => {
   loadStats();
+
+  // Startseite als Grundzustand im Verlauf ablegen
+  history.replaceState({ seite: 'home' }, '', location.pathname + location.search);
 
   // Direktlink aus Newsletter-Mails: ?beruf=Name öffnet die Berufsseite
   const gewuenscht = new URLSearchParams(location.search).get('beruf');
@@ -2476,33 +2565,6 @@ async function loadAehnlicheBerufe(dkzId) {
 }
 
 // ── Kategorie-Suche (Browse ohne Suchbegriff)
-async function searchByKategorie(berufsgruppe) {
-  const input = document.querySelector('.search-input');
-  input.value = '';
-  const dd = document.getElementById('search-dropdown');
-  dd.innerHTML = `<div class="search-item" style="color:var(--muted)"><span class="search-spinner"></span> Lade Berufe…</div>`;
-  dd.classList.add('open');
-  input.focus();
-
-  try {
-    const { data, error } = await sb
-      .from('berufe')
-      .select('name, berufsgruppe, dkz_id')
-      .eq('berufsgruppe', berufsgruppe)
-      .limit(15);
-
-    if (error) throw error;
-
-    dd.innerHTML = (data || []).map(b =>
-      `<div class="search-item" onmousedown="showBeruf('${b.name.replace(/'/g,"\\'")}', '${b.berufsgruppe}', '${b.dkz_id||''}')">
-        <span>${b.name}</span><span class="tag">${b.berufsgruppe}</span>
-      </div>`
-    ).join('') || `<div class="search-item" style="color:var(--muted)">Keine Berufe gefunden</div>`;
-  } catch {
-    dd.innerHTML = `<div class="search-item" style="color:var(--muted)">Fehler beim Laden</div>`;
-  }
-}
-
 // ── Stars (form)
 const formStars = { expect: 0, overall: 0 };
 function setStarForm(type, val) {

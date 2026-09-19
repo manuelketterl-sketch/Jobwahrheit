@@ -1,0 +1,18 @@
+/* Gemeinsame Farben, Schatten und Abstände aller JobInsides-Seiten.
+   Änderungen hier wirken überall. */
+:root {
+  --bg: #ffffff;
+  --bg-soft: #f3f7f6;
+  --ink: #0d1b1a;
+  --accent: #00bfa6;
+  --accent-deep: #009e88;
+  --accent2: #1f6feb;
+  --muted: #66756f;
+  --border: #e6ece9;
+  --card: #ffffff;
+  --green: #00a878;
+  --gruen: #00a878;
+  --rot: #e8552d;
+  --shadow: 0 4px 24px rgba(13,27,26,.06);
+  --shadow-lg: 0 16px 50px rgba(13,27,26,.10);
+}

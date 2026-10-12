@@ -1,0 +1,11 @@
+# Sitemap wird live aus der Datenbank erzeugt (Supabase Edge Function "sitemap")
+/sitemap.xml         https://kvqdgcixmdnrarlaskyb.supabase.co/functions/v1/sitemap   200
+
+# Echte Adressen der Seite – alle werden von index.html ausgeliefert,
+# die App liest die Adresse und zeigt die passende Ansicht
+/beruf/*             /index.html   200
+/bewerten            /index.html   200
+/vergleich           /index.html   200
+/fuer-arbeitgeber    /index.html   200
+/impressum           /index.html   200
+/datenschutz         /index.html   200

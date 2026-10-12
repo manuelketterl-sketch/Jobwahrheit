@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /arbeitgeber.html
+Disallow: /newsletter.html
+
+Sitemap: https://jobinsides.de/sitemap.xml

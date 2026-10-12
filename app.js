@@ -43,18 +43,16 @@ async function loadBewertungen(berufName) {
     .order('created_at', { ascending: false });
 
   if (error || !data?.length) {
-    container.innerHTML = `
-      <div style="text-align:center;padding:3rem 1rem;border:1px dashed var(--border);border-radius:12px">
-        <div style="font-size:2rem;margin-bottom:.75rem">✍️</div>
-        <div style="font-weight:600;margin-bottom:.4rem">Noch keine Bewertungen</div>
-        <div style="font-size:.85rem;color:var(--muted);margin-bottom:1rem">Schreib die erste Bewertung für diesen Beruf.</div>
-        <button onclick="showPage('bewerten')" style="background:var(--ink);color:#fff;border:none;padding:.6rem 1.4rem;border-radius:8px;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;cursor:pointer">Jetzt bewerten</button>
-      </div>`;
+    // Der Aufruf zum Bewerten steht schon im Kasten oben (#erstbewerter),
+    // hier reicht ein ruhiger Hinweis.
+    container.innerHTML = `<div style="color:var(--muted);font-size:.88rem;padding:1.25rem 0">Noch keine Erfahrungsberichte.</div>`;
     if (counter) counter.textContent = '(0)';
     resetStatistiken();
+    seoBewertungen(berufName, 0);
     return;
   }
 
+  seoBewertungen(berufName, data.length);
   if (counter) counter.textContent = `(${data.length})`;
   updateStatistiken(data);
   container.innerHTML = data.map(b => renderBewertung(b)).join('');
@@ -69,6 +67,15 @@ function setText(id, wert) {
 }
 
 function resetStatistiken() {
+  // Ohne Bewertungen: Hinweis zeigen, leere Balken verstecken
+  const eb = document.getElementById('erstbewerter');
+  if (eb) eb.style.display = 'block';
+  const ro = document.getElementById('rating-overview');
+  if (ro) ro.style.display = 'none';
+  // Der Seitenkasten wiederholte sonst nur den Hinweis von oben
+  const wb = document.getElementById('widget-bewerten');
+  if (wb) wb.style.display = 'none';
+
   // Kennzahlen-Zeile ausblenden, Hinweis zeigen
   const row = document.getElementById('score-row');
   const leer = document.getElementById('score-leer');
@@ -89,6 +96,12 @@ function resetStatistiken() {
 
 function updateStatistiken(data) {
   const n = data.length;
+  const eb = document.getElementById('erstbewerter');
+  if (eb) eb.style.display = 'none';
+  const ro = document.getElementById('rating-overview');
+  if (ro) ro.style.display = 'block';
+  const wb = document.getElementById('widget-bewerten');
+  if (wb) wb.style.display = 'block';
 
   // Kennzahlen-Zeile einblenden, Hinweis ausblenden
   const row = document.getElementById('score-row');
@@ -855,6 +868,75 @@ window.addEventListener('beforeunload', (e) => {
 // ════════════════════════════════════════
 let verlaufAktiv = true;   // false, während wir auf ein Zurück reagieren
 
+// ════════════════════════════════════════
+// ECHTE ADRESSEN + SEO
+// Jede Ansicht hat eine eigene URL, damit Google sie finden kann
+// ════════════════════════════════════════
+const SEITEN_PFADE = {
+  home: '/', bewerten: '/bewerten', vergleich: '/vergleich',
+  arbeitgeber: '/fuer-arbeitgeber', impressum: '/impressum', datenschutz: '/datenschutz'
+};
+const PFAD_SEITEN = Object.fromEntries(Object.entries(SEITEN_PFADE).map(([k, v]) => [v, k]));
+const SEITE_URL = 'https://jobinsides.de';
+
+// Muss exakt zur Spalte "slug" in der Datenbank passen
+function slugify(name) {
+  return String(name || '').toLowerCase()
+    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+// Titel, Beschreibung, Canonical, Indexierung und strukturierte Daten setzen
+function setzeMeta({ titel, beschreibung, pfad, index = true, jsonld = null }) {
+  document.title = titel;
+  const meta = (attr, key, wert) => {
+    let el = document.head.querySelector(`meta[${attr}="${key}"]`);
+    if (!el) { el = document.createElement('meta'); el.setAttribute(attr, key); document.head.appendChild(el); }
+    el.setAttribute('content', wert);
+  };
+  const url = SEITE_URL + pfad;
+  meta('name', 'description', beschreibung);
+  meta('name', 'robots', index ? 'index,follow' : 'noindex,follow');
+  meta('property', 'og:title', titel);
+  meta('property', 'og:description', beschreibung);
+  meta('property', 'og:url', url);
+  meta('name', 'twitter:title', titel);
+  meta('name', 'twitter:description', beschreibung);
+
+  let canon = document.head.querySelector('link[rel="canonical"]');
+  if (!canon) { canon = document.createElement('link'); canon.rel = 'canonical'; document.head.appendChild(canon); }
+  canon.href = url;
+
+  let ld = document.getElementById('seo-jsonld');
+  if (jsonld) {
+    if (!ld) { ld = document.createElement('script'); ld.type = 'application/ld+json'; ld.id = 'seo-jsonld'; document.head.appendChild(ld); }
+    ld.textContent = JSON.stringify(jsonld);
+  } else if (ld) {
+    ld.remove();
+  }
+}
+
+const SEITEN_META = {
+  home: {
+    titel: 'JobInsides – Wir bewerten die Arbeit, nicht den Arbeitgeber',
+    beschreibung: 'Andere bewerten Arbeitgeber – wir bewerten die Arbeit. Ehrlicher Einblick in über 9.000 Berufe, von Menschen, die den Job wirklich machen. Anonym und ohne Anmeldung.'
+  },
+  bewerten: {
+    titel: 'Beruf ehrlich bewerten – anonym | JobInsides',
+    beschreibung: 'Teile anonym, wie dein Beruf wirklich ist – Alltag, Gehalt, Belastung. Ohne E-Mail, ohne Anmeldung. Du hilfst anderen bei der Berufswahl.'
+  },
+  vergleich: {
+    titel: 'Berufe vergleichen – Bewertungen & Gehälter | JobInsides',
+    beschreibung: 'Zwei Berufe direkt vergleichen: Gesamtbewertung, Weiterempfehlung, Gehalt – aus ehrlichen Erfahrungsberichten.'
+  },
+  arbeitgeber: {
+    titel: 'Für Arbeitgeber – Stellen ausschreiben | JobInsides',
+    beschreibung: 'Erreiche Bewerber, die vorher wissen, was sie erwartet. Weniger Fehlbesetzungen, weniger Abbrüche. Stellenanzeigen in der Startphase kostenlos.'
+  },
+  impressum: { titel: 'Impressum | JobInsides', beschreibung: 'Impressum von JobInsides.', index: false },
+  datenschutz: { titel: 'Datenschutz | JobInsides', beschreibung: 'Datenschutzerklärung von JobInsides.', index: false }
+};
+
 function showPage(id, ausVerlauf) {
   // Angefangene Bewertung schützen, wenn woanders hin gewechselt wird
   if (!ausVerlauf && id !== 'bewerten' && bewertungAngefangen()) {
@@ -862,10 +944,9 @@ function showPage(id, ausVerlauf) {
     formularZuruecksetzen();
   }
 
-  // Sicherstellen, dass ein Grundzustand im Verlauf liegt –
-  // sonst führt der erste Zurück-Klick aus der Seite heraus
+  // Sicherstellen, dass ein Grundzustand im Verlauf liegt
   if (!ausVerlauf && verlaufAktiv && !history.state) {
-    history.replaceState({ seite: 'home' }, '', location.pathname);
+    history.replaceState({ seite: 'home' }, '', '/');
   }
 
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -873,22 +954,25 @@ function showPage(id, ausVerlauf) {
   if (ziel) ziel.classList.add('active');
   window.scrollTo(0, 0);
 
-  if (!ausVerlauf && verlaufAktiv) {
+  // Meta-Angaben für feste Seiten (Berufsseiten setzt showBeruf selbst)
+  if (SEITEN_META[id]) {
+    const m = SEITEN_META[id];
+    setzeMeta({ titel: m.titel, beschreibung: m.beschreibung, pfad: SEITEN_PFADE[id], index: m.index !== false });
+  }
+
+  if (!ausVerlauf && verlaufAktiv && SEITEN_PFADE[id]) {
     const zustand = { seite: id };
-    // Startseite als Grundzustand, alles andere kommt obendrauf
-    if (id === 'home') history.replaceState(zustand, '', location.pathname);
-    else history.pushState(zustand, '', '#' + id);
+    if (id === 'home') history.pushState(zustand, '', '/');
+    else history.pushState(zustand, '', SEITEN_PFADE[id]);
   }
 }
 
 // Reagiert auf den Zurück- und Vorwärts-Knopf des Browsers
 window.addEventListener('popstate', (e) => {
-  // Angefangene Bewertung? Dann nachfragen bevor sie verloren geht
   if (bewertungAngefangen()) {
     const weiter = confirm('Deine Bewertung ist noch nicht abgeschickt und geht verloren. Trotzdem zurück?');
     if (!weiter) {
-      // Auf der Bewertungsseite bleiben: Verlaufseintrag wiederherstellen
-      history.pushState({ seite: 'bewerten' }, '', '#bewerten');
+      history.pushState({ seite: 'bewerten' }, '', '/bewerten');
       return;
     }
     formularZuruecksetzen();
@@ -912,6 +996,119 @@ function zeigeBerufOhneVerlauf(name, gruppe, dkz) {
   verlaufAktiv = false;
   showBeruf(name, gruppe, dkz, true);
   verlaufAktiv = merker;
+}
+
+// Interne Links (<a href="/beruf/..." data-intern>) ohne Neuladen öffnen –
+// Google folgt dem href, Nutzer bekommen die schnelle Navigation
+document.addEventListener('click', async (e) => {
+  const a = e.target.closest('a[data-intern]');
+  if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+  const pfad = a.getAttribute('href');
+  if (pfad.startsWith('/beruf/')) {
+    e.preventDefault();
+    await oeffneBerufPerSlug(pfad.slice(7));
+  } else if (PFAD_SEITEN[pfad]) {
+    e.preventDefault();
+    showPage(PFAD_SEITEN[pfad]);
+  }
+});
+
+// Sucht einen Beruf über seine Adresse und öffnet ihn
+async function oeffneBerufPerSlug(slug, ausVerlauf) {
+  try {
+    const { data } = await sb.from('berufe')
+      .select('name, berufsgruppe, dkz_id')
+      .eq('slug', decodeURIComponent(slug))
+      .limit(1);
+    if (data?.length) {
+      showBeruf(data[0].name, data[0].berufsgruppe, data[0].dkz_id || '', ausVerlauf);
+      return true;
+    }
+  } catch { /* fällt unten durch */ }
+  return false;
+}
+
+// Merkt sich, was für den aktuellen Beruf schon bekannt ist.
+// Bewertungen und Stellen kommen unabhängig voneinander an –
+// sobald sich etwas ändert, werden die Meta-Angaben neu gesetzt.
+let seoStand = { name: null, bewertungen: null, stellen: null };
+
+function seoBerufStart(name) {
+  seoStand = { name, bewertungen: null, stellen: null };
+  // Vorläufig: noch nichts bekannt, also nicht indexieren
+  setzeBerufMeta(name, null, null);
+}
+
+function seoBewertungen(name, anzahl) {
+  if (seoStand.name !== name) return;
+  seoStand.bewertungen = anzahl;
+  setzeBerufMeta(name, seoStand.bewertungen, seoStand.stellen);
+}
+
+function seoStellen(name, anzahl) {
+  if (seoStand.name !== name) return;
+  seoStand.stellen = anzahl;
+  setzeBerufMeta(name, seoStand.bewertungen, seoStand.stellen);
+}
+
+// Meta-Angaben einer Berufsseite.
+// Indexiert wird, sobald es Bewertungen ODER offene Stellen gibt –
+// eine Seite mit echten Stellenangeboten ist kein leerer Inhalt.
+function setzeBerufMeta(name, bewertungen, stellen) {
+  const b = bewertungen ?? 0;
+  const st = stellen ?? 0;
+  const pfad = '/beruf/' + slugify(name);
+  const kurz = name.length > 42 ? name.slice(0, 40) + '…' : name;
+
+  let titel, beschreibung;
+  if (b > 0) {
+    titel = `${kurz}: Erfahrungen, Gehalt & Alltag | JobInsides`;
+    beschreibung = `${b} ehrliche${b === 1 ? 'r' : ''} Erfahrungsbericht${b === 1 ? '' : 'e'} zum Beruf ${name}: Alltag, Gehalt und Anforderungen – anonym von Menschen, die den Job machen.`;
+  } else if (st > 0) {
+    titel = `${kurz}: offene Stellen & Berufsinfos | JobInsides`;
+    beschreibung = `Aktuelle Stellenangebote für ${name} – und ein ehrlicher Blick auf den Beruf. Du machst den Job bereits? Teile deine Erfahrung anonym.`;
+  } else {
+    titel = `${kurz} | JobInsides`;
+    beschreibung = `Wie ist der Beruf ${name} wirklich? Erfahrungen, Gehalt und Alltag – anonym bewertet auf JobInsides.`;
+  }
+
+  const jsonld = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Occupation',
+        name,
+        description: beschreibung,
+        occupationLocation: { '@type': 'Country', name: 'Deutschland' }
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Startseite', item: SEITE_URL + '/' },
+          { '@type': 'ListItem', position: 2, name, item: SEITE_URL + pfad }
+        ]
+      }
+    ]
+  };
+
+  setzeMeta({ titel, beschreibung, pfad, index: (b > 0 || st > 0), jsonld });
+}
+
+// Prüft im Hintergrund, ob es für diesen Beruf Stellen gibt.
+// Läuft unabhängig vom Stellen-Tab, damit Suchmaschinen die Seite
+// auch dann als sinnvoll erkennen, wenn noch keine Bewertung da ist.
+async function pruefeStellenAnzahl(name) {
+  try {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/jobs', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ beruf: name, size: 1 })
+    });
+    const d = await res.json();
+    seoStellen(name, d.ok ? (d.gesamt || 0) : 0);
+  } catch {
+    seoStellen(name, 0);
+  }
 }
 
 function showBeruf(name, berufsgruppe, dkzId, ausVerlauf) {
@@ -942,13 +1139,18 @@ function showBeruf(name, berufsgruppe, dkzId, ausVerlauf) {
   showPage('beruf', true);
   // Beruf im Verlauf ablegen, damit Zurück wieder zur Suche führt
   if (!ausVerlauf && verlaufAktiv) {
-    if (!history.state) history.replaceState({ seite: 'home' }, '', location.pathname);
+    if (!history.state) history.replaceState({ seite: 'home' }, '', '/');
     history.pushState(
       { seite: 'beruf', beruf: name, gruppe: berufsgruppe, dkz: dkzId },
-      '', '#beruf=' + encodeURIComponent(name)
+      '', '/beruf/' + slugify(name)
     );
   }
   switchTabByName('tab-bewertungen');
+
+  // SEO: Vorgang starten, Stellen im Hintergrund zählen
+  seoBerufStart(name);
+  pruefeStellenAnzahl(name);
+  protokolliereBerufaufruf(name);
 
   // Echte Bewertungen aus Supabase laden
   loadBewertungen(name);
@@ -1092,28 +1294,76 @@ function closeFormBerufDropdown() {
   if (dd) dd.classList.remove('open');
 }
 
-// Init beim Seitenstart
+// Init beim Seitenstart: die aufgerufene Adresse auswerten
 window.addEventListener('DOMContentLoaded', async () => {
   loadStats();
+  ladeBewerteteBerufe();
 
-  // Startseite als Grundzustand im Verlauf ablegen
-  history.replaceState({ seite: 'home' }, '', location.pathname + location.search);
+  const pfad = location.pathname.replace(/\/+$/, '') || '/';
+  const hash = location.hash;
+  const alterParameter = new URLSearchParams(location.search).get('beruf');
 
-  // Direktlink aus Newsletter-Mails: ?beruf=Name öffnet die Berufsseite
-  const gewuenscht = new URLSearchParams(location.search).get('beruf');
-  if (gewuenscht) {
-    try {
-      const { data } = await sb
-        .from('berufe')
-        .select('name, berufsgruppe, dkz_id')
-        .ilike('name', gewuenscht)
-        .limit(1);
-      if (data?.length) {
-        showBeruf(data[0].name, data[0].berufsgruppe, data[0].dkz_id || '');
-      }
-    } catch { /* stillschweigend auf Startseite bleiben */ }
+  // 1. Berufsseite: /beruf/<slug>
+  if (pfad.startsWith('/beruf/')) {
+    const slug = pfad.slice(7);
+    verlaufAktiv = false;
+    const gefunden = await oeffneBerufPerSlug(slug, true);
+    verlaufAktiv = true;
+    if (gefunden) {
+      history.replaceState({ seite: 'beruf', beruf: currentBeruf.name, gruppe: currentBeruf.berufsgruppe, dkz: currentBeruf.dkzId }, '', '/beruf/' + slugify(currentBeruf.name));
+    } else {
+      location.replace('/404.html');
+    }
+    return;
   }
+
+  // 2. Alte Links weiterleiten: ?beruf=Name (Newsletter) und #beruf=Name
+  const alterName = alterParameter || (hash.startsWith('#beruf=') ? decodeURIComponent(hash.slice(7)) : null);
+  if (alterName) {
+    try {
+      const { data } = await sb.from('berufe').select('name, berufsgruppe, dkz_id').ilike('name', alterName).limit(1);
+      if (data?.length) {
+        history.replaceState({ seite: 'home' }, '', '/');
+        showBeruf(data[0].name, data[0].berufsgruppe, data[0].dkz_id || '');
+        return;
+      }
+    } catch { /* weiter zur Startseite */ }
+  }
+
+  // 3. Feste Seiten: /bewerten, /impressum …  (auch alte #bewerten-Links)
+  const seite = PFAD_SEITEN[pfad] || (hash && SEITEN_PFADE[hash.slice(1)] ? hash.slice(1) : null);
+  if (seite && seite !== 'home') {
+    history.replaceState({ seite: 'home' }, '', '/');
+    showPage(seite, true);
+    history.pushState({ seite }, '', SEITEN_PFADE[seite]);
+    return;
+  }
+
+  // 4. Startseite
+  history.replaceState({ seite: 'home' }, '', '/');
+  const m = SEITEN_META.home;
+  setzeMeta({ titel: m.titel, beschreibung: m.beschreibung, pfad: '/' });
 });
+
+// Berufe mit Bewertungen als echte Links auf der Startseite –
+// damit Google (und Besucher) sie finden
+async function ladeBewerteteBerufe() {
+  const box = document.getElementById('bewertete-berufe');
+  const liste = document.getElementById('bewertete-berufe-liste');
+  if (!box || !liste) return;
+  try {
+    const { data } = await sb.from('bewertungen')
+      .select('beruf_name, created_at')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    const namen = [...new Set((data || []).map(b => b.beruf_name).filter(Boolean))].slice(0, 24);
+    if (!namen.length) return;
+    liste.innerHTML = namen.map(n =>
+      `<a href="/beruf/${slugify(n)}" data-intern class="beruf-link">${escHtml(n)}</a>`
+    ).join('');
+    box.style.display = 'block';
+  } catch { /* Abschnitt bleibt verborgen */ }
+}
 
 // ── Tabs
 function switchTab(el, tabId) {
@@ -1340,6 +1590,19 @@ function entdupliziere(liste) {
     gesehen.add(b.name);
     return true;
   });
+}
+
+// Hält anonym fest, welche Berufsseiten geöffnet werden.
+// Daraus entsteht die Sitemap – so findet Google die Seiten,
+// die Menschen tatsächlich interessieren.
+let zuletztProtokollierterBeruf = '';
+function protokolliereBerufaufruf(name) {
+  if (!name || name === zuletztProtokollierterBeruf) return;
+  zuletztProtokollierterBeruf = name;
+  setTimeout(() => {
+    secureSubmit('suche', { begriff: name, treffer: 1, geoeffnet: name })
+      .catch(() => { /* nicht kritisch */ });
+  }, 1500);
 }
 
 // ════════════════════════════════════════

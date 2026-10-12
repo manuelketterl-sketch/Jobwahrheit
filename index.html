@@ -11,23 +11,27 @@
 <meta name="theme-color" content="#0d1b1a">
 
 <!-- Beschreibung für Suchmaschinen -->
-<meta name="description" content="Wie ist der Beruf wirklich? Anonyme Bewertungen von Menschen, die den Job bereits machen – nicht von HR-Abteilungen. Über 9.000 Berufe.">
+<link rel="canonical" href="https://jobinsides.de/">
+<meta name="robots" content="index,follow">
+<meta name="description" content="Andere bewerten Arbeitgeber – wir bewerten die Arbeit. Ehrlicher Einblick in über 9.000 Berufe, von Menschen, die den Job wirklich machen. Anonym und ohne Anmeldung.">
 
 <!-- Vorschau beim Teilen (WhatsApp, LinkedIn, Slack …) -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="JobInsides">
 <meta property="og:locale" content="de_DE">
 <meta property="og:url" content="https://jobinsides.de/">
-<meta property="og:title" content="JobInsides – Was dein Job wirklich bedeutet">
-<meta property="og:description" content="Anonyme Bewertungen von Menschen, die den Job bereits machen. Über 9.000 Berufe – ehrlich statt geschönt.">
-<meta property="og:image" content="https://jobinsides.de/og-bild.svg">
+<meta property="og:title" content="JobInsides – Wir bewerten die Arbeit, nicht den Arbeitgeber">
+<meta property="og:description" content="Ehrlicher Einblick in über 9.000 Berufe – von Menschen, die den Job wirklich machen. Keine geschönten Stellenbeschreibungen.">
+<meta property="og:image" content="https://jobinsides.de/og-bild.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:alt" content="JobInsides – Was dein Job wirklich bedeutet.">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="JobInsides – Was dein Job wirklich bedeutet">
-<meta name="twitter:description" content="Anonyme Bewertungen von Menschen, die den Job bereits machen.">
-<meta name="twitter:image" content="https://jobinsides.de/og-bild.svg">
+<meta name="twitter:title" content="JobInsides – Wir bewerten die Arbeit, nicht den Arbeitgeber">
+<meta name="twitter:description" content="Ehrlicher Einblick in über 9.000 Berufe, von Menschen, die den Job wirklich machen.">
+<meta name="twitter:image" content="https://jobinsides.de/og-bild.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -54,7 +58,7 @@
   <section class="hero">
     <div class="hero-badge">🔒 <strong>100% anonym</strong> · Kein Account · Keine E-Mail</div>
     <h1>Was dein Job<br><em>wirklich</em> bedeutet.</h1>
-    <p class="hero-sub">Echte Erfahrungen von Menschen, die den Job jeden Tag machen – nicht aus der Personalabteilung.</p>
+    <p class="hero-sub">Anzeigen werben. Personaler verkaufen. Hier reden die, die den Job wirklich machen.</p>
 
     <div class="search-wrap">
       <input class="search-input" type="text" placeholder="Beruf suchen, z.B. Elektriker, Pflegefachkraft…"
@@ -63,16 +67,134 @@
       <div class="search-dropdown" id="search-dropdown"></div>
     </div>
 
-    <div class="stats-bar">
-      <div class="stat">
-        <div class="stat-num" id="stat-berufe">–</div>
-        <div class="stat-label">Berufe gelistet</div>
+    <div class="hero-beleg">
+      <span><strong id="stat-berufe">–</strong> Berufe</span>
+      <span class="hero-beleg-trenner"></span>
+      <span>Anonym und ohne Anmeldung</span>
+    </div>
+  </section>
+
+  <!-- ══ DIE KETTE: warum alle anderen Quellen schönen ══ -->
+  <section class="kette">
+    <p class="abschnitt-label">Warum hier ehrlich bewertet wird</p>
+    <h2 class="abschnitt-titel">Andere bewerten Arbeitgeber.<br><em>Wir bewerten die Arbeit.</em></h2>
+    <p class="abschnitt-text">
+      Auf dem Weg in einen Beruf hat jede Station ein Interesse. Nur eine nicht: die Menschen,
+      die den Job schon machen – und nichts mehr verkaufen müssen.
+    </p>
+
+    <div class="kette-lauf">
+      <div class="kette-station">
+        <div class="kette-rolle">Die Stellenanzeige</div>
+        <div class="kette-tut">verspricht</div>
+        <p class="kette-zitat">„Flexible Arbeitszeiten, starkes Team, abwechslungsreiche Aufgaben."</p>
       </div>
-      <div class="stat">
-        <div class="stat-num">100%</div>
-        <div class="stat-label">Anonym</div>
+      <div class="kette-station">
+        <div class="kette-rolle">Das Vorstellungsgespräch</div>
+        <div class="kette-tut">verkauft</div>
+        <p class="kette-zitat">„Überstunden? Nur wenn's mal brennt."</p>
+      </div>
+      <div class="kette-station">
+        <div class="kette-rolle">Das Arbeitgeber-Portal</div>
+        <div class="kette-tut">schönt</div>
+        <p class="kette-zitat">Ein schlechtes Firmenprofil kostet Bewerber. Also bleibt es gut.</p>
+      </div>
+      <div class="kette-station kette-wir">
+        <div class="kette-rolle">JobInsides</div>
+        <div class="kette-tut">sagt, wie es ist</div>
+        <p class="kette-zitat">Hier bewertet niemand eine Firma. Es gibt kein Profil zu schützen und nichts zu verkaufen – nur den Beruf, so wie er ist.</p>
       </div>
     </div>
+  </section>
+
+  <!-- ══ WAS DU HIER FINDEST ══ -->
+  <section class="findest">
+    <p class="abschnitt-label">Was du hier findest</p>
+    <h2 class="abschnitt-titel">Die Fragen, die dir sonst niemand beantwortet</h2>
+    <div class="findest-karten">
+      <div class="findest-karte">
+        <div class="findest-titel">Erwartung gegen Wirklichkeit</div>
+        <p>Was haben Menschen von diesem Beruf erwartet – und was ist davon geblieben? Der ehrlichste Blick, den es gibt.</p>
+      </div>
+      <div class="findest-karte">
+        <div class="findest-titel">Echte Gehälter</div>
+        <p>Nicht die Spanne aus der Anzeige, sondern was Menschen in diesem Beruf tatsächlich verdienen. Anonym angegeben.</p>
+      </div>
+      <div class="findest-karte">
+        <div class="findest-titel">Was der Job wirklich verlangt</div>
+        <p>Schichtdienst, Zeitdruck, Alleinarbeit – die Dinge, die in keiner Anzeige stehen, aber jeden Tag zählen.</p>
+      </div>
+      <div class="findest-karte">
+        <div class="findest-titel">Passende Stellen – danach</div>
+        <p>Erst verstehst du den Beruf. Dann, wenn er zu dir passt, findest du offene Stellen. In dieser Reihenfolge, nicht umgekehrt.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FÜR WEN ══ -->
+  <section class="fuerwen">
+    <p class="abschnitt-label">Für wen das ist</p>
+    <h2 class="abschnitt-titel">Für alle, die eine Entscheidung vor sich haben</h2>
+    <div class="fuerwen-liste">
+      <div class="fuerwen-eintrag"><strong>Schulabgänger</strong>, die zwischen drei Berufen schwanken und keine Ahnung haben, wie der Alltag aussieht.</div>
+      <div class="fuerwen-eintrag"><strong>Studierende</strong>, die zweifeln, ob das Fach zu dem Beruf führt, den sie sich vorstellen.</div>
+      <div class="fuerwen-eintrag"><strong>Berufswechsler</strong>, die es nicht nochmal falsch machen wollen.</div>
+      <div class="fuerwen-eintrag"><strong>Umschüler und Wiedereinsteiger</strong>, die wissen wollen, worauf sie sich einlassen, bevor sie Zeit und Geld investieren.</div>
+    </div>
+  </section>
+
+  <!-- ══ SO FUNKTIONIERT'S ══ -->
+  <section class="ablauf">
+    <p class="abschnitt-label">So funktioniert's</p>
+    <div class="ablauf-schritte">
+      <div class="ablauf-schritt">
+        <span class="ablauf-nr">1</span>
+        <div>
+          <div class="ablauf-titel">Beruf suchen</div>
+          <p>Über 9.000 Berufe – von Ausbildung bis Studium. Auch Umgangssprache versteht die Suche.</p>
+        </div>
+      </div>
+      <div class="ablauf-schritt">
+        <span class="ablauf-nr">2</span>
+        <div>
+          <div class="ablauf-titel">Ehrlich lesen</div>
+          <p>Bewertungen, Gehälter, Anforderungen, Diskussionen – alles von Menschen, die den Job kennen.</p>
+        </div>
+      </div>
+      <div class="ablauf-schritt">
+        <span class="ablauf-nr">3</span>
+        <div>
+          <div class="ablauf-titel">Entscheiden – und Stellen finden</div>
+          <p>Passt der Beruf, findest du direkt aktuelle Ausschreibungen. Passt er nicht, hast du dir Jahre gespart.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ BEWERTETE BERUFE (echte Links für Nutzer und Suchmaschinen) ══ -->
+  <section class="bewertete" id="bewertete-berufe" style="display:none">
+    <p class="abschnitt-label">Schon bewertet</p>
+    <h2 class="abschnitt-titel">Diese Berufe haben Erfahrungsberichte</h2>
+    <div class="beruf-links" id="bewertete-berufe-liste"></div>
+  </section>
+
+  <!-- ══ AUFRUF ══ -->
+  <section class="aufruf">
+    <div class="aufruf-box">
+      <h2 class="aufruf-titel">Du machst einen Job?<br>Dann weißt du etwas, das andere brauchen.</h2>
+      <p class="aufruf-text">Drei Minuten, anonym, ohne Anmeldung. Deine Erfahrung erspart jemandem den falschen Weg – oder bestätigt ihm den richtigen.</p>
+      <button class="btn-submit" style="max-width:340px" onclick="showPage('bewerten')">Beruf bewerten</button>
+      <span class="anon-note">Ohne E-Mail, ohne Konto, ohne Rückverfolgung.</span>
+    </div>
+  </section>
+
+  <!-- ══ ARBEITGEBER – bewusst zurückhaltend, ganz am Ende ══ -->
+  <section class="ag-streifen">
+    <div class="ag-streifen-text">
+      <div class="ag-streifen-titel">Sie suchen Mitarbeiter?</div>
+      <p>Wer bei uns liest, weiß vorher, was ihn erwartet – und bleibt eher. Schreiben Sie Ihre Stelle dort aus, wo sich Menschen gerade ernsthaft mit dem Beruf beschäftigen.</p>
+    </div>
+    <button class="ag-streifen-btn" onclick="showPage('arbeitgeber')">Für Arbeitgeber</button>
   </section>
 </div>
 
@@ -112,9 +234,7 @@
     <div id="score-leer" style="display:none;margin-top:2rem;position:relative;z-index:1">
       <div style="display:inline-flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:99px;padding:.7rem 1.3rem;backdrop-filter:blur(8px)">
         <span style="font-size:1.1rem">✍️</span>
-        <span style="font-size:.9rem;color:rgba(255,255,255,.85)">Noch keine Bewertungen –
-          <span onclick="showPage('bewerten')" style="color:#2ee6a8;cursor:pointer;font-weight:700">schreib die erste!</span>
-        </span>
+        <span style="font-size:.9rem;color:rgba(255,255,255,.85)">Noch keine Bewertungen zu diesem Beruf</span>
       </div>
     </div>
   </div>
@@ -138,6 +258,23 @@
 
       <!-- TAB: Bewertungen -->
       <div id="tab-bewertungen">
+
+        <!-- Hinweis: noch keine Bewertung vorhanden -->
+        <div class="erstbewerter" id="erstbewerter" style="display:none">
+          <div class="eb-kopf">Für diesen Beruf fehlt noch die erste Bewertung</div>
+          <p class="eb-text">
+            Zu diesem Beruf hat bisher niemand berichtet. Wenn du den Beruf ausübst oder
+            ausgeübt hast, bist du gerade die einzige Quelle, die es dazu gibt – und
+            deine Bewertung ist die erste, die andere hier lesen.
+          </p>
+          <ul class="eb-liste">
+            <li>Du brauchst keinen Account und nennst keinen Arbeitgeber.</li>
+            <li>Fünf Minuten reichen – Pflichtfelder sind nur die drei Bewertungsfragen.</li>
+            <li>Jemand, der gerade über diesen Beruf nachdenkt, liest sie als Erstes.</li>
+          </ul>
+          <button class="btn-submit" onclick="showPage('bewerten')">Erste Bewertung schreiben</button>
+        </div>
+
         <div class="rating-overview fade-in" id="rating-overview">
           <div class="sec-title">Bewertungsübersicht</div>
           <div class="rating-bars">
@@ -282,7 +419,7 @@
         <div class="gehalt-label">Ø Bruttogehalt / Monat</div>
       </div>
 
-      <div class="widget">
+      <div class="widget" id="widget-bewerten">
         <div class="widget-title">Bewertung fehlt?</div>
         <p style="font-size:.82rem;color:var(--muted);margin-bottom:.75rem">Teile deine Erfahrung anonym und hilf anderen bei der Entscheidung.</p>
         <button onclick="showPage('bewerten')" style="width:100%;background:var(--ink);color:#fff;border:none;padding:.65rem;border-radius:8px;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer">Jetzt bewerten</button>
@@ -545,39 +682,56 @@
 ════════════════════════════════════════ -->
 <div class="page" id="page-arbeitgeber">
   <div class="ag-page">
-    <div class="ag-start-pille">Startphase – Stellenanzeigen aktuell kostenlos</div>
-    <h2>Erreiche Bewerber, die wissen, was sie erwartet</h2>
-    <p class="sub">Wer auf JobInsides eine Berufsseite liest, hat sich mit dem Alltag beschäftigt – nicht nur mit der Anzeige. Deine Stelle erscheint genau dort, direkt neben den Bewertungen aus der Praxis.</p>
+    <div class="ag-start-pille">Startphase – Stellenanzeigen derzeit kostenlos</div>
+    <h2>Weniger Bewerbungen. Dafür die richtigen.</h2>
+    <p class="sub">Die meisten Portale versprechen Ihnen mehr Bewerber. Wir versprechen Ihnen bessere. Wer bei uns eine Berufsseite liest, hat sich mit dem Alltag auseinandergesetzt – bevor er sich bewirbt.</p>
 
     <div class="ag-aktionen">
-      <button class="btn-submit" style="max-width:320px" onclick="location.href='/arbeitgeber.html'">Konto anlegen und Stelle ausschreiben</button>
+      <button class="btn-submit" style="max-width:340px" onclick="location.href='/arbeitgeber.html'">Konto anlegen und Stelle ausschreiben</button>
       <span class="anon-note">Schon registriert? <a href="/arbeitgeber.html" class="ag-link">Zum Login</a></span>
+    </div>
+
+    <!-- Das Problem, das Sie kennen -->
+    <div class="ag-problem">
+      <div class="ag-problem-titel">Das Problem kennen Sie</div>
+      <p>
+        Ein neuer Mitarbeiter springt nach drei Monaten ab. Ein Azubi bricht im ersten Jahr ab.
+        In den Austrittsgesprächen fällt fast immer derselbe Satz: <em>„Ich hatte mir das anders vorgestellt."</em>
+      </p>
+      <p>
+        Eine Fehlbesetzung kostet je nach Position zwischen einem halben und anderthalb Jahresgehältern –
+        Suche, Einarbeitung, entgangene Leistung, und dann wieder von vorn. In manchen Branchen bricht
+        jeder dritte Azubi ab, in der Gastronomie noch deutlich mehr. Der häufigste Grund ist nicht
+        das Geld und nicht der Chef, sondern eine falsche Vorstellung vom Beruf.
+      </p>
     </div>
 
     <div class="ag-vorteile">
       <div class="ag-vorteil">
-        <div class="ag-vorteil-titel">Auf der passenden Berufsseite</div>
-        <p>Deine Anzeige steht da, wo sich Menschen gerade über genau diesen Beruf informieren – hervorgehoben über den Ausschreibungen der Bundesagentur.</p>
+        <div class="ag-vorteil-titel">Bewerber, die wissen, was kommt</div>
+        <p>Schichtdienst, Zeitdruck, körperliche Belastung – wer sich hier informiert hat, kennt die unbequemen Seiten und bewirbt sich trotzdem. Oder eben nicht. Beides spart Ihnen Zeit.</p>
       </div>
       <div class="ag-vorteil">
-        <div class="ag-vorteil-titel">Weniger Fehlbewerbungen</div>
-        <p>Wer die ehrlichen Bewertungen gelesen hat, weiß, worauf er sich einlässt. Das spart dir Absagen nach der Probezeit.</p>
+        <div class="ag-vorteil-titel">Geringeres Abbruchrisiko</div>
+        <p>Realistische Erwartungen sind der beste Schutz vor Kündigungen in der Probezeit und vor abgebrochenen Ausbildungen.</p>
       </div>
       <div class="ag-vorteil">
-        <div class="ag-vorteil-titel">Anzeigen selbst verwalten</div>
-        <p>Anlegen, bearbeiten, pausieren – und sehen, wie oft deine Anzeige angeklickt wurde. Alles im eigenen Bereich.</p>
+        <div class="ag-vorteil-titel">Sichtbar im richtigen Moment</div>
+        <p>Ihre Anzeige steht auf der Berufsseite – hervorgehoben über den Ausschreibungen der Bundesagentur, genau dort, wo gerade jemand über diesen Beruf nachdenkt.</p>
       </div>
       <div class="ag-vorteil">
-        <div class="ag-vorteil-titel">Geprüft, nicht automatisiert</div>
-        <p>Jede Firma und jede Anzeige wird von uns freigeschaltet. Das hält die Plattform sauber – für Bewerber und für dich.</p>
+        <div class="ag-vorteil-titel">Niemand bewertet Ihr Unternehmen</div>
+        <p>Bei uns wird der Beruf bewertet, nicht der Arbeitgeber. Sie bekommen den Zugang zu einer vorinformierten Zielgruppe, ohne ein Firmenprofil pflegen oder verteidigen zu müssen.</p>
       </div>
     </div>
 
     <div class="ag-hinweis">
-      <strong>Warum kostenlos?</strong> JobInsides ist neu. Wir bauen gerade die Bewertungsbasis auf, die den Wert für Arbeitgeber ausmacht. Wer jetzt dabei ist, bekommt die Startphase geschenkt und wird rechtzeitig informiert, bevor sich daran etwas ändert.
+      <strong>Warum kostenlos?</strong> JobInsides ist neu. Der Wert für Arbeitgeber entsteht durch die Bewertungen –
+      und die bauen wir gerade auf. Wer jetzt dabei ist, nutzt die Startphase kostenlos und wird rechtzeitig
+      informiert, bevor sich daran etwas ändert.
     </div>
 
-    <p class="ag-kontakt">Fragen, größere Volumen oder Anbindung an euer Bewerbermanagement? <a href="mailto:info@jobinsides.de" class="ag-link">info@jobinsides.de</a></p>
+    <p class="ag-kontakt">Fragen, mehrere Standorte oder Anbindung an Ihr Bewerbermanagement? <a href="mailto:info@jobinsides.de" class="ag-link">info@jobinsides.de</a></p>
   </div>
 </div>
 
@@ -776,8 +930,8 @@
   <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:900;font-size:1.1rem;color:var(--bg)">Job<span style="color:var(--accent)">Insides</span></div>
   <div style="color:#888">Echte Menschen. Echte Jobs. Ehrliche Bewertungen.</div>
   <div style="display:flex;gap:1.5rem">
-    <span onclick="showPage('impressum')" style="cursor:pointer;color:#888;transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">Impressum</span>
-    <span onclick="showPage('datenschutz')" style="cursor:pointer;color:#888;transition:color .2s" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">Datenschutz</span>
+    <a href="/impressum" data-intern class="footer-link">Impressum</a>
+    <a href="/datenschutz" data-intern class="footer-link">Datenschutz</a>
   </div>
 </footer>
 

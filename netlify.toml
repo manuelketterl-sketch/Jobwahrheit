@@ -1,0 +1,25 @@
+# Netlify-Konfiguration für JobInsides
+# Die Seite besteht nur aus statischen Dateien im Wurzelverzeichnis,
+# gebaut wird nichts.
+
+[build]
+  publish = "."
+
+# Sicherheits-Header für alle Seiten
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Seite darf nicht in fremde Rahmen eingebettet werden (Clickjacking)
+    X-Frame-Options = "DENY"
+    # Browser darf Dateitypen nicht selbst erraten
+    X-Content-Type-Options = "nosniff"
+    # Beim Verlassen der Seite nur die Domain weitergeben, nicht die volle Adresse
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Weder Kamera noch Mikrofon noch Standort werden gebraucht
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Das Vorschaubild ändert sich selten
+[[headers]]
+  for = "/og-bild.png"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"

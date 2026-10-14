@@ -193,8 +193,10 @@ h1 em { color: var(--accent); font-style: normal; }
   font-size: 1.35rem; letter-spacing: -0.02em; color: var(--ink); margin-bottom: .75rem;
 }
 .kette-zitat { font-size: .88rem; color: var(--muted); line-height: 1.55; }
-/* Die drei geschönten Quellen leicht zurückgenommen, JobInsides klar hervorgehoben */
-.kette-station:not(.kette-wir) .kette-tut { color: #8a9793; text-decoration: line-through; text-decoration-color: rgba(232,85,45,.55); text-decoration-thickness: 2px; }
+/* Die drei Stationen zurückgenommen, JobInsides klar hervorgehoben.
+   Kein Durchstreichen: Hier wird nichts als Lüge markiert, die Beschreibung
+   ist nur unvollständig. */
+.kette-station:not(.kette-wir) .kette-tut { color: #8a9793; }
 .kette-wir::before { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 6px rgba(0,191,166,.15); }
 .kette-wir .kette-rolle { color: var(--accent-deep); }
 .kette-wir .kette-tut { color: var(--accent-deep); }

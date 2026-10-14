@@ -1649,8 +1649,8 @@ async function fetchBerufe(suchbegriff) {
     const treffer = sortiereNachRelevanz(entdupliziere(zusammen), q, varianten).slice(0, 10);
 
     if (!treffer.length) {
-      dd.innerHTML = `<div class="search-item" style="color:var(--muted)">Kein Beruf gefunden – <strong onclick="showPage('bewerten')" style="cursor:pointer;color:var(--accent)">trotzdem bewerten</strong></div>`;
       protokolliereSuche(q, 0);
+      await sucheUeberStellenanzeigen(q, dd);
       return;
     }
 
@@ -1666,6 +1666,153 @@ async function fetchBerufe(suchbegriff) {
     dd.innerHTML = `<div class="search-item" style="color:var(--muted)">Suche nicht verfügbar</div>${getFallbackBerufe(suchbegriff)}`;
   }
 
+  dd.classList.add('open');
+}
+
+// ════════════════════════════════════════
+// FALLBACK ÜBER STELLENANZEIGEN
+//
+// "Schadensachbearbeiter" ist keine Berufsbezeichnung der Klassifikation,
+// aber dutzende Stellenanzeigen heißen so. Die Bundesagentur ordnet jede
+// Anzeige einem Beruf zu ("hauptberuf"). Über diesen Umweg landet jemand,
+// der seine eigene Stellenbezeichnung eingibt, trotzdem beim richtigen Beruf.
+// ════════════════════════════════════════
+
+function keinTrefferAnzeigen(dd, zusatz) {
+  dd.innerHTML = `<div class="search-item" style="color:var(--muted);display:block;line-height:1.5">
+    ${zusatz ? escHtml(zusatz) + '<br>' : ''}Kein Beruf gefunden –
+    <strong onclick="showPage('bewerten')" style="cursor:pointer;color:var(--accent)">trotzdem bewerten</strong>
+  </div>`;
+  dd.classList.add('open');
+}
+
+// Sucht zu einer Bezeichnung der Jobbörse den passenden Beruf bei uns.
+// Die beiden Systeme schreiben nicht gleich: die Jobbörse sagt
+// "Versicherungskaufmann/-frau", unsere Tabelle "Kaufmann/-frau -
+// Versicherungen und Finanzanlagen".
+async function findeBerufZuBezeichnung(bezeichnung, nurGenau) {
+  const hole = async (muster, limit = 10) => {
+    try {
+      const { data } = await sb.from('berufe')
+        .select('name, berufsgruppe, dkz_id').ilike('name', muster).limit(limit);
+      return data || [];
+    } catch { return []; }
+  };
+
+  // 1. Wortgleich
+  let t = await hole(bezeichnung, 1);
+  if (t.length) return t[0];
+
+  // 2. Ohne Klammerzusatz, auch als Wortanfang
+  const schlicht = bezeichnung.replace(/\s*\([^)]*\)/g, '').trim();
+  if (!schlicht) return null;
+  t = await hole(schlicht + '%', 1);
+  if (t.length) return t[0];
+
+  // Beim Durchgehen mehrerer Kandidaten hier aufhören – der unschärfere
+  // Teil unten würde sonst beim ersten Kandidaten irgendetwas finden.
+  if (nurGenau) return null;
+
+  // 3. Zusammengesetzte Wörter schrittweise kürzen.
+  //    "Versicherungskaufmann" → "Versicherung" findet den Kaufmann.
+  const woerter = schlicht.split(/[^A-Za-zÄÖÜäöüß]+/).filter(w => w.length >= 5);
+  const laengste = [...woerter].sort((a, b) => b.length - a.length).slice(0, 2);
+
+  for (const wort of laengste) {
+    const staemme = [...new Set([wort, wort.slice(0, 12), wort.slice(0, 10), wort.slice(0, 8)])]
+      .filter(s => s.length >= 7);
+    for (const stamm of staemme) {
+      const kandidaten = await hole('%' + stamm + '%', 10);
+      if (!kandidaten.length) continue;
+      // Von mehreren Kandidaten den nehmen, der die übrigen Wörter mitbringt
+      const rest = woerter.filter(w => w !== wort).map(w => w.toLowerCase().slice(0, 6));
+      let beste = kandidaten[0], bestwert = -1;
+      for (const k of kandidaten) {
+        const n = k.name.toLowerCase();
+        const wert = rest.filter(r => n.includes(r)).length;
+        if (wert > bestwert) { bestwert = wert; beste = k; }
+      }
+      return beste;
+    }
+  }
+  return null;
+}
+
+async function sucheUeberStellenanzeigen(begriff, dd) {
+  dd.innerHTML = `<div class="search-item" style="color:var(--muted);justify-content:center;gap:.5rem">
+    <span class="search-spinner"></span> Suche in Stellenanzeigen…</div>`;
+  dd.classList.add('open');
+
+  let hauptberuf = null, stellen = 0, gemerkt = null, kandidaten = [];
+
+  // 1. Haben wir diesen Begriff schon einmal aufgelöst?
+  try {
+    const { data } = await sb.from('berufs_synonyme')
+      .select('hauptberuf, beruf_name, stellen')
+      .eq('begriff_lower', begriff.toLowerCase()).maybeSingle();
+    if (data) { gemerkt = data; hauptberuf = data.hauptberuf; stellen = data.stellen || 0; }
+  } catch { /* Tabelle fehlt vielleicht noch – dann eben die Jobbörse */ }
+
+  // 2. Sonst die Jobbörse fragen
+  if (!hauptberuf) {
+    try {
+      const res = await fetch(SUPABASE_URL + '/functions/v1/jobs', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ beruf: begriff, size: 25, nurBerufe: true })
+      });
+      const d = await res.json();
+      if (d.ok && d.berufe && d.berufe.length) {
+        kandidaten = d.berufe.map(b => b.name);
+        hauptberuf = kandidaten[0];
+        stellen = d.gesamt || 0;
+      }
+    } catch { /* unten abgefangen */ }
+  }
+
+  if (!hauptberuf) { keinTrefferAnzeigen(dd); return; }
+
+  // 3. Auf einen Beruf bei uns abbilden.
+  //    Die Jobbörse nennt mehrere Berufe pro Suchbegriff und nicht jeder
+  //    steht bei uns. Bei "Schadensachbearbeiter" ist der häufigste
+  //    "Versicherungskaufmann/-frau" (haben wir nicht), der drittplatzierte
+  //    "Schadensregulierer/in" aber schon – und der passt sogar besser.
+  let beruf = null;
+  if (gemerkt && gemerkt.beruf_name) {
+    const { data } = await sb.from('berufe')
+      .select('name, berufsgruppe, dkz_id').eq('name', gemerkt.beruf_name).limit(1);
+    beruf = data && data[0];
+  }
+  if (!beruf) {
+    for (const k of (kandidaten.length ? kandidaten : [hauptberuf])) {
+      beruf = await findeBerufZuBezeichnung(k, true);  // nur exakt/Wortanfang
+      if (beruf) { hauptberuf = k; break; }
+    }
+  }
+  // Erst wenn keiner davon passt: der unschärfere Versuch über Wortstämme
+  if (!beruf) beruf = await findeBerufZuBezeichnung(hauptberuf);
+
+  // 4. Zuordnung merken, damit die nächste Suche sie sofort kennt
+  if (!gemerkt) {
+    secureSubmit('synonym', {
+      begriff, hauptberuf, beruf_name: beruf ? beruf.name : null, stellen
+    }).catch(() => { /* nicht kritisch */ });
+  }
+
+  const stellenText = stellen > 0
+    ? `${stellen.toLocaleString('de-DE')} Stellenangebote heißen „${begriff}“.`
+    : `„${begriff}“ kommt in Stellenanzeigen vor.`;
+
+  if (!beruf) { keinTrefferAnzeigen(dd, stellenText); return; }
+
+  dd.innerHTML = `
+    <div class="such-hinweis">${escHtml(stellenText)} Geführt wird das als:</div>
+    <div class="search-item" onmousedown="showBeruf('${beruf.name.replace(/'/g, "\\'")}', '${beruf.berufsgruppe}', '${beruf.dkz_id || ''}')">
+      <span>${escHtml(beruf.name)}</span><span class="tag">${escHtml(beruf.berufsgruppe)}</span>
+    </div>
+    <div class="such-hinweis such-hinweis-fuss">
+      Passt nicht? <strong onclick="showPage('bewerten')" style="cursor:pointer;color:var(--accent)">Trotzdem bewerten</strong>
+    </div>`;
   dd.classList.add('open');
 }
 

@@ -124,6 +124,15 @@ h1 em { color: var(--accent); font-style: normal; }
   overflow-wrap: anywhere; line-height: 1.4; min-width: 0;
 }
 .search-item:hover { background: var(--bg-soft); }
+/* Erklärzeile im Dropdown, wenn der Treffer über Stellenanzeigen kam */
+.such-hinweis {
+  padding: .7rem 1.4rem .5rem; font-size: .82rem; line-height: 1.45;
+  color: var(--muted); background: var(--bg-soft);
+}
+.such-hinweis-fuss {
+  background: transparent; border-top: 1px solid var(--border);
+  padding: .6rem 1.4rem .75rem;
+}
 .search-item .tag {
   font-size: .7rem; background: var(--bg-soft);
   border-radius: 99px; padding: .25rem .7rem; color: var(--muted);

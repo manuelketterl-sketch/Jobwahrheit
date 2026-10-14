@@ -24,19 +24,19 @@
   <text x="90" y="310"
         font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
         font-size="82" font-weight="800" fill="#ffffff" letter-spacing="-2">
-    Was dein Job
+    Was dich im Job
   </text>
   <text x="90" y="400"
         font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
         font-size="82" font-weight="800" letter-spacing="-2">
-    <tspan fill="#2ee6a8">wirklich</tspan><tspan fill="#ffffff"> bedeutet.</tspan>
+    <tspan fill="#2ee6a8">wirklich</tspan><tspan fill="#ffffff"> erwartet.</tspan>
   </text>
 
   <!-- Unterzeile -->
   <text x="90" y="472"
         font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
         font-size="30" fill="#9fb3ad">
-    Echte Bewertungen von Menschen, die den Job bereits machen.
+    Bewertungen von echten Angestellten aus über 9.000 Berufen.
   </text>
 
   <!-- Hinweis-Pille -->

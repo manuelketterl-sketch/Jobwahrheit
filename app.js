@@ -918,8 +918,8 @@ function setzeMeta({ titel, beschreibung, pfad, index = true, jsonld = null }) {
 
 const SEITEN_META = {
   home: {
-    titel: 'JobInsides – Wir bewerten die Arbeit, nicht den Arbeitgeber',
-    beschreibung: 'Andere bewerten Arbeitgeber – wir bewerten die Arbeit. Ehrlicher Einblick in über 9.000 Berufe, von Menschen, die den Job wirklich machen. Anonym und ohne Anmeldung.'
+    titel: 'JobInsides – Was dich im Job wirklich erwartet',
+    beschreibung: 'Echte Bewertungen von echten Angestellten: Alltag, Gehalt und Anforderungen in über 9.000 Berufen. Andere bewerten Arbeitgeber – wir bewerten die Arbeit. Anonym und ohne Anmeldung.'
   },
   bewerten: {
     titel: 'Beruf ehrlich bewerten – anonym | JobInsides',

@@ -1739,10 +1739,40 @@ async function findeBerufZuBezeichnung(bezeichnung, nurGenau) {
   return null;
 }
 
+// Merkt sich die gerade vorgeschlagene Zuordnung. Gespeichert wird sie erst,
+// wenn der Besucher den Vorschlag auch anklickt – siehe oeffneAusFallback().
+let offenesSynonym = null;
+
+function synonymBestaetigen(berufName) {
+  if (!offenesSynonym) return;
+  const s = offenesSynonym;
+  offenesSynonym = null;
+  secureSubmit('synonym', {
+    begriff: s.begriff, hauptberuf: s.hauptberuf,
+    beruf_name: berufName, stellen: s.stellen
+  }).catch(() => { /* nicht kritisch */ });
+}
+
+function oeffneAusFallback(name, gruppe, dkz) {
+  synonymBestaetigen(name);
+  showBeruf(name, gruppe, dkz);
+}
+
 async function sucheUeberStellenanzeigen(begriff, dd) {
+  // Bruchstücke nicht nachschlagen: Beim Tippen von "Schadensachbearbeiter"
+  // liefe der Fallback sonst auch für "schadensac" – und ordnet dann
+  // irgendetwas zu. Erst ab einer gewissen Länge, und erst wenn der
+  // Besucher mit dem Tippen fertig ist.
+  if (begriff.length < 5) { keinTrefferAnzeigen(dd); return; }
+
   dd.innerHTML = `<div class="search-item" style="color:var(--muted);justify-content:center;gap:.5rem">
     <span class="search-spinner"></span> Suche in Stellenanzeigen…</div>`;
   dd.classList.add('open');
+
+  // Tippt er weiter, bricht dieser Durchgang ab – der nächste übernimmt
+  await new Promise(r => setTimeout(r, 600));
+  const feld = document.querySelector('.search-input');
+  if (feld && feld.value.trim() !== begriff) return;
 
   let hauptberuf = null, stellen = 0, gemerkt = null, kandidaten = [];
 
@@ -1793,12 +1823,9 @@ async function sucheUeberStellenanzeigen(begriff, dd) {
   // Erst wenn keiner davon passt: der unschärfere Versuch über Wortstämme
   if (!beruf) beruf = await findeBerufZuBezeichnung(hauptberuf);
 
-  // 4. Zuordnung merken, damit die nächste Suche sie sofort kennt
-  if (!gemerkt) {
-    secureSubmit('synonym', {
-      begriff, hauptberuf, beruf_name: beruf ? beruf.name : null, stellen
-    }).catch(() => { /* nicht kritisch */ });
-  }
+  // 4. Zuordnung vormerken. Gespeichert wird sie erst, wenn der Besucher
+  //    den Vorschlag anklickt – dann hat ein Mensch sie bestätigt.
+  offenesSynonym = gemerkt ? null : { begriff, hauptberuf, stellen };
 
   const stellenText = stellen > 0
     ? `${stellen.toLocaleString('de-DE')} Stellenangebote heißen „${begriff}“.`
@@ -1808,7 +1835,7 @@ async function sucheUeberStellenanzeigen(begriff, dd) {
 
   dd.innerHTML = `
     <div class="such-hinweis">${escHtml(stellenText)} Geführt wird das als:</div>
-    <div class="search-item" onmousedown="showBeruf('${beruf.name.replace(/'/g, "\\'")}', '${beruf.berufsgruppe}', '${beruf.dkz_id || ''}')">
+    <div class="search-item" onmousedown="oeffneAusFallback('${beruf.name.replace(/'/g, "\\'")}', '${beruf.berufsgruppe}', '${beruf.dkz_id || ''}')">
       <span>${escHtml(beruf.name)}</span><span class="tag">${escHtml(beruf.berufsgruppe)}</span>
     </div>
     <div class="such-hinweis such-hinweis-fuss">

@@ -54,6 +54,17 @@
   .tag.rot{background:#fee9e3;color:var(--rot)}
   .tag.gruen{background:rgba(0,168,120,.12);color:var(--gruen)}
   .leer{color:var(--muted);font-size:.88rem;padding:.5rem 0}
+  .zeitraum{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
+  .btn-klein.aktiv{border-color:var(--ink);color:var(--ink);font-weight:700;background:var(--bg)}
+  .such-block{background:#fff;border:1px solid var(--border);border-radius:16px;
+              padding:1.25rem;margin-bottom:.75rem}
+  .such-block h3{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1rem;
+                 margin-bottom:.2rem}
+  .such-block .hinweis{font-size:.8rem;color:var(--muted);margin-bottom:.9rem;line-height:1.5}
+  .such-zahl{display:inline-block;margin-right:1.75rem}
+  .such-zahl b{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.4rem;
+               display:block;line-height:1.1}
+  .such-zahl span{font-size:.75rem;color:var(--muted)}
   .schalter{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}
   .schalter input{opacity:0;width:0;height:0}
   .schieber{position:absolute;cursor:pointer;inset:0;background:#cfd8d5;border-radius:99px;
@@ -102,8 +113,18 @@
   <h2 id="stellen-titel">💼 Stellenanzeigen</h2>
   <div id="stellen"></div>
 
-  <h2>🔎 Meistgesuchte Begriffe <span style="font-size:.75rem;font-weight:400;color:var(--muted)">letzte 7 Tage</span></h2>
-  <div class="karte" id="suchen"></div>
+  <h2>🔎 Suchauswertung <span style="font-size:.75rem;font-weight:400;color:var(--muted)">Wo die nächste Bewertung fehlt</span></h2>
+  <div class="karte">
+    <div class="zeitraum">
+      <span style="font-size:.82rem;color:var(--muted);font-weight:600">Zeitraum:</span>
+      <button class="btn-klein" data-tage="7" onclick="suchauswertung(7)">7 Tage</button>
+      <button class="btn-klein" data-tage="30" onclick="suchauswertung(30)">30 Tage</button>
+      <button class="btn-klein" data-tage="90" onclick="suchauswertung(90)">90 Tage</button>
+      <button class="btn-klein" data-tage="365" onclick="suchauswertung(365)">12 Monate</button>
+    </div>
+    <div id="such-zahlen" style="margin-top:.9rem"></div>
+  </div>
+  <div id="such-listen"></div>
 
   <h2>⭐ Top-Berufe nach Bewertungen</h2>
   <div class="karte" id="topberufe"></div>
@@ -149,6 +170,8 @@ async function anmelden(){
   document.getElementById('login').style.display='none';
   document.getElementById('dash').style.display='block';
   zeichne(d);
+  // Läuft nebenher – die Übersicht soll nicht darauf warten
+  suchauswertung(30);
 }
 
 function abmelden(){
@@ -192,6 +215,132 @@ async function stelleLoeschen(id){
 async function schalte(schluessel, wert){
   const d = await ruf({aktion:'einstellung', schluessel, wert});
   if(!d.ok){ alert('Fehler: '+(d.error||'')); laden(); }
+}
+
+// ── Suchauswertung ──────────────────────────────────────────
+// Lädt getrennt von der Übersicht, weil sie über einen längeren
+// Zeitraum rechnet und man den Zeitraum umstellen können soll.
+let suchTage = 30;
+
+async function suchauswertung(tage){
+  if(tage) suchTage = tage;
+  document.querySelectorAll('.zeitraum .btn-klein').forEach(b => {
+    b.classList.toggle('aktiv', Number(b.dataset.tage) === suchTage);
+  });
+  document.getElementById('such-zahlen').innerHTML = '<div class="leer">Rechnet…</div>';
+  document.getElementById('such-listen').innerHTML = '';
+  const d = await ruf({aktion:'suchauswertung', tage:suchTage});
+  if(!d.ok){
+    document.getElementById('such-zahlen').innerHTML =
+      '<div class="leer">Fehler: '+esc(d.error||'unbekannt')+'</div>';
+    return;
+  }
+  zeichneSuche(d);
+}
+
+// Eine Liste mit Balken. zusatz() liefert die Tags hinter dem Begriff.
+function suchListe(titel, hinweis, eintraege, zusatz, leerText){
+  if(!eintraege.length){
+    return `<div class="such-block"><h3>${titel}</h3>
+      <div class="hinweis">${hinweis}</div>
+      <div class="leer">${leerText}</div></div>`;
+  }
+  const max = eintraege[0].anzahl || 1;
+  const zeilen = eintraege.map(t => `<div class="zeile">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+          <strong style="font-size:.9rem">${esc(t.begriff)}</strong>
+          ${zusatz(t)}
+        </div>
+        <div class="balken"><div style="width:${Math.max(t.anzahl/max*100,3)}%"></div></div>
+      </div>
+      <span style="font-weight:700;font-size:.9rem;white-space:nowrap">${t.anzahl}×</span>
+    </div>`).join('');
+  return `<div class="such-block"><h3>${titel}</h3>
+    <div class="hinweis">${hinweis}</div>${zeilen}</div>`;
+}
+
+function zeichneSuche(d){
+  const zeitraum = d.tage === 365 ? '12 Monaten' : d.tage + ' Tagen';
+  document.getElementById('such-zahlen').innerHTML = `
+    <div class="such-zahl"><b>${d.gesamtSuchen}</b><span>Suchen in ${zeitraum}</span></div>
+    <div class="such-zahl"><b>${d.verschiedeneBegriffe}</b><span>verschiedene Begriffe</span></div>
+    <div class="such-zahl"><b>${d.quoteOhneTreffer}%</b><span>davon ohne Treffer</span></div>`;
+
+  const bloecke = [];
+
+  bloecke.push(suchListe(
+    '🙋 Nachfrage ohne Antwort',
+    'Die Suche findet den Beruf, aber es steht noch keine einzige Bewertung drin. '
+    + 'Das ist deine Prioritätenliste: Hier warten Leute auf einen Einblick, den es noch nicht gibt.',
+    d.ohneBewertung,
+    t => (t.geoeffnet ? `<span class="tag">geöffnet: ${esc(t.geoeffnet)}</span>` : '')
+       + '<span class="tag rot">0 Bewertungen</span>',
+    'Jeder gesuchte Beruf hat mindestens eine Bewertung. Sehr gut.'
+  ));
+
+  bloecke.push(suchListe(
+    '🚫 Begriffe ohne Treffer',
+    'Hier findet die Suche gar nichts. Entweder fehlt der Beruf in unserer Datenbank, '
+    + 'oder er heißt bei uns anders als die Leute ihn nennen. Tippfehler sind auch dabei – '
+    + 'erst ab zwei, drei Treffern lohnt das Hinsehen.',
+    d.ohneTreffer,
+    () => '<span class="tag rot">kein Beruf gefunden</span>',
+    'Kein Suchbegriff blieb ohne Treffer.'
+  ));
+
+  bloecke.push(suchListe(
+    '📈 Meistgesuchte Begriffe',
+    'Alles, was eingegeben wurde – unabhängig davon, ob es etwas gefunden hat.',
+    d.meistgesucht,
+    t => (t.treffer === 0 ? '<span class="tag rot">kein Treffer</span>' : '')
+       + (t.treffer > 0 && t.bewertungen === 0 ? '<span class="tag">unbewertet</span>' : '')
+       + (t.bewertungen > 0 ? `<span class="tag gruen">${t.bewertungen} Bewertung${t.bewertungen===1?'':'en'}</span>` : '')
+       + (t.klicks ? `<span class="tag">${t.klicks}× geöffnet</span>` : ''),
+    'Noch keine Suchanfragen protokolliert.'
+  ));
+
+  // Synonyme: andere Struktur, eigenes Markup
+  const synBlock = (titel, hinweis, liste, leerText, mitZuordnung) => {
+    if(!liste.length){
+      return `<div class="such-block"><h3>${titel}</h3>
+        <div class="hinweis">${hinweis}</div><div class="leer">${leerText}</div></div>`;
+    }
+    const zeilen = liste.map(s => `<div class="zeile">
+        <div style="flex:1;min-width:0">
+          <strong style="font-size:.9rem">${esc(s.begriff)}</strong>
+          <div style="font-size:.78rem;color:var(--muted);margin-top:.2rem">
+            Jobbörse führt das als <strong>${esc(s.hauptberuf)}</strong>
+            ${mitZuordnung ? ' → bei uns: <strong>'+esc(s.beruf_name)+'</strong>' : ''}
+            · ${s.stellen} Stellenanzeige${s.stellen===1?'':'n'}
+          </div>
+        </div>
+        <span style="font-weight:700;font-size:.9rem;white-space:nowrap">${s.gesucht}×</span>
+      </div>`).join('');
+    return `<div class="such-block"><h3>${titel}</h3>
+      <div class="hinweis">${hinweis}</div>${zeilen}</div>`;
+  };
+
+  bloecke.push(synBlock(
+    '🔧 Nicht zuordenbar – Handarbeit nötig',
+    'Zu diesen Begriffen gibt es Stellenanzeigen, aber die Schreibweise der Jobbörse passte '
+    + 'zu keinem Beruf in unserer Datenbank. Jede Zeile hier bedeutet: Jemand sucht etwas, '
+    + 'das wir hätten anbieten können.',
+    d.nichtZuordenbar,
+    'Alle gesammelten Begriffe sind einem Beruf zugeordnet.',
+    false
+  ));
+
+  bloecke.push(synBlock(
+    '✅ Gelernte Begriffe',
+    'Diese Begriffe sind keine offiziellen Berufsbezeichnungen, führen bei uns aber zum '
+    + 'richtigen Beruf. Die Suche hat sie über die Jobbörse selbst gelernt.',
+    d.zugeordnet,
+    'Noch keine Begriffe gelernt.',
+    true
+  ));
+
+  document.getElementById('such-listen').innerHTML = bloecke.join('');
 }
 
 async function testmail(){
@@ -312,23 +461,6 @@ function zeichne(d){
           </div></div>`;
       }).join('')
     : '<div class="karte"><div class="leer">Noch keine Stellenanzeigen.</div></div>';
-
-  // Suchbegriffe
-  const maxSuche = d.topSuchen[0]?.anzahl || 1;
-  document.getElementById('suchen').innerHTML = d.topSuchen.length
-    ? d.topSuchen.map(t => `<div class="zeile">
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-            <strong style="font-size:.9rem">${esc(t.begriff)}</strong>
-            ${t.treffer === 0 ? '<span class="tag rot">kein Beruf gefunden</span>' : ''}
-            ${t.treffer > 0 && !t.hatBewertung ? '<span class="tag">noch unbewertet</span>' : ''}
-            ${t.hatBewertung ? '<span class="tag gruen">hat Bewertungen</span>' : ''}
-          </div>
-          <div class="balken"><div style="width:${t.anzahl/maxSuche*100}%"></div></div>
-        </div>
-        <span style="font-weight:700;font-size:.9rem">${t.anzahl}×</span>
-      </div>`).join('')
-    : '<div class="leer">Noch keine Suchanfragen protokolliert.</div>';
 
   // Top-Berufe
   const maxBeruf = d.topBerufe[0]?.anzahl || 1;

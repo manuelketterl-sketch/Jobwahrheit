@@ -757,6 +757,21 @@ h1 em { color: var(--accent); font-style: normal; }
 .btn-submit:disabled { opacity: .6; cursor: wait; transform: none; }
 .anon-note { font-size: .8rem; color: var(--muted); text-align: center; }
 
+/* Rechtstexte (Impressum, Datenschutz) */
+.rt-karte {
+  background: #fff; border: 1px solid var(--border); border-radius: 14px;
+  padding: 2rem; margin-bottom: 1.5rem;
+}
+.rt-karte h3 {
+  font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700;
+  font-size: 1.1rem; margin-bottom: .75rem; color: var(--ink);
+}
+.rt-karte p { font-size: .9rem; line-height: 1.7; color: var(--muted); margin-bottom: .9rem; }
+.rt-karte p:last-child { margin-bottom: 0; }
+.rt-karte strong { color: var(--ink); }
+.rt-karte a { color: var(--accent2); }
+@media (max-width: 640px) { .rt-karte { padding: 1.4rem; border-radius: 12px; } }
+
 /* Vergleich */
 .vergleich-page { padding: 3.5rem 5vw; max-width: 1100px; margin: 0 auto; }
 .vergleich-page h2 {

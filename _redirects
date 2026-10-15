@@ -1,3 +1,11 @@
+# Serverseitiger Code liegt im Repository, gehört aber nicht ins Netz.
+# Netlify veröffentlicht das ganze Wurzelverzeichnis – ohne diese Regeln
+# wäre z.B. /edge-function-submit.ts für jeden lesbar, samt Name des
+# Honeypot-Feldes, Rate-Limit-Fenstern und allen Prüfregeln.
+# Das Ausrufezeichen erzwingt die Regel, obwohl die Datei wirklich existiert.
+/edge-function-*     /404.html   404!
+/supabase-*          /404.html   404!
+
 # Sitemap wird live aus der Datenbank erzeugt (Supabase Edge Function "sitemap")
 /sitemap.xml         https://kvqdgcixmdnrarlaskyb.supabase.co/functions/v1/sitemap   200
 

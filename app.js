@@ -1650,7 +1650,8 @@ async function fetchBerufe(suchbegriff) {
 
     if (!treffer.length) {
       protokolliereSuche(q, 0);
-      await sucheUeberStellenanzeigen(q, dd);
+      // Originalschreibweise übergeben – der Hinweis zeigt den Begriff an
+      await sucheUeberStellenanzeigen(suchbegriff.trim(), dd);
       return;
     }
 

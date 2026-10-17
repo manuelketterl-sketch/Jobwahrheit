@@ -1037,9 +1037,47 @@ const SEITEN_META = {
   datenschutz: { titel: 'Datenschutz | JobInsides', beschreibung: 'Datenschutzerklärung von JobInsides.', index: false }
 };
 
+// ════════════════════════════════════════
+// MOBILMENÜ
+// Auf dem Handy ist für die Linkleiste kein Platz, also klappt sie auf.
+// Es ist dieselbe Liste wie am Desktop – nur per CSS anders angeordnet.
+// ════════════════════════════════════════
+function menueUmschalten(erzwinge) {
+  const liste = document.getElementById('nav-links');
+  const knopf = document.querySelector('.nav-menue');
+  if (!liste || !knopf) return;
+
+  const offen = typeof erzwinge === 'boolean' ? erzwinge : !liste.classList.contains('offen');
+  liste.classList.toggle('offen', offen);
+  knopf.setAttribute('aria-expanded', String(offen));
+  knopf.setAttribute('aria-label', offen ? 'Menü schließen' : 'Menü öffnen');
+
+  let schatten = document.querySelector('.nav-schatten');
+  if (offen && !schatten) {
+    schatten = document.createElement('button');
+    schatten.className = 'nav-schatten';
+    schatten.type = 'button';
+    schatten.setAttribute('aria-label', 'Menü schließen');
+    schatten.addEventListener('click', () => menueUmschalten(false));
+    document.body.appendChild(schatten);
+  } else if (!offen && schatten) {
+    schatten.remove();
+  }
+}
+
+// Ein Klick im Menü soll es auch wieder schließen
+document.addEventListener('click', e => {
+  if (e.target.closest('#nav-links a')) menueUmschalten(false);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') menueUmschalten(false);
+});
+
 // Von überall zurück zur Suche. Das Suchfeld steht nur auf der Startseite,
 // vorher kam man von einer Berufsseite aus nur über das Logo dorthin zurück.
 function zurSuche() {
+  menueUmschalten(false);
   const schonDa = document.getElementById('page-home')?.classList.contains('active');
   if (!schonDa) showPage('home');
 

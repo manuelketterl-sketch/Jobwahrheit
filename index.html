@@ -41,12 +41,24 @@
 <!-- NAV -->
 <nav>
   <div class="nav-logo" onclick="showPage('home')">Job<span>Insides</span></div>
-  <div class="nav-links">
+  <div class="nav-links" id="nav-links">
     <a class="nav-suche" onclick="zurSuche()">Beruf suchen</a>
-    <a onclick="showPage('vergleich')">Vergleichen</a>
+    <a onclick="showPage('vergleich')">Berufe vergleichen</a>
     <a onclick="showPage('arbeitgeber')">Für Arbeitgeber</a>
     <a href="/arbeitgeber.html" class="nav-login">Anmelden</a>
   </div>
+  <!-- Nur auf dem Handy sichtbar: Lupe für die Suche, Menü für den Rest.
+       Als Symbole, weil für vier Textlinks neben Logo und Knopf kein
+       Platz ist – siehe Media Query in styles.css. -->
+  <button class="nav-lupe" type="button" aria-label="Beruf suchen" onclick="zurSuche()">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="11" cy="11" r="7"></circle><line x1="16.2" y1="16.2" x2="21" y2="21"></line>
+    </svg>
+  </button>
+  <button class="nav-menue" type="button" aria-label="Menü öffnen" aria-expanded="false"
+    aria-controls="nav-links" onclick="menueUmschalten()">
+    <span></span><span></span><span></span>
+  </button>
   <button class="nav-cta" onclick="showPage('bewerten')">Beruf bewerten</button>
 </nav>
 
@@ -60,7 +72,11 @@
     <p class="hero-sub">Bewertungen von echten Angestellten: Alltag, Gehalt, Belastung – alles, was in keiner Stellenbeschreibung steht.</p>
 
     <div class="search-wrap">
+      <!-- autocomplete="off": iOS liest "Beruf" als Berufsbezeichnung aus der
+           Kontaktkarte und bietet an, das Feld damit auszufüllen. Die übrigen
+           Attribute verhindern Großschreibung und Autokorrektur im Suchfeld. -->
       <input class="search-input" type="text" placeholder="Beruf suchen, z.B. Elektriker, Pflegefachkraft…"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"
         oninput="handleSearch(this.value)" onblur="closeSearch()">
       <button class="search-btn">Suchen</button>
       <div class="search-dropdown" id="search-dropdown"></div>
@@ -312,7 +328,7 @@
         <!-- Formular: neue Diskussion (versteckt bis Klick) -->
         <div id="disc-form" style="display:none;background:#fff;border:1px solid var(--border);border-radius:16px;padding:1.4rem;margin-bottom:1.25rem">
           <div style="font-size:.8rem;color:var(--muted);margin-bottom:.75rem">Du schreibst als <strong id="disc-nickname" style="color:var(--accent-deep)"></strong> – niemand erfährt, wer du bist.</div>
-          <input id="disc-titel" class="form-input" placeholder="Worum geht es?" style="margin-bottom:.6rem">
+          <input id="disc-titel" class="form-input" placeholder="Worum geht es?" autocomplete="off" style="margin-bottom:.6rem">
           <textarea id="disc-inhalt" class="form-textarea" placeholder="Mehr dazu, wenn du magst" style="margin-bottom:.6rem;min-height:80px"></textarea>
           <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
             <button class="modal-btn" style="padding:.6rem 1.5rem;font-size:.9rem" onclick="submitDiskussion()">Veröffentlichen</button>
@@ -333,7 +349,7 @@
 
         <div style="display:flex;gap:.5rem;margin-bottom:1.25rem;flex-wrap:wrap">
           <input type="text" id="job-plz" class="form-input" placeholder="PLZ (optional)"
-            inputmode="numeric" maxlength="5" style="flex:1;min-width:120px;padding:.65rem .9rem;font-size:.9rem"
+            inputmode="numeric" maxlength="5" autocomplete="postal-code" style="flex:1;min-width:120px;padding:.65rem .9rem;font-size:.9rem"
             onkeydown="if(event.key==='Enter')ladeStellen()">
           <select id="job-umkreis" class="form-select" style="flex:1;min-width:110px;padding:.65rem .9rem;font-size:.9rem">
             <option value="25">25 km</option>
@@ -744,7 +760,7 @@
         <div style="font-size:.76rem;color:var(--muted);margin-bottom:.45rem;text-align:left">📍 Wo suchst du?</div>
         <div style="display:flex;gap:.5rem">
           <input type="text" id="nl-plz" class="form-input" placeholder="PLZ"
-            inputmode="numeric" maxlength="5" style="flex:1;min-width:0;padding:.55rem .7rem;font-size:.88rem">
+            inputmode="numeric" maxlength="5" autocomplete="postal-code" style="flex:1;min-width:0;padding:.55rem .7rem;font-size:.88rem">
           <select id="nl-umkreis" class="form-select" style="flex:1;min-width:0;padding:.55rem .7rem;font-size:.88rem">
             <option value="25">25 km</option>
             <option value="50" selected>50 km</option>
@@ -754,7 +770,7 @@
         </div>
       </div>
 
-      <input type="email" id="nl-email" class="form-input" placeholder="deine@email.de" style="margin-bottom:.45rem;padding:.65rem .9rem;font-size:.9rem">
+      <input type="email" id="nl-email" class="form-input" placeholder="deine@email.de" autocomplete="email" style="margin-bottom:.45rem;padding:.65rem .9rem;font-size:.9rem">
       <p style="font-size:.68rem;color:var(--muted);line-height:1.4;text-align:left">Du bekommst eine Bestätigungsmail. Deine Adresse wird <strong>nicht</strong> mit der Bewertung verknüpft – Abmeldung jederzeit.</p>
       <p id="nl-feedback" style="font-size:.8rem;margin-top:.4rem;display:none"></p>
     </div>

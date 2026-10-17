@@ -38,7 +38,11 @@ nav {
    welche Funktion gerade die Seite umgeschaltet hat (showPage, showBeruf,
    Zurück-Taste). Kennt ein Browser :has() nicht, bleibt der Link eben
    stehen – das ist der vorherige Zustand und stört niemanden. */
-body:has(#page-home.active) .nav-suche { display: none; }
+body:has(#page-home.active) .nav-suche,
+body:has(#page-home.active) .nav-lupe { display: none; }
+
+/* Lupe und Menüknopf gibt es nur auf dem Handy (siehe Media Query unten) */
+.nav-lupe, .nav-menue { display: none; }
 .nav-cta {
   background: var(--ink); color: #fff;
   border: none; padding: .6rem 1.3rem;
@@ -992,13 +996,62 @@ h1 em { color: var(--accent); font-style: normal; }
   .form-row { grid-template-columns: 1fr; gap: 0; }
   .vergleich-grid { grid-template-columns: 1fr; }
   .stats-bar { gap: 2rem; margin-top: 3rem; }
-  nav { height: 60px; padding: 0 5vw; }
-  /* Die Linkleiste hat auf dem Handy keinen Platz – bis auf "Beruf suchen".
-     Von einer Berufsseite führte sonst kein Weg zurück zur Suche außer
-     dem Logo, und darauf kommt niemand von allein. */
-  nav .nav-links { display: flex; gap: 0; }
-  nav .nav-links a:not(.nav-suche) { display: none; }
-  nav .nav-links a.nav-suche { font-size: .82rem; white-space: nowrap; }
+  nav { height: 60px; padding: 0 5vw; gap: .5rem; }
+  /* Logo links, der Rest als Gruppe rechts. Ohne das verteilt
+     space-between Lupe und Menüknopf quer über die Leiste. */
+  nav .nav-logo { margin-right: auto; font-size: 1.25rem; }
+
+  /* ── Mobilmenü ──────────────────────────────────────────────
+     Für vier Textlinks ist neben Logo und Knopf kein Platz. Deshalb
+     wandert die Leiste in ein aufklappbares Menü, und die Suche bekommt
+     als häufigste Handlung eine eigene Lupe direkt in der Leiste.
+     Es ist dieselbe Liste wie am Desktop, nur anders angeordnet –
+     so gibt es die Links nur einmal im Dokument. */
+  nav .nav-links {
+    display: flex; flex-direction: column; align-items: stretch; gap: 0;
+    position: fixed; top: 60px; left: 0; right: 0;
+    background: #fff; border-bottom: 1px solid var(--border);
+    padding: .25rem 5vw 1rem;
+    box-shadow: 0 14px 28px rgba(13,27,26,.10);
+    transform: translateY(-115%);
+    transition: transform .22s ease, visibility .22s;
+    visibility: hidden;
+    z-index: 99;
+  }
+  nav .nav-links.offen { transform: translateY(0); visibility: visible; }
+  nav .nav-links a {
+    padding: .95rem .1rem; font-size: 1rem; color: var(--ink);
+    border-bottom: 1px solid var(--bg-soft);
+  }
+  nav .nav-links a:last-child { border-bottom: none; }
+
+  .nav-lupe, .nav-menue {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: none; border: none; cursor: pointer;
+    width: 40px; height: 40px; padding: 0; flex-shrink: 0;
+    color: var(--ink);
+  }
+  .nav-lupe svg {
+    width: 21px; height: 21px; fill: none; stroke: currentColor;
+    stroke-width: 2; stroke-linecap: round;
+  }
+  .nav-menue span {
+    position: absolute; width: 20px; height: 2px; border-radius: 2px;
+    background: var(--ink); transition: transform .22s ease, opacity .18s ease;
+  }
+  .nav-menue { position: relative; }
+  .nav-menue span:nth-child(1) { transform: translateY(-6px); }
+  .nav-menue span:nth-child(3) { transform: translateY(6px); }
+  /* Offen: aus den drei Strichen wird ein Kreuz */
+  .nav-menue[aria-expanded="true"] span:nth-child(1) { transform: rotate(45deg); }
+  .nav-menue[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+  .nav-menue[aria-expanded="true"] span:nth-child(3) { transform: rotate(-45deg); }
+
+  /* Dunkle Fläche hinter dem offenen Menü, Tippen darauf schließt es */
+  .nav-schatten {
+    position: fixed; inset: 60px 0 0; background: rgba(13,27,26,.35);
+    z-index: 98; border: none; width: 100%; padding: 0;
+  }
   .nav-cta { padding: .6rem 1.1rem; font-size: .85rem; min-height: 40px; }
 
   /* Hero: weniger Höhe, Suche im Fokus */
@@ -1023,6 +1076,13 @@ h1 em { color: var(--accent); font-style: normal; }
   .tabs {
     top: 60px; padding: .5rem 5vw; gap: .15rem;
     overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    /* overflow-y muss ausdrücklich hidden sein: Steht eine Achse auf auto
+       und die andere auf visible, macht der Browser aus visible ebenfalls
+       auto – die Leiste ließ sich dadurch auch hoch und runter schieben.
+       overscroll-behavior verhindert zusätzlich, dass das Wischen am Ende
+       der Leiste als Zurück-Geste der Seite durchschlägt. */
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
   }
   .tabs::-webkit-scrollbar { display: none; }
   .tabs::after { content: none; }
@@ -1039,7 +1099,10 @@ h1 em { color: var(--accent); font-style: normal; }
   /* Weicher Verlauf links: zeigt, dass die Leiste weiterläuft */
   .tab-stellen::before {
     content: ''; position: absolute; right: 100%;
-    top: -1rem; bottom: -1rem; width: 34px;
+    /* Nicht über die Leiste hinausragen: Mit top/bottom auf -1rem war der
+       Inhalt 7px höher als die Leiste, und genau dadurch ließ sie sich
+       auch hoch und runter schieben. Die Leistenhöhe reicht völlig. */
+    top: 0; bottom: 0; width: 34px;
     background: linear-gradient(90deg, rgba(255,255,255,0), #fff 72%);
     pointer-events: none;
   }

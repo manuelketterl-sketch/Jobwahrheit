@@ -42,6 +42,7 @@
 <nav>
   <div class="nav-logo" onclick="showPage('home')">Job<span>Insides</span></div>
   <div class="nav-links">
+    <a onclick="zurSuche()">Beruf suchen</a>
     <a onclick="showPage('vergleich')">Vergleichen</a>
     <a onclick="showPage('arbeitgeber')">Für Arbeitgeber</a>
     <a href="/arbeitgeber.html" class="nav-login">Anmelden</a>
@@ -624,11 +625,26 @@
 <div class="page" id="page-vergleich">
   <div class="vergleich-page">
     <h2>Berufe vergleichen</h2>
-    <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap">
-      <input id="v-input-1" class="search-input" style="max-width:280px" type="text" placeholder="Erster Beruf">
-      <input id="v-input-2" class="search-input" style="max-width:280px" type="text" placeholder="Zweiter Beruf">
+    <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;align-items:flex-start">
+      <div style="position:relative;flex:1 1 220px;max-width:280px">
+        <input id="v-input-1" class="search-input" style="max-width:none" type="text"
+          placeholder="Erster Beruf" autocomplete="off"
+          oninput="handleVergleichSearch(1, this.value)"
+          onblur="setTimeout(()=>closeVergleichDropdown(1),180)">
+        <div class="search-dropdown" id="v-dropdown-1" style="border-radius:14px"></div>
+      </div>
+      <div style="position:relative;flex:1 1 220px;max-width:280px">
+        <input id="v-input-2" class="search-input" style="max-width:none" type="text"
+          placeholder="Zweiter Beruf" autocomplete="off"
+          oninput="handleVergleichSearch(2, this.value)"
+          onblur="setTimeout(()=>closeVergleichDropdown(2),180)">
+        <div class="search-dropdown" id="v-dropdown-2" style="border-radius:14px"></div>
+      </div>
       <button class="search-btn" style="position:static;transform:none" onclick="vergleicheBerufe()">Vergleichen</button>
     </div>
+    <p class="abschnitt-lead" style="margin:-1.25rem 0 2rem;font-size:.85rem">
+      Tipp: Wähl die Berufe aus der Vorschlagsliste – dann stimmt die Schreibweise.
+    </p>
     <div class="vergleich-grid" id="vergleich-grid">
       <div class="v-card" id="v-card-1">
         <h3 style="color:var(--muted)">Beruf 1</h3>

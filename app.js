@@ -746,7 +746,89 @@ async function stelleGeklickt(id) {
 
 // ════════════════════════════════════════
 // BERUFSVERGLEICH – mit echten Bewertungsdaten
+//
+// Die beiden Felder haben dieselbe Vorschlagsliste wie die Hauptsuche.
+// Vorher waren es nackte Textfelder, und die Auswertung verglich den
+// getippten Text buchstabengenau mit beruf_name – wer "Mechatroniker"
+// statt "Mechatroniker/in" eintippte, bekam "keine Bewertungen",
+// obwohl welche da waren.
 // ════════════════════════════════════════
+let vergleichTimer = [null, null, null];
+
+function handleVergleichSearch(nr, wert) {
+  clearTimeout(vergleichTimer[nr]);
+  const dd = document.getElementById('v-dropdown-' + nr);
+  if (!dd) return;
+
+  const suchbegriff = (wert || '').trim();
+  if (suchbegriff.length < 2) {
+    dd.classList.remove('open');
+    return;
+  }
+
+  vergleichTimer[nr] = setTimeout(async () => {
+    try {
+      const q = suchbegriff.toLowerCase();
+      const varianten = erweitereSuchbegriff(q);
+
+      const abfragen = [];
+      for (const v of varianten) {
+        abfragen.push(sb.from('berufe').select('name, berufsgruppe').ilike('name_lower', `${v}%`).limit(12));
+        abfragen.push(sb.from('berufe').select('name, berufsgruppe').ilike('name_lower', `%${v}%`).limit(20));
+      }
+
+      const ergebnisse = await Promise.all(abfragen);
+      const zusammen = ergebnisse.flatMap(r => r.data || []);
+      const treffer = sortiereNachRelevanz(entdupliziere(zusammen), q, varianten).slice(0, 8);
+
+      // Zwischenzeitlich weitergetippt? Dann ist diese Antwort veraltet.
+      const feld = document.getElementById('v-input-' + nr);
+      if (feld && feld.value.trim() !== suchbegriff) return;
+
+      if (!treffer.length) {
+        dd.innerHTML = `<div class="search-item" style="color:var(--muted)">Kein Beruf dieses Namens gefunden</div>`;
+        dd.classList.add('open');
+        return;
+      }
+
+      dd.innerHTML = treffer.map(b =>
+        `<div class="search-item" onmousedown="selectVergleichBeruf(${nr}, '${b.name.replace(/'/g,"\\'")}')">
+          <span>${escHtml(b.name)}</span><span class="tag">${escHtml(b.berufsgruppe)}</span>
+        </div>`
+      ).join('');
+      dd.classList.add('open');
+    } catch {
+      dd.classList.remove('open');
+    }
+  }, 250);
+}
+
+function selectVergleichBeruf(nr, name) {
+  const input = document.getElementById('v-input-' + nr);
+  if (input) input.value = name;
+  closeVergleichDropdown(nr);
+}
+
+function closeVergleichDropdown(nr) {
+  const dd = document.getElementById('v-dropdown-' + nr);
+  if (dd) dd.classList.remove('open');
+}
+
+// Getippten Text auf eine echte Berufsbezeichnung bringen, damit auch
+// jemand, der direkt auf "Vergleichen" klickt, ein Ergebnis bekommt.
+async function berufNameAufloesen(eingabe) {
+  const q = (eingabe || '').trim();
+  if (!q) return null;
+  try {
+    const genau = await sb.from('berufe').select('name').ilike('name_lower', q.toLowerCase()).limit(1);
+    if (genau.data?.length) return genau.data[0].name;
+
+    const anfang = await sb.from('berufe').select('name').ilike('name_lower', `${q.toLowerCase()}%`).limit(1);
+    if (anfang.data?.length) return anfang.data[0].name;
+  } catch { /* Netzproblem: dann eben mit dem getippten Text weiter */ }
+  return null;
+}
+
 async function berufStatistik(name) {
   const { data, error } = await sb
     .from('bewertungen').select('*').ilike('beruf_name', name);
@@ -764,11 +846,17 @@ async function berufStatistik(name) {
   return { n, gesamt, empf, erwartung, median };
 }
 
-function renderVergleichKarte(el, name, stat) {
+function renderVergleichKarte(el, name, stat, unbekannt) {
   if (!stat) {
-    el.innerHTML = `<h3>${escHtml(name)}</h3>
-      <p style="font-size:.88rem;color:var(--muted)">Für diesen Beruf gibt es noch keine Bewertungen.
-      <span onclick="showPage('bewerten')" style="color:var(--accent-deep);cursor:pointer;font-weight:600">Jetzt bewerten</span></p>`;
+    // Zwei verschiedene Gründe für eine leere Karte – und der Unterschied
+    // ist für den Besucher wichtig: Tippfehler oder wirklich noch nichts da.
+    el.innerHTML = unbekannt
+      ? `<h3>${escHtml(name)}</h3>
+         <p style="font-size:.88rem;color:var(--muted)">Diesen Beruf kennen wir nicht.
+         Tipp ein paar Buchstaben und wähl ihn aus der Vorschlagsliste.</p>`
+      : `<h3>${escHtml(name)}</h3>
+         <p style="font-size:.88rem;color:var(--muted)">Für diesen Beruf gibt es noch keine Bewertungen.
+         <span onclick="showPage('bewerten')" style="color:var(--accent-deep);cursor:pointer;font-weight:600">Jetzt bewerten</span></p>`;
     return;
   }
   const farbe = v => v >= 4 ? 'good' : v >= 3 ? 'mid' : '';
@@ -794,9 +882,21 @@ async function vergleicheBerufe() {
   c1.innerHTML = '<p style="color:var(--muted)">Lade…</p>';
   c2.innerHTML = '<p style="color:var(--muted)">Lade…</p>';
 
-  const [s1, s2] = await Promise.all([berufStatistik(n1), berufStatistik(n2)]);
-  renderVergleichKarte(c1, n1, s1);
-  renderVergleichKarte(c2, n2, s2);
+  // Erst auf die amtliche Schreibweise bringen, dann die Zahlen holen
+  const [k1, k2] = await Promise.all([berufNameAufloesen(n1), berufNameAufloesen(n2)]);
+  const name1 = k1 || n1;
+  const name2 = k2 || n2;
+
+  // Aufgelöste Namen zurück in die Felder, damit sichtbar ist,
+  // was tatsächlich verglichen wurde
+  const f1 = document.getElementById('v-input-1');
+  const f2 = document.getElementById('v-input-2');
+  if (f1 && k1) f1.value = k1;
+  if (f2 && k2) f2.value = k2;
+
+  const [s1, s2] = await Promise.all([berufStatistik(name1), berufStatistik(name2)]);
+  renderVergleichKarte(c1, name1, s1, !k1);
+  renderVergleichKarte(c2, name2, s2, !k2);
 }
 
 // ════════════════════════════════════════
@@ -936,6 +1036,22 @@ const SEITEN_META = {
   impressum: { titel: 'Impressum | JobInsides', beschreibung: 'Impressum von JobInsides.', index: false },
   datenschutz: { titel: 'Datenschutz | JobInsides', beschreibung: 'Datenschutzerklärung von JobInsides.', index: false }
 };
+
+// Von überall zurück zur Suche. Das Suchfeld steht nur auf der Startseite,
+// vorher kam man von einer Berufsseite aus nur über das Logo dorthin zurück.
+function zurSuche() {
+  const schonDa = document.getElementById('page-home')?.classList.contains('active');
+  if (!schonDa) showPage('home');
+
+  // Nach dem Seitenwechsel kurz warten, sonst ist das Feld noch nicht sichtbar
+  setTimeout(() => {
+    const f = document.querySelector('.search-input');
+    if (!f) return;
+    f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    f.focus();
+    f.select();
+  }, schonDa ? 0 : 60);
+}
 
 function showPage(id, ausVerlauf) {
   // Angefangene Bewertung schützen, wenn woanders hin gewechselt wird

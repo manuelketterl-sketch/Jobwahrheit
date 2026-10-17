@@ -1071,6 +1071,11 @@ h1 em { color: var(--accent); font-style: normal; }
 
 /* Sehr schmale Geräte */
 @media (max-width: 380px) {
+  /* Logo, "Beruf suchen" und der Knopf füllen die Leiste hier sonst bis
+     auf den letzten Pixel – und solange die Schrift lädt, rendert die
+     Ersatzschrift breiter. Etwas Luft schaffen. */
+  .nav-cta { padding: .55rem .85rem; font-size: .8rem; }
+  nav .nav-links a.nav-suche { font-size: .78rem; }
   h1 { font-size: 2.1rem; }
   .beruf-header h2 { font-size: 1.6rem; }
   .stern { width: 42px; height: 42px; }

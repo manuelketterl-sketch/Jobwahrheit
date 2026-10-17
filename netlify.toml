@@ -23,3 +23,11 @@
   for = "/og-bild.png"
   [headers.values]
     Cache-Control = "public, max-age=604800"
+
+# Schriftdateien ändern sich nie: Die Versionsnummer steckt im Dateinamen
+# (…-v9-…), eine neue Fassung bekäme also einen neuen Namen. Deshalb darf
+# der Browser sie ein Jahr lang behalten, ohne nachzufragen.
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

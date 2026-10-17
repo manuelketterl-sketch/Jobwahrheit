@@ -1,0 +1,94 @@
+/* ════════════════════════════════════════
+   SCHRIFTEN – ausgeliefert von unserem eigenen Server
+
+   Früher kamen diese Schriften von fonts.googleapis.com und
+   fonts.gstatic.com. Dabei ging bei jedem Seitenaufruf die IP-Adresse
+   des Besuchers an Google – ohne Einwilligung, ohne Abschaltmöglichkeit.
+   Seit die Dateien hier liegen, baut die Seite keine Verbindung mehr
+   zu Dritten auf.
+
+   Die Dateien stammen von google-webfonts-helper und enthalten die
+   Zeichensätze latin und latin-ext in einer Datei. latin-ext deckt
+   polnische, tschechische, türkische und rumänische Zeichen ab – die
+   tauchen in Bewertungen und in Firmennamen aus der Jobbörse auf.
+   Deshalb ist hier kein unicode-range nötig: Jede Datei kann alles.
+
+   Beide Schriften stehen unter der SIL Open Font License, das
+   Selbsthosten ist ausdrücklich erlaubt.
+
+   font-display: swap bedeutet: Text ist sofort lesbar (in einer
+   Systemschrift) und wird ausgetauscht, sobald die Schrift da ist.
+   Niemand starrt auf eine leere Seite.
+
+   Die Versionsnummer steckt im Dateinamen (v9, v12). Wird eine Schrift
+   später aktualisiert, ändert sich der Name – der Browser holt dann
+   automatisch die neue Datei, statt die alte aus dem Cache zu nehmen.
+   ════════════════════════════════════════ */
+
+/* ── Bricolage Grotesque – Überschriften, Wortmarke ── */
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/bricolage-grotesque-v9-latin_latin-ext-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/bricolage-grotesque-v9-latin_latin-ext-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/bricolage-grotesque-v9-latin_latin-ext-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/bricolage-grotesque-v9-latin_latin-ext-800.woff2') format('woff2');
+}
+
+/* ── Plus Jakarta Sans – Fließtext, Bedienelemente ── */
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/plus-jakarta-sans-v12-latin_latin-ext-regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/plus-jakarta-sans-v12-latin_latin-ext-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/plus-jakarta-sans-v12-latin_latin-ext-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/plus-jakarta-sans-v12-latin_latin-ext-700.woff2') format('woff2');
+}

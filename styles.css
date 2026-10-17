@@ -985,7 +985,12 @@ h1 em { color: var(--accent); font-style: normal; }
   .vergleich-grid { grid-template-columns: 1fr; }
   .stats-bar { gap: 2rem; margin-top: 3rem; }
   nav { height: 60px; padding: 0 5vw; }
-  nav .nav-links { display: none; }
+  /* Die Linkleiste hat auf dem Handy keinen Platz – bis auf "Beruf suchen".
+     Von einer Berufsseite führte sonst kein Weg zurück zur Suche außer
+     dem Logo, und darauf kommt niemand von allein. */
+  nav .nav-links { display: flex; gap: 0; }
+  nav .nav-links a:not(.nav-suche) { display: none; }
+  nav .nav-links a.nav-suche { font-size: .82rem; white-space: nowrap; }
   .nav-cta { padding: .6rem 1.1rem; font-size: .85rem; min-height: 40px; }
 
   /* Hero: weniger Höhe, Suche im Fokus */

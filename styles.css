@@ -31,6 +31,14 @@ nav {
   transition: color .2s;
 }
 .nav-links a:hover { color: var(--ink); }
+
+/* "Beruf suchen" nur zeigen, wenn man nicht ohnehin auf der Startseite
+   steht – dort liegt das Suchfeld sichtbar im Hero.
+   Über :has() statt per JavaScript, damit die Regel immer stimmt, egal
+   welche Funktion gerade die Seite umgeschaltet hat (showPage, showBeruf,
+   Zurück-Taste). Kennt ein Browser :has() nicht, bleibt der Link eben
+   stehen – das ist der vorherige Zustand und stört niemanden. */
+body:has(#page-home.active) .nav-suche { display: none; }
 .nav-cta {
   background: var(--ink); color: #fff;
   border: none; padding: .6rem 1.3rem;

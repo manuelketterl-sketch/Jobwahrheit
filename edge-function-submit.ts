@@ -98,11 +98,20 @@ Deno.serve(async (req) => {
     if (!Number.isInteger(bewertung_gesamt) || bewertung_gesamt < 1 || bewertung_gesamt > 5)
       return fail('Gesamtbewertung muss 1–5 sein')
 
+    // Seit Oktober 2026 ein Schieberegler 1–10 statt fünf Sterne
     const bewertung_erwartung = Number.isInteger(Number(d.bewertung_erwartung)) &&
-      d.bewertung_erwartung >= 1 && d.bewertung_erwartung <= 5 ? Number(d.bewertung_erwartung) : null
+      d.bewertung_erwartung >= 1 && d.bewertung_erwartung <= 10 ? Number(d.bewertung_erwartung) : null
 
     let gehalt: number | null = parseInt(d.gehalt_brutto)
     if (isNaN(gehalt) || gehalt < 0 || gehalt > 100000) gehalt = null
+
+    // Sonderzahlungen in Monatsgehältern, in halben Schritten von 0 bis 6.
+    // null = keine Angabe, 0 = ausdrücklich keine Sonderzahlungen.
+    let bonus: number | null = null
+    if (d.bonus_monatsgehaelter !== null && d.bonus_monatsgehaelter !== undefined && d.bonus_monatsgehaelter !== '') {
+      const b = Number(d.bonus_monatsgehaelter)
+      if (Number.isFinite(b) && b >= 0 && b <= 6) bonus = Math.round(b * 2) / 2
+    }
 
     let skills: string[] | null = null
     if (Array.isArray(d.skills)) {
@@ -120,6 +129,7 @@ Deno.serve(async (req) => {
       alltag_vs_stelle: str(d.alltag_vs_stelle, 2000),
       skills,
       gehalt_brutto: gehalt,
+      bonus_monatsgehaelter: bonus,
       bewertung_gesamt,
       weiterempfehlung: !!d.weiterempfehlung,
       freitext: str(d.freitext, 3000),

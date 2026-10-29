@@ -206,7 +206,7 @@
       </div>
       <div class="score-item">
         <div class="score-big" style="color:#a78bfa" id="score-erwartung">–</div>
-        <div class="score-label">Versprechen ≈ Realität</div>
+        <div class="score-label">Versprechen ≈ Realität (von 10)</div>
       </div>
       <div class="score-item">
         <div class="score-big green" id="score-gehalt">–</div>
@@ -304,6 +304,8 @@
             </div>
           </div>
           <div style="font-size:.82rem;color:var(--muted);text-align:center" id="gehalt-basis">Noch keine Gehaltsangaben.</div>
+          <!-- Sonderzahlungen und Jahresbrutto – nur sichtbar, wenn jemand sie angegeben hat -->
+          <div class="gehalt-extra" id="gehalt-extra" style="display:none"></div>
         </div>
       </div>
 
@@ -497,14 +499,20 @@
         <textarea id="f-erwartet" class="form-textarea" placeholder="Wie hast du dir den Job vorgestellt, bevor du angefangen hast? Ein, zwei Sätze reichen."></textarea>
       </div>
       <div class="form-group">
-        <label class="form-label">Wie viel davon hat sich bestätigt? <span class="pflicht">Pflicht</span></label>
-        <div class="sterne" id="stars-expect" role="radiogroup" aria-label="Erwartung erfüllt">
-          <button type="button" class="stern" onclick="setStarForm('expect',1)" aria-label="1 von 5"></button>
-          <button type="button" class="stern" onclick="setStarForm('expect',2)" aria-label="2 von 5"></button>
-          <button type="button" class="stern" onclick="setStarForm('expect',3)" aria-label="3 von 5"></button>
-          <button type="button" class="stern" onclick="setStarForm('expect',4)" aria-label="4 von 5"></button>
-          <button type="button" class="stern" onclick="setStarForm('expect',5)" aria-label="5 von 5"></button>
-          <span class="sterne-text" id="sterne-text-expect">Tipp einen Stern an</span>
+        <label class="form-label" for="f-erwartung">Wie viel davon hat sich bestätigt? <span class="pflicht">Pflicht</span></label>
+        <!-- Schieberegler 1–10. Er hat technisch immer einen Wert, deshalb
+             zählt er erst als ausgefüllt, wenn man ihn angefasst hat
+             (Klasse "gesetzt"). Vorher steht der Knopf grau in der Mitte. -->
+        <div class="regler" id="regler-erwartung">
+          <div class="regler-kopf">
+            <span class="regler-wert" id="regler-wert">–</span>
+            <span class="regler-text" id="regler-text">Schieb den Regler</span>
+          </div>
+          <input type="range" id="f-erwartung" class="regler-input" min="1" max="10" step="1" value="5"
+            aria-describedby="regler-text"
+            oninput="reglerSetzen(this.value)" onchange="reglerSetzen(this.value)"
+            onpointerup="reglerSetzen(this.value)">
+          <div class="regler-skala"><span>1 · ganz anders</span><span>10 · genau so</span></div>
         </div>
       </div>
       <div class="form-group" style="margin-bottom:0">
@@ -586,13 +594,36 @@
       </div>
       <div class="skill-zaehler" id="skill-zaehler"></div>
 
-      <div class="form-group" style="margin:1.25rem 0 0">
-        <label class="form-label" for="f-gehalt">Bruttogehalt pro Monat <span class="optional">optional</span></label>
-        <div class="gehalt-eingabe">
-          <input id="f-gehalt" class="form-input" type="number" inputmode="numeric" placeholder="3200">
-          <span>€</span>
+      <div class="gehalt-felder">
+        <div class="form-group">
+          <label class="form-label" for="f-gehalt">Monatsbrutto im Durchschnitt <span class="optional">optional</span></label>
+          <div class="gehalt-eingabe">
+            <input id="f-gehalt" class="form-input" type="number" inputmode="numeric" placeholder="3200"
+              min="0" max="100000" autocomplete="off" oninput="gehaltVorschau()">
+            <span>€</span>
+          </div>
+          <p class="form-hinweis">Was im Schnitt auf dem Lohnzettel steht, mit regelmäßigen Zulagen – aber ohne Einmalzahlungen.</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="f-bonus">Sonderzahlungen im Jahr <span class="optional">optional</span></label>
+          <select id="f-bonus" class="form-select" onchange="gehaltVorschau()">
+            <option value="">Keine Angabe</option>
+            <option value="0">Keine Sonderzahlungen</option>
+            <option value="0.5">½ Monatsgehalt</option>
+            <option value="1">1 Monatsgehalt</option>
+            <option value="1.5">1,5 Monatsgehälter</option>
+            <option value="2">2 Monatsgehälter</option>
+            <option value="2.5">2,5 Monatsgehälter</option>
+            <option value="3">3 Monatsgehälter</option>
+            <option value="3.5">3,5 Monatsgehälter</option>
+            <option value="4">4 Monatsgehälter</option>
+            <option value="5">5 Monatsgehälter</option>
+            <option value="6">6 oder mehr</option>
+          </select>
+          <p class="form-hinweis">Weihnachtsgeld, Urlaubsgeld, Gewinnbeteiligung, Bonus – zusammengerechnet in Monatsgehältern. Volles Weihnachts- und halbes Urlaubsgeld wären 1,5.</p>
         </div>
       </div>
+      <div class="gehalt-vorschau" id="gehalt-vorschau" aria-live="polite"></div>
     </section>
 
     <!-- Schritt 4: Gesamturteil -->

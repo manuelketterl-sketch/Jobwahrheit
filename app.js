@@ -90,6 +90,7 @@ function resetStatistiken() {
   setText('gehalt-min','–'); setText('gehalt-median','–'); setText('gehalt-max','–');
   setText('gehalt-basis','Noch keine Gehaltsangaben.');
   const gw = document.getElementById('gehalt-widget'); if (gw) gw.style.display = 'none';
+  const ge = document.getElementById('gehalt-extra'); if (ge) { ge.innerHTML = ''; ge.style.display = 'none'; }
   const sc = document.getElementById('skill-cloud');
   if (sc) sc.innerHTML = '<span style="font-size:.88rem;color:var(--muted)">Noch keine Angaben.</span>';
 }
@@ -124,13 +125,15 @@ function updateStatistiken(data) {
   if (be) be.style.width = empfRate + '%';
 
   // ── Erwartung (nur Bewertungen die das angegeben haben) ──
+  // Skala 1–10 (Schieberegler). Ältere Bewertungen mit 1–5 gibt es
+  // nicht – die Testdaten wurden vor der Umstellung gelöscht.
   const mitErwartung = data.filter(b => b.bewertung_erwartung > 0);
   if (mitErwartung.length) {
     const avgErw = mitErwartung.reduce((s,b) => s + b.bewertung_erwartung, 0) / mitErwartung.length;
     setText('score-erwartung', avgErw.toFixed(1));
-    setText('val-erwartung', avgErw.toFixed(1));
+    setText('val-erwartung', avgErw.toFixed(1) + '/10');
     const bar = document.getElementById('bar-erwartung');
-    if (bar) bar.style.width = (avgErw / 5 * 100) + '%';
+    if (bar) bar.style.width = (avgErw / 10 * 100) + '%';
   } else {
     setText('score-erwartung', '–');
     setText('val-erwartung', '–');
@@ -173,6 +176,41 @@ function updateStatistiken(data) {
     if (gw) gw.style.display = 'none';
   }
 
+  // ── Sonderzahlungen und Jahresbrutto ──
+  // Jahresbrutto nur aus Bewertungen, die BEIDES angegeben haben –
+  // ein Monatsgehalt ohne Angabe zu Sonderzahlungen sagt nichts übers Jahr.
+  const extra = document.getElementById('gehalt-extra');
+  if (extra) {
+    const mitBonus = data.filter(b => b.bonus_monatsgehaelter != null);
+    const jahre = data
+      .filter(b => b.gehalt_brutto > 0 && b.bonus_monatsgehaelter != null)
+      .map(b => b.gehalt_brutto * (12 + Number(b.bonus_monatsgehaelter)))
+      .sort((a,b) => a-b);
+    const median = arr => {
+      const m = Math.floor(arr.length / 2);
+      return arr.length % 2 ? arr[m] : (arr[m-1] + arr[m]) / 2;
+    };
+    const zeilen = [];
+    if (mitBonus.length) {
+      const bonusWerte = mitBonus.map(b => Number(b.bonus_monatsgehaelter)).sort((a,b) => a-b);
+      const anteilOhne = Math.round(bonusWerte.filter(v => v === 0).length / bonusWerte.length * 100);
+      zeilen.push(`<div><strong>${monatsgehaelter(median(bonusWerte))}</strong> Sonderzahlungen im Jahr (Median)`
+        + (anteilOhne > 0 ? ` · ${anteilOhne} % bekommen keine` : '') + `</div>`);
+    }
+    if (jahre.length) {
+      const j = Math.round(median(jahre) / 100) * 100;
+      zeilen.push(`<div>Rund <strong>${j.toLocaleString('de-DE')} €</strong> brutto im Jahr inklusive Sonderzahlungen (Median)</div>`);
+    }
+    if (zeilen.length) {
+      zeilen.push(`<div class="gehalt-extra-basis">${mitBonus.length} Angabe${mitBonus.length === 1 ? '' : 'n'} zu Sonderzahlungen</div>`);
+      extra.innerHTML = zeilen.join('');
+      extra.style.display = 'block';
+    } else {
+      extra.innerHTML = '';
+      extra.style.display = 'none';
+    }
+  }
+
   // ── Skills-Wolke: Häufigkeit bestimmt Größe ──
   const sc = document.getElementById('skill-cloud');
   if (sc) {
@@ -212,7 +250,7 @@ function renderBewertung(b) {
       ${b.alltag_vs_stelle ? `<div class="rc-body"><strong>Realität:</strong> ${escHtml(b.alltag_vs_stelle)}</div>` : ''}
       ${tags ? `<div class="rc-tags">${tags}</div>` : ''}
       <div class="rc-footer">
-        <span>${b.gehalt_brutto ? `Bruttogehalt: <strong>${b.gehalt_brutto.toLocaleString('de')} €</strong>` : ''} ${b.region ? '· ' + escHtml(b.region) : ''} · ${empf}</span>
+        <span>${b.gehalt_brutto ? `Bruttogehalt: <strong>${b.gehalt_brutto.toLocaleString('de')} €</strong>` : ''}${b.bonus_monatsgehaelter > 0 ? ` + ${monatsgehaelter(b.bonus_monatsgehaelter)} Sonderzahlungen` : ''} ${b.region ? '· ' + escHtml(b.region) : ''} · ${empf}</span>
         <div style="display:flex;gap:1rem;align-items:center">
           <button class="rc-helpful" onclick="markHilfreich('${b.id}', this)">👍 ${b.hilfreich || 0} Hilfreich</button>
           <span class="rc-flag" title="Melden" onclick="meldenBewertung('${b.id}')">⚑</span>
@@ -262,6 +300,13 @@ async function submitBewertung() {
     document.getElementById('f-beruf')?.focus();
     return;
   }
+  // Die Erwartungsfrage ist als Pflicht markiert – das wurde bisher
+  // nur im Fortschritt gezählt, aber beim Abschicken nicht geprüft.
+  if (!formStars.expect) {
+    hinweis('Bitte schieb den Regler bei „Wie viel davon hat sich bestätigt?".', 'fehler');
+    document.getElementById('f-erwartung')?.focus();
+    return;
+  }
   if (!formStars.overall) {
     hinweis('Bitte vergib eine Gesamtbewertung.', 'fehler');
     return;
@@ -280,6 +325,11 @@ async function submitBewertung() {
     alltag_vs_stelle: document.getElementById('f-alltag')?.value || null,
     skills: selectedSkills.length ? selectedSkills : null,
     gehalt_brutto: parseInt(document.getElementById('f-gehalt')?.value) || null,
+    // Leere Auswahl heißt "keine Angabe" (null), "0" heißt "keine Sonderzahlungen"
+    bonus_monatsgehaelter: (() => {
+      const roh = document.getElementById('f-bonus')?.value;
+      return roh === '' || roh == null ? null : parseFloat(roh);
+    })(),
     bewertung_gesamt: formStars.overall,
     weiterempfehlung,
     freitext: document.getElementById('f-freitext')?.value || null,
@@ -292,7 +342,9 @@ async function submitBewertung() {
 
   const result = await secureSubmit('bewertung', payload);
 
-  btn.textContent = 'Anonym einreichen →';
+  // Wieder die Beschriftung aus dem HTML – vorher stand hier ein
+  // anderer Text, und der Knopf hieß nach dem ersten Versuch anders.
+  btn.textContent = 'Bewertung anonym abschicken';
   btn.disabled = false;
 
   if (!result.ok) {
@@ -319,7 +371,10 @@ function formularZuruecksetzen() {
   document.querySelectorAll('#page-bewerten .toggle-opt.sel').forEach(el => el.classList.remove('sel'));
   document.querySelectorAll('#page-bewerten .sterne-text').forEach(el => { el.textContent = 'Tipp einen Stern an'; el.classList.remove('gesetzt'); });
   const z = document.getElementById('skill-zaehler'); if (z) z.innerHTML = '';
-  formStars.expect = 0; formStars.overall = 0;
+  const bonus = document.getElementById('f-bonus'); if (bonus) bonus.value = '';
+  const vorschau = document.getElementById('gehalt-vorschau'); if (vorschau) vorschau.textContent = '';
+  reglerZuruecksetzen();
+  formStars.overall = 0;
   fortschrittAktualisieren();
 }
 
@@ -863,7 +918,7 @@ function renderVergleichKarte(el, name, stat, unbekannt) {
   el.innerHTML = `<h3>${escHtml(name)}</h3>
     <div class="v-row"><span class="v-label">Gesamtbewertung</span><span class="v-val ${farbe(stat.gesamt)}">${stat.gesamt.toFixed(1)} / 5 ★</span></div>
     <div class="v-row"><span class="v-label">Weiterempfehlung</span><span class="v-val ${stat.empf >= 70 ? 'good' : stat.empf >= 50 ? 'mid' : ''}">${stat.empf}%</span></div>
-    <div class="v-row"><span class="v-label">Versprechen ≈ Realität</span><span class="v-val ${stat.erwartung ? farbe(stat.erwartung) : ''}">${stat.erwartung ? stat.erwartung.toFixed(1) + ' / 5' : '–'}</span></div>
+    <div class="v-row"><span class="v-label">Versprechen ≈ Realität</span><span class="v-val ${stat.erwartung ? farbe(stat.erwartung / 2) : ''}">${stat.erwartung ? stat.erwartung.toFixed(1) + ' / 10' : '–'}</span></div>
     <div class="v-row"><span class="v-label">Ø Gehalt (Median)</span><span class="v-val good">${stat.median ? stat.median.toLocaleString('de') + ' €' : '–'}</span></div>
     <div class="v-row"><span class="v-label">Bewertungen</span><span class="v-val">${stat.n}</span></div>`;
 }
@@ -948,7 +1003,9 @@ function bewertungAngefangen() {
     .some(id => (document.getElementById(id)?.value || '').trim().length > 0);
   const ausgewaehlt = document.querySelector('#page-bewerten .skill-opt.sel')
     || document.querySelector('#page-bewerten .stern.aktiv')
-    || document.querySelector('#page-bewerten .toggle-opt.sel');
+    || document.querySelector('#page-bewerten .toggle-opt.sel')
+    || document.querySelector('#regler-erwartung.gesetzt')
+    || (document.getElementById('f-bonus')?.value || '') !== '';
 
   return gefuellt || !!ausgewaehlt;
 }
@@ -2081,9 +2138,72 @@ const formStars = { expect: 0, overall: 0 };
 
 // Was die Sterne bedeuten – erscheint neben der Auswahl
 const STERN_TEXTE = {
-  expect:  ['', 'Ganz anders als gedacht', 'Eher enttäuschend', 'Teils, teils', 'Größtenteils bestätigt', 'Genau wie erwartet'],
   overall: ['', 'Würde ich nicht nochmal machen', 'Eher anstrengend', 'Geht so', 'Kann ich empfehlen', 'Richtig guter Job']
 };
+
+// ── Erwartung: Schieberegler 1–10 ─────────────────────────────
+// Ersetzt die fünf Sterne – zehn Stufen sind feiner, und ein Regler
+// passt besser zu der Frage "wie viel davon": Das ist ein Anteil,
+// keine Note.
+const ERWARTUNG_TEXTE = ['',
+  'Hat mit meiner Vorstellung nichts zu tun',
+  'Fast nichts davon stimmt',
+  'Wenig davon stimmt',
+  'Eher anders als gedacht',
+  'Teils, teils',
+  'Etwas mehr bestätigt als nicht',
+  'Größtenteils bestätigt',
+  'Vieles genau so',
+  'Fast genau wie erwartet',
+  'Genau wie erwartet'
+];
+
+function reglerSetzen(wert) {
+  const v = parseInt(wert, 10);
+  if (!v || v < 1 || v > 10) return;
+  formStars.expect = v;
+  const box = document.getElementById('regler-erwartung');
+  const feld = document.getElementById('f-erwartung');
+  if (box) box.classList.add('gesetzt');
+  if (feld) feld.style.setProperty('--fuellung', ((v - 1) / 9 * 100) + '%');
+  setText('regler-wert', v + '/10');
+  setText('regler-text', ERWARTUNG_TEXTE[v]);
+  fortschrittAktualisieren();
+}
+
+function reglerZuruecksetzen() {
+  formStars.expect = 0;
+  const box = document.getElementById('regler-erwartung');
+  const feld = document.getElementById('f-erwartung');
+  if (box) box.classList.remove('gesetzt');
+  if (feld) { feld.value = 5; feld.style.setProperty('--fuellung', '44.4%'); }
+  setText('regler-wert', '–');
+  setText('regler-text', 'Schieb den Regler');
+}
+
+// ── Gehalt: Monatsbrutto plus Sonderzahlungen ─────────────────
+// Sonderzahlungen werden bewusst nicht in Euro abgefragt, sondern in
+// Monatsgehältern – so kann man "Weihnachts- plus halbes Urlaubsgeld"
+// angeben, ohne den Lohnzettel herauszusuchen.
+function zahlDe(n) {
+  return Number(n).toLocaleString('de-DE', { maximumFractionDigits: 1 });
+}
+
+// "1 Monatsgehalt", aber "1,5 Monatsgehälter"
+function monatsgehaelter(n) {
+  return zahlDe(n) + (Number(n) === 1 ? ' Monatsgehalt' : ' Monatsgehälter');
+}
+
+function gehaltVorschau() {
+  const ziel = document.getElementById('gehalt-vorschau');
+  if (!ziel) return;
+  const monat = parseInt(document.getElementById('f-gehalt')?.value, 10);
+  const bonusRoh = document.getElementById('f-bonus')?.value;
+  if (!monat || monat <= 0 || bonusRoh === '' || bonusRoh == null) { ziel.textContent = ''; return; }
+  const bonus = parseFloat(bonusRoh);
+  const jahr = Math.round(monat * (12 + bonus) / 100) * 100;
+  ziel.innerHTML = `Das macht rund <strong>${jahr.toLocaleString('de-DE')} € brutto im Jahr</strong> – ${monatsgehaelter(12 + bonus)}.`;
+}
 
 function setStarForm(type, val) {
   formStars[type] = val;

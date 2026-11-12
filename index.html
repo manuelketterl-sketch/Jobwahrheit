@@ -44,8 +44,11 @@
   <div class="nav-links" id="nav-links">
     <a class="nav-suche" onclick="zurSuche()">Beruf suchen</a>
     <a onclick="showPage('vergleich')">Berufe vergleichen</a>
-    <a onclick="showPage('arbeitgeber')">Für Arbeitgeber</a>
-    <a href="/arbeitgeber.html" class="nav-login">Anmelden</a>
+    <!-- Ein Punkt statt "Für Arbeitgeber" plus "Anmelden": Anmelden können
+         sich ohnehin nur Arbeitgeber, und zwei Einträge nebeneinander sahen
+         aus, als gäbe es auch Konten für Bewerter. Die Infoseite hat oben
+         beides – Konto anlegen und "Schon registriert? Zum Login". -->
+    <a onclick="showPage('arbeitgeber')">Arbeitgeberbereich</a>
   </div>
   <!-- Nur auf dem Handy sichtbar: Lupe für die Suche, Menü für den Rest.
        Als Symbole, weil für vier Textlinks neben Logo und Knopf kein

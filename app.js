@@ -1176,7 +1176,45 @@ function showPage(id, ausVerlauf) {
     if (id === 'home') history.pushState(zustand, '', '/');
     else history.pushState(zustand, '', SEITEN_PFADE[id]);
   }
+
+  insiGucktAktualisieren();
 }
+
+// ── Insi schaut unten rechts herein ──
+// Nur auf Startseite und Berufsseiten, erst nach etwas Scrollen (oben steht
+// Insi auf der Startseite schon im Kopfbereich). Das Wegklicken merkt sich
+// nur diese Variable – bewusst kein localStorage, siehe Datenschutz Abschnitt 7.
+let insiGucktAus = false;
+
+function insiGucktAktualisieren() {
+  const el = document.getElementById('insi-guckt');
+  if (!el) return;
+  const aktiv = document.querySelector('.page.active');
+  const seite = aktiv ? aktiv.id : '';
+  const erlaubt = !insiGucktAus && (seite === 'page-home' || seite === 'page-beruf');
+  if (!erlaubt) {
+    el.classList.remove('zeigen');
+    el.hidden = true;
+    return;
+  }
+  const schwelle = seite === 'page-home' ? window.innerHeight * 0.8 : 400;
+  if (window.scrollY > schwelle) {
+    if (el.hidden) {
+      el.hidden = false;
+      void el.offsetWidth; // Startlage einmal berechnen lassen, damit Insi hochgleitet
+    }
+    el.classList.add('zeigen');
+  } else {
+    el.classList.remove('zeigen');
+  }
+}
+
+function insiGucktSchliessen() {
+  insiGucktAus = true;
+  insiGucktAktualisieren();
+}
+
+window.addEventListener('scroll', insiGucktAktualisieren, { passive: true });
 
 // Reagiert auf den Zurück- und Vorwärts-Knopf des Browsers
 window.addEventListener('popstate', (e) => {

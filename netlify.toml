@@ -24,6 +24,13 @@
   [headers.values]
     Cache-Control = "public, max-age=604800"
 
+# Insi-Bilder ändern sich selten (eine neue Fassung vom Illustrator
+# kann denselben Namen tragen, deshalb nur eine Woche)
+[[headers]]
+  for = "/insi/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
 # Schriftdateien ändern sich nie: Die Versionsnummer steckt im Dateinamen
 # (…-v9-…), eine neue Fassung bekäme also einen neuen Namen. Deshalb darf
 # der Browser sie ein Jahr lang behalten, ohne nachzufragen.

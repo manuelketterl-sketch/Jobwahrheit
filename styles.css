@@ -494,13 +494,13 @@ h1 em { color: var(--accent); font-style: normal; }
 
 /* Startseite: am Desktop rechts unten im Kopfbereich, darunter klein über dem Hinweis */
 .hero-insi {
-  display: block; width: 96px; height: auto;
+  display: block; width: 76px; height: auto;
   margin: 0 auto .75rem; position: relative;
 }
 @media (min-width: 1100px) {
   .hero-insi {
     position: absolute; right: max(3vw, 1.5rem); bottom: 1.5rem;
-    width: clamp(170px, 16vw, 240px); margin: 0; pointer-events: none;
+    width: clamp(150px, 14vw, 210px); margin: 0; pointer-events: none;
   }
 }
 
@@ -526,8 +526,8 @@ h1 em { color: var(--accent); font-style: normal; }
 .insi-hinweis strong { color: var(--accent-deep); }
 
 /* Danke-Fenster */
-.modal-insi { display: block; width: 120px; height: auto; margin: 0 auto .5rem; }
-@media (max-width: 560px) { .modal .modal-insi { width: 84px; margin-bottom: .25rem; } }
+.modal-insi { display: block; width: 110px; height: auto; margin: 0 auto .5rem; }
+@media (max-width: 560px) { .modal .modal-insi { width: 66px; margin-bottom: .25rem; } }
 
 /* Insi schaut unten rechts herein */
 .insi-guckt {

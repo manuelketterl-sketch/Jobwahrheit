@@ -18,11 +18,55 @@ const LIMITS: Record<string, number> = {
 }
 
 // ── Hilfsfunktionen ──
+// Der Prüfwert der IP-Adresse wird mit einem geheimen Schlüssel gebildet (HMAC).
+// Vorher stand hier ein fester Zusatzwert im Code – und der Code ist öffentlich.
+// Damit hätte jeder, der die Tabelle submissions_log sieht, alle rund vier
+// Milliarden IPv4-Adressen durchrechnen und die echten Adressen ermitteln können.
+// Ohne den Schlüssel geht das nicht mehr.
+//
+// Der Schlüssel liegt als Supabase-Secret IP_HASH_SECRET vor (Einrichtung siehe
+// Pull Request). Fehlt er, würfelt die Funktion beim Start einen eigenen aus:
+// Das Rate Limit gilt dann nur, solange diese Instanz läuft, aber es landet
+// nie ein zurückrechenbarer Wert in der Datenbank.
+const ersatzSchluessel = crypto.getRandomValues(new Uint8Array(32))
+let hmacSchluessel: Promise<CryptoKey> | null = null
+
+function ladeHmacSchluessel(): Promise<CryptoKey> {
+  if (!hmacSchluessel) {
+    const geheim = Deno.env.get('IP_HASH_SECRET')
+    const roh = geheim && geheim.length >= 32
+      ? new TextEncoder().encode(geheim)
+      : ersatzSchluessel
+    hmacSchluessel = crypto.subtle.importKey(
+      'raw', roh, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  }
+  return hmacSchluessel
+}
+
 async function hashIp(ip: string): Promise<string> {
-  const data = new TextEncoder().encode('jobinsides-salt-2026::' + ip)
-  const digest = await crypto.subtle.digest('SHA-256', data)
+  const schluessel = await ladeHmacSchluessel()
+  const digest = await crypto.subtle.sign('HMAC', schluessel, new TextEncoder().encode(ip))
   return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('')
 }
+
+// ── Kontaktdaten in Freitexten ──
+// Bewertungen erscheinen sofort. E-Mail-Adressen, Telefonnummern und Links
+// haben darin nichts verloren: Sie machen Menschen erkennbar oder sind Werbung.
+// Namen lassen sich so nicht erkennen – dafür gibt es den Meldeknopf.
+const MUSTER_EMAIL = /[^\s@]+@[^\s@]+\.[a-z]{2,}/i
+const MUSTER_LINK = /https?:\/\/|www\.[a-z0-9-]+\.[a-z]{2,}/i
+// Deutsche Schreibweisen: 0171 1234567, +49 171 1234567, 0049…, 089/123456-7.
+// Die führende Null darf nicht hinter einer Ziffer stehen, sonst würden
+// Gehaltsangaben wie "40000 - 45000" als Telefonnummer gelten.
+const MUSTER_TELEFON = /(?<!\d)(?:\+49|0049|0)[\s\/-]?[1-9](?:[\s\/().-]{0,2}\d){7,}/
+
+function enthaeltKontaktdaten(...texte: (string | null)[]): boolean {
+  return texte.some(t => !!t &&
+    (MUSTER_EMAIL.test(t) || MUSTER_LINK.test(t) || MUSTER_TELEFON.test(t)))
+}
+
+const HINWEIS_KONTAKTDATEN =
+  'Bitte entferne E-Mail-Adressen, Telefonnummern und Links aus deinem Text – so bleibt alles anonym.'
 
 function str(v: any, max: number): string | null {
   if (typeof v !== 'string') return null
@@ -120,19 +164,25 @@ Deno.serve(async (req) => {
       if (!skills.length) skills = null
     }
 
+    const was_erwartet = str(d.was_erwartet, 2000)
+    const alltag_vs_stelle = str(d.alltag_vs_stelle, 2000)
+    const freitext = str(d.freitext, 3000)
+    if (enthaeltKontaktdaten(was_erwartet, alltag_vs_stelle, freitext))
+      return fail(HINWEIS_KONTAKTDATEN)
+
     const { error } = await supabase.from('bewertungen').insert([{
       beruf_name,
       berufsjahre: str(d.berufsjahre, 50),
       region: str(d.region, 50),
-      was_erwartet: str(d.was_erwartet, 2000),
+      was_erwartet,
       bewertung_erwartung,
-      alltag_vs_stelle: str(d.alltag_vs_stelle, 2000),
+      alltag_vs_stelle,
       skills,
       gehalt_brutto: gehalt,
       bonus_monatsgehaelter: bonus,
       bewertung_gesamt,
       weiterempfehlung: !!d.weiterempfehlung,
-      freitext: str(d.freitext, 3000),
+      freitext,
       anon_name: str(d.anon_name, 50) || 'Anonym',
       hilfreich: 0
     }])
@@ -142,10 +192,12 @@ Deno.serve(async (req) => {
   else if (action === 'diskussion') {
     const titel = str(d.titel, 200)
     if (!titel) return fail('Titel fehlt')
+    const inhalt = str(d.inhalt, 3000)
+    if (enthaeltKontaktdaten(titel, inhalt)) return fail(HINWEIS_KONTAKTDATEN)
     const { error } = await supabase.from('diskussionen').insert([{
       beruf_name: str(d.beruf_name, 200) || 'Allgemein',
       titel,
-      inhalt: str(d.inhalt, 3000),
+      inhalt,
       anon_name: str(d.anon_name, 50) || 'Anonym',
       upvotes: 0
     }])
@@ -156,6 +208,7 @@ Deno.serve(async (req) => {
     const inhalt = str(d.inhalt, 3000)
     const diskussion_id = str(d.diskussion_id, 60)
     if (!inhalt || !diskussion_id) return fail('Antwort unvollständig')
+    if (enthaeltKontaktdaten(inhalt)) return fail(HINWEIS_KONTAKTDATEN)
     const { error } = await supabase.from('diskussion_antworten').insert([{
       diskussion_id,
       inhalt,

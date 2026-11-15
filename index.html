@@ -842,7 +842,7 @@
     <h2 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:900;font-size:2rem;margin-bottom:2rem">Impressum</h2>
 
     <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
-      <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Angaben gemäß § 5 TMG</h3>
+      <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Angaben gemäß § 5 DDG</h3>
       <p style="font-size:.95rem;line-height:1.8;color:var(--ink)">
         <strong>Manuel Ketterl</strong><br>
         Tassilostraße 4<br>
@@ -859,7 +859,7 @@
     </div>
 
     <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
-      <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h3>
+      <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h3>
       <p style="font-size:.95rem;line-height:1.8;color:var(--ink)">
         <strong>Manuel Ketterl</strong><br>
         Tassilostraße 4<br>
@@ -870,7 +870,7 @@
     <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
       <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Haftungsausschluss</h3>
       <p style="font-size:.9rem;line-height:1.7;color:var(--muted);margin-bottom:1rem">
-        <strong style="color:var(--ink)">Haftung für Inhalte:</strong> Die Inhalte unserer Seiten wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen. Als Diensteanbieter sind wir gemäß § 7 Abs.1 TMG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich.
+        <strong style="color:var(--ink)">Haftung für Inhalte:</strong> Die Inhalte unserer Seiten wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen. Als Diensteanbieter sind wir gemäß § 7 Abs. 1 DDG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich.
       </p>
       <p style="font-size:.9rem;line-height:1.7;color:var(--muted);margin-bottom:1rem">
         <strong style="color:var(--ink)">Nutzergenerierte Inhalte:</strong> Bewertungen und Beiträge auf dieser Plattform stammen von anonymen Nutzern. Der Betreiber macht sich diese Inhalte nicht zu eigen. Bei Bekanntwerden von Rechtsverletzungen werden entsprechende Inhalte umgehend entfernt.
@@ -978,9 +978,11 @@
 
       <p>
         <strong>Schutz vor Missbrauch:</strong> Beim Absenden von Beiträgen wird ein
-        pseudonymisierter Prüfwert (kryptografischer Hash) deiner IP-Adresse gespeichert, um
-        automatisierte Massenzugriffe zu verhindern. Aus dem Prüfwert lässt sich die
-        IP-Adresse nicht zurückrechnen. Er wird spätestens nach 48 Stunden automatisch
+        pseudonymisierter Prüfwert deiner IP-Adresse gespeichert, um
+        automatisierte Massenzugriffe zu verhindern. Der Prüfwert wird mit einem geheimen
+        Schlüssel gebildet, der getrennt von der Datenbank aufbewahrt wird; ohne diesen
+        Schlüssel lässt sich die IP-Adresse aus dem Prüfwert nicht ermitteln. Der Prüfwert wird nicht
+        zusammen mit deiner Bewertung gespeichert und spätestens nach 48 Stunden automatisch
         gelöscht (Art. 6 Abs. 1 lit. f DSGVO).
       </p>
 

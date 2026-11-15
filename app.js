@@ -352,8 +352,8 @@ async function submitBewertung() {
     return;
   }
 
-  // Nach dem Abschicken senden die Werbe-Pixel für den Rest des Besuchs
-  // nichts mehr – sonst ließe sich der Zeitpunkt mit der Bewertung verbinden.
+  // Abgeschickte Bewertung als Anzeigen-Erfolg melden (nur mit Einwilligung,
+  // nur der Ereignisname, siehe einwilligung.js)
   if (window.werbung) werbung.bewertungAbgeschickt();
 
   // Berufsname ins Newsletter-Modal übernehmen
@@ -1158,9 +1158,8 @@ function showPage(id, ausVerlauf) {
     if (!confirm('Deine Bewertung ist noch nicht abgeschickt und geht verloren. Trotzdem wechseln?')) return;
     formularZuruecksetzen();
   }
-  // Klick auf „Beruf bewerten“ als Anzeigen-Erfolg melden (nur mit
-  // Einwilligung, ohne Berufsnamen, siehe einwilligung.js). Ab hier sendet
-  // auf der Bewertungsseite nichts mehr.
+  // Klick auf „Beruf bewerten“ für die Anzeigen-Auswertung melden (nur mit
+  // Einwilligung, nur der Ereignisname, siehe einwilligung.js)
   if (id === 'bewerten' && !ausVerlauf && window.werbung) werbung.bewertungGestartet();
 
   // Sicherstellen, dass ein Grundzustand im Verlauf liegt

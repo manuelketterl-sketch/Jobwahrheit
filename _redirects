@@ -5,8 +5,11 @@
 # Das Ausrufezeichen erzwingt die Regel, obwohl die Datei wirklich existiert.
 /edge-function-*     /404.html   404!
 /supabase-*          /404.html   404!
+/netlify/*           /404.html   404!
 
-# Sitemap wird live aus der Datenbank erzeugt (Supabase Edge Function "sitemap")
+# Sitemap wird live aus der Datenbank erzeugt (Supabase Edge Function "sitemap").
+# Normalerweise beantwortet die Netlify Edge Function netlify/edge-functions/sitemap.ts
+# die Anfrage vorher und setzt den richtigen Typ – diese Regel ist der Rückfall.
 /sitemap.xml         https://kvqdgcixmdnrarlaskyb.supabase.co/functions/v1/sitemap   200
 
 # Echte Adressen der Seite – alle werden von index.html ausgeliefert,

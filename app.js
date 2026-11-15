@@ -352,6 +352,10 @@ async function submitBewertung() {
     return;
   }
 
+  // Nach dem Abschicken senden die Werbe-Pixel für den Rest des Besuchs
+  // nichts mehr – sonst ließe sich der Zeitpunkt mit der Bewertung verbinden.
+  if (window.werbung) werbung.bewertungAbgeschickt();
+
   // Berufsname ins Newsletter-Modal übernehmen
   document.querySelectorAll('.nl-beruf-name').forEach(el => el.textContent = berufName);
   window._nlBeruf = berufName;
@@ -1154,6 +1158,10 @@ function showPage(id, ausVerlauf) {
     if (!confirm('Deine Bewertung ist noch nicht abgeschickt und geht verloren. Trotzdem wechseln?')) return;
     formularZuruecksetzen();
   }
+  // Klick auf „Beruf bewerten“ als Anzeigen-Erfolg melden (nur mit
+  // Einwilligung, ohne Berufsnamen, siehe einwilligung.js). Ab hier sendet
+  // auf der Bewertungsseite nichts mehr.
+  if (id === 'bewerten' && !ausVerlauf && window.werbung) werbung.bewertungGestartet();
 
   // Sicherstellen, dass ein Grundzustand im Verlauf liegt
   if (!ausVerlauf && verlaufAktiv && !history.state) {

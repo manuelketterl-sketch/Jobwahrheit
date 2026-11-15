@@ -2,20 +2,15 @@
 // EINWILLIGUNG UND WERBE-PIXEL (Meta, TikTok)
 //
 // Die Pixel messen, ob unsere Anzeigen auf Instagram, Facebook und TikTok
-// Leute zu uns bringen. Sie greifen auf das Gerät zu und senden Daten an
-// die Plattformen – das geht nur mit Einwilligung VORHER (§ 25 TDDDG,
-// Art. 6 Abs. 1 lit. a DSGVO). Deshalb gilt hier:
+// Leute zu uns bringen und ob daraus Bewertungen werden. Sie greifen auf
+// das Gerät zu und senden Daten an die Plattformen – das geht nur mit
+// Einwilligung VORHER (§ 25 TDDDG, Art. 6 Abs. 1 lit. a DSGVO). Deshalb:
 //
 //  1. Ohne „Akzeptieren“ wird kein Pixel geladen. Nichts, nicht einmal
 //     das Skript von Meta oder TikTok.
-//  2. Auf der Bewertungsseite (/bewerten) wird nichts gesendet, und nach
-//     dem Abschicken einer Bewertung sendet die Seite für den Rest des
-//     Besuchs nichts mehr. Sonst wüssten Meta und TikTok, dass ein
-//     bestimmtes Konto zu einem bestimmten Zeitpunkt bewertet hat – und
-//     die Bewertungen stehen mit Datum öffentlich auf der Seite.
-//  3. Es gehen nie Berufsnamen, Formulareingaben oder Inhalte als
-//     Ereignisdaten an die Plattformen. Gemessen wird nur „Seite
-//     aufgerufen“ und „Klick auf Beruf bewerten“.
+//  2. Gemessen werden drei Dinge: Seitenaufruf, Klick auf „Beruf
+//     bewerten“ und abgeschickte Bewertung. Inhalte, Gehälter und andere
+//     Formulareingaben gehen nie als Ereignisdaten an die Plattformen.
 //
 // Solange unten keine ID eingetragen ist, passiert gar nichts: kein
 // Banner, kein Link im Footer, kein Pixel.
@@ -28,16 +23,21 @@ const WERBE_IDS = {
   tiktok: ''
 };
 
-// Welches Ereignis als Erfolg zählt. Standard-Ereignisse lassen sich in
-// beiden Werbekonten direkt als Kampagnenziel auswählen.
-const ERFOLG = { meta: 'Lead', tiktok: 'ClickButton' };
+// Ereignisnamen. „Lead“ (Meta) und „SubmitForm“ (TikTok) sind
+// Standard-Ereignisse und lassen sich direkt als Kampagnenziel wählen –
+// darauf optimieren, sobald genug Bewertungen reinkommen. Bis dahin liefert
+// der Klick auf „Beruf bewerten“ mehr Signal (bei Meta als eigene
+// Conversion „BewertungGestartet“ anlegen).
+const EREIGNISSE = {
+  gestartet:   { meta: 'BewertungGestartet', tiktok: 'ClickButton' },
+  abgeschickt: { meta: 'Lead',               tiktok: 'SubmitForm' }
+};
 
 // Speicherort der Entscheidung. Das Speichern der Entscheidung selbst
 // ist technisch erforderlich und braucht keine Einwilligung.
 const EW_SCHLUESSEL = 'jobinsides-einwilligung';
 const EW_VERSION = 1;            // erhöhen, wenn neue Dienste dazukommen → erneut fragen
 const EW_GUELTIG_TAGE = 365;     // nach einem Jahr erneut fragen
-const PAUSE_SCHLUESSEL = 'jobinsides-pixelpause';
 
 // Als window.werbung, damit app.js und die onclick-Links im HTML es finden
 window.werbung = (() => {
@@ -48,7 +48,6 @@ window.werbung = (() => {
   const konfiguriert = dienste.length > 0;
 
   let geladen = false;
-  let gesperrt = false;
   let zuletztGesehen = null;
 
   // ── Entscheidung lesen und speichern ───────────────────────
@@ -69,13 +68,6 @@ window.werbung = (() => {
   }
 
   const eingewilligt = () => konfiguriert && lesen()?.marketing === true;
-
-  // ── Wann darf etwas gesendet werden? ───────────────────────
-  function pausiert() {
-    try { return sessionStorage.getItem(PAUSE_SCHLUESSEL) === '1'; } catch { return false; }
-  }
-  const aufBewertungsseite = () => location.pathname === '/bewerten';
-  const darfSenden = () => eingewilligt() && !pausiert() && !aufBewertungsseite();
 
   // ── Pixel laden (Original-Grundcode der Anbieter) ──────────
   function metaLaden(id) {
@@ -117,18 +109,6 @@ window.werbung = (() => {
     if (WERBE_IDS.tiktok) tiktokLaden(WERBE_IDS.tiktok);
   }
 
-  // Beide Pixel haben eine eingebaute Sperre. Wir schalten sie auf der
-  // Bewertungsseite und nach dem Abschicken ein – damit auch das, was die
-  // Skripte von sich aus senden würden, nicht rausgeht.
-  function sperreSetzen(an) {
-    if (!geladen || gesperrt === an) return;
-    gesperrt = an;
-    try {
-      if (window.fbq) window.fbq('consent', an ? 'revoke' : 'grant');
-      if (window.ttq) window.ttq[an ? 'revokeConsent' : 'grantConsent']();
-    } catch { /* Pixel noch nicht bereit – dann wird ohnehin nichts gesendet */ }
-  }
-
   // ── Seitenaufrufe ──────────────────────────────────────────
   // Die Seite ist eine Single-Page-App: Seitenwechsel passieren per
   // history.pushState. Wir hängen uns dort ein, statt in jede Funktion
@@ -138,11 +118,7 @@ window.werbung = (() => {
     // Dieselbe Adresse zweimal hintereinander zählt nur einmal
     if (location.pathname === zuletztGesehen) return;
     zuletztGesehen = location.pathname;
-    if (!darfSenden()) { sperreSetzen(true); return; }
-    // Erst auf einer erlaubten Seite laden – wer direkt auf /bewerten
-    // landet, lädt gar nichts.
     laden();
-    sperreSetzen(false);
     try {
       if (window.fbq) window.fbq('track', 'PageView');
       if (window.ttq) window.ttq.page();
@@ -158,22 +134,22 @@ window.werbung = (() => {
   window.addEventListener('popstate', () => setTimeout(seitenwechsel, 0));
 
   // ── Von app.js aufgerufen ──────────────────────────────────
-  // Klick auf „Beruf bewerten“, noch bevor die Adresse wechselt.
-  // Ohne Berufsnamen oder sonstige Angaben.
-  function bewertungGestartet() {
-    if (!darfSenden() || !geladen) return;
+  // Nur der Ereignisname geht raus – keine Berufe, Inhalte oder Eingaben.
+  const STANDARD_META = ['Lead', 'SubmitApplication', 'CompleteRegistration', 'Contact', 'ViewContent'];
+  function melden(ereignis) {
+    if (!eingewilligt()) return;
+    laden();
     try {
-      if (window.fbq && WERBE_IDS.meta) window.fbq('track', ERFOLG.meta);
-      if (window.ttq && WERBE_IDS.tiktok) window.ttq.track(ERFOLG.tiktok);
+      if (window.fbq && WERBE_IDS.meta) {
+        window.fbq(STANDARD_META.includes(ereignis.meta) ? 'track' : 'trackCustom', ereignis.meta);
+      }
+      if (window.ttq && WERBE_IDS.tiktok) window.ttq.track(ereignis.tiktok);
     } catch {}
   }
-
-  // Nach dem Abschicken einer Bewertung: für den Rest des Besuchs Ruhe.
-  function bewertungAbgeschickt() {
-    if (!eingewilligt()) return;
-    try { sessionStorage.setItem(PAUSE_SCHLUESSEL, '1'); } catch {}
-    sperreSetzen(true);
-  }
+  // Klick auf „Beruf bewerten“
+  const bewertungGestartet = () => melden(EREIGNISSE.gestartet);
+  // Bewertung erfolgreich gespeichert
+  const bewertungAbgeschickt = () => melden(EREIGNISSE.abgeschickt);
 
   // ── Banner ─────────────────────────────────────────────────
   function bannerZeigen() {
@@ -190,11 +166,8 @@ window.werbung = (() => {
       <p class="ew-text">
         Mit deiner Zustimmung setzen wir Cookies von ${liste} ein. So sehen wir, ob unsere
         Anzeigen dort Leute zu uns bringen. ${mehrere ? 'Die Anbieter erfahren' : 'Der Anbieter erfährt'}
-        dabei, welche Seiten du hier aufrufst, und ${mehrere ? 'können' : 'kann'} das mit deinem Konto verknüpfen.
-      </p>
-      <p class="ew-text ew-anonym">
-        Deine Bewertung bleibt in jedem Fall anonym: Auf der Bewertungsseite und nach dem
-        Abschicken wird nichts gesendet.
+        dabei, welche Seiten du hier aufrufst und ob du eine Bewertung abschickst, und
+        ${mehrere ? 'können' : 'kann'} das mit deinem Konto verknüpfen. Was du schreibst, ${mehrere ? 'bekommen sie' : 'bekommt er'} nicht.
       </p>
       <div class="ew-knoepfe">
         <button type="button" class="ew-knopf" data-wahl="nein">Ablehnen</button>

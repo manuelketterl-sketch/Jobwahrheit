@@ -25,6 +25,68 @@ function passwortStimmt(eingabe: string, echt: string): boolean {
   return diff === 0
 }
 
+// ── Sperre nach Fehlversuchen ──
+// Vorher bremste nur eine Pause von 0,8 Sekunden. Mit vielen parallelen
+// Anfragen ließ sich das Passwort trotzdem in hohem Tempo durchprobieren.
+// Jetzt: höchstens 10 Fehlversuche pro Anschluss und Stunde, und höchstens
+// 100 insgesamt (gegen Angriffe von vielen Adressen). Die Fehlversuche
+// landen mit HMAC-Prüfwert im selben Log wie die Rate Limits der Beiträge
+// und werden mit ihm nach zwei Tagen gelöscht.
+const FEHLVERSUCHE_JE_ADRESSE = 10
+const FEHLVERSUCHE_GESAMT = 100
+
+const ersatzSchluessel = crypto.getRandomValues(new Uint8Array(32))
+let hmacSchluessel: Promise<CryptoKey> | null = null
+// Schlüssel wie in submit: IP_HASH_SECRET oder Vault (ip_pruefwert_schluessel)
+function ladeHmacSchluessel(supabase: any): Promise<CryptoKey> {
+  if (!hmacSchluessel) {
+    hmacSchluessel = (async () => {
+      let roh: Uint8Array = ersatzSchluessel
+      const geheim = Deno.env.get('IP_HASH_SECRET')
+      if (geheim && geheim.length >= 32) {
+        roh = new TextEncoder().encode(geheim)
+      } else {
+        try {
+          const { data } = await supabase.rpc('ip_pruefwert_schluessel')
+          if (typeof data === 'string' && data.length >= 32) roh = new TextEncoder().encode(data)
+        } catch { /* Ersatzschlüssel */ }
+      }
+      return crypto.subtle.importKey('raw', roh, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+    })()
+  }
+  return hmacSchluessel
+}
+async function hashIp(ip: string, supabase: any): Promise<string> {
+  const d = await crypto.subtle.sign('HMAC', await ladeHmacSchluessel(supabase), new TextEncoder().encode('admin|' + ip))
+  return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, '0')).join('')
+}
+function besucherAdresse(req: Request): string {
+  const cf = req.headers.get('cf-connecting-ip')
+  if (cf && cf.trim()) return cf.trim()
+  return (req.headers.get('x-forwarded-for') || 'unbekannt').split(',')[0].trim()
+}
+
+// ── Mail an Meldende (Entscheidung, Art. 16 Abs. 5 DSA) ──
+async function sendeMail(an: string, betreff: string, text: string): Promise<boolean> {
+  const schluessel = Deno.env.get('RESEND_API_KEY')
+  if (!schluessel) return false
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${schluessel}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: Deno.env.get('MAIL_ABSENDER') || 'JobInsides <info@jobinsides.de>',
+        to: [an], subject: betreff, text
+      })
+    })
+    return r.ok
+  } catch { return false }
+}
+
+const INHALT_TABELLE: Record<string, string> = {
+  bewertung: 'bewertungen', diskussion: 'diskussionen', antwort: 'diskussion_antworten'
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json({ ok: false, error: 'Nur POST erlaubt' }, 405)
@@ -34,16 +96,29 @@ Deno.serve(async (req) => {
 
   const adminPw = Deno.env.get('ADMIN_PASSWORT')
   if (!adminPw) return json({ ok: false, error: 'ADMIN_PASSWORT ist nicht gesetzt' }, 500)
-  if (!passwortStimmt(body.passwort || '', adminPw)) {
-    // Kurze Verzögerung gegen automatisiertes Durchprobieren
-    await new Promise(r => setTimeout(r, 800))
-    return json({ ok: false, error: 'Falsches Passwort' }, 401)
-  }
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
+
+  const ipHash = await hashIp(besucherAdresse(req), supabase)
+  const seitEinerStunde = new Date(Date.now() - 3600e3).toISOString()
+  const [jeAdresse, gesamt] = await Promise.all([
+    supabase.from('submissions_log').select('id', { count: 'exact', head: true })
+      .eq('aktion', 'admin_fehlversuch').eq('ip_hash', ipHash).gte('created_at', seitEinerStunde),
+    supabase.from('submissions_log').select('id', { count: 'exact', head: true })
+      .eq('aktion', 'admin_fehlversuch').gte('created_at', seitEinerStunde)
+  ])
+  if ((jeAdresse.count ?? 0) >= FEHLVERSUCHE_JE_ADRESSE || (gesamt.count ?? 0) >= FEHLVERSUCHE_GESAMT) {
+    return json({ ok: false, error: 'Zu viele Fehlversuche. Bitte in einer Stunde erneut versuchen.' }, 429)
+  }
+
+  if (!passwortStimmt(body.passwort || '', adminPw)) {
+    await supabase.from('submissions_log').insert([{ ip_hash: ipHash, aktion: 'admin_fehlversuch' }])
+    await new Promise(r => setTimeout(r, 800))
+    return json({ ok: false, error: 'Falsches Passwort' }, 401)
+  }
 
   const aktion = body.aktion || 'uebersicht'
 
@@ -57,11 +132,70 @@ Deno.serve(async (req) => {
     const { error } = await supabase.from(tabelle).delete().eq('id', id)
     if (error) return json({ ok: false, error: error.message }, 500)
 
-    // Zugehörige Meldungen mitentfernen
+    // Zugehörige offene Meldungen als erledigt markieren. Sie bleiben zur
+    // Dokumentation stehen (Meldeverfahren). Ohne die Spalten aus
+    // supabase-schutz-und-meldungen.sql: wie früher löschen.
     if (tabelle === 'bewertungen') {
-      await supabase.from('meldungen').delete().eq('bewertung_id', id)
+      const { error: e2 } = await supabase.from('meldungen')
+        .update({ status: 'entfernt', entschieden_am: new Date().toISOString() })
+        .eq('bewertung_id', id).eq('status', 'offen')
+      if (e2) await supabase.from('meldungen').delete().eq('bewertung_id', id)
     }
     return json({ ok: true })
+  }
+
+  // ── Bewertung ausblenden / wieder einblenden (Sofortmaßnahme) ──
+  if (aktion === 'ausblenden') {
+    if (!body.id) return json({ ok: false, error: 'ID fehlt' }, 400)
+    const { error } = await supabase.from('bewertungen')
+      .update({ ausgeblendet: !!body.ausblenden }).eq('id', body.id)
+    if (error) return json({ ok: false, error: error.message }, 500)
+    return json({ ok: true })
+  }
+
+  // ── Meldung entscheiden (Art. 16 Abs. 5 und 6 DSA) ──
+  // entscheidung 'entfernt': gemeldeten Inhalt löschen
+  // entscheidung 'bleibt':   Inhalt bleibt stehen (ggf. wieder einblenden)
+  // In beiden Fällen bekommt der Meldende die Entscheidung mit Begründung,
+  // wenn er eine Adresse angegeben hat. Die Meldung bleibt zur Dokumentation.
+  if (aktion === 'meldung_entscheiden') {
+    const entscheidung = body.entscheidung
+    const begruendung = String(body.begruendung || '').trim().slice(0, 2000)
+    if (!body.id || !['entfernt', 'bleibt'].includes(entscheidung))
+      return json({ ok: false, error: 'Ungültige Anfrage' }, 400)
+    if (begruendung.length < 10) return json({ ok: false, error: 'Bitte eine Begründung angeben.' }, 400)
+
+    const { data: m, error: e1 } = await supabase.from('meldungen').select('*').eq('id', body.id).maybeSingle()
+    if (e1 || !m) return json({ ok: false, error: e1?.message || 'Meldung nicht gefunden' }, 404)
+
+    const art = m.art || 'bewertung'
+    const inhaltId = m.inhalt_id || m.bewertung_id
+    const tabelle = INHALT_TABELLE[art]
+    if (tabelle && inhaltId) {
+      if (entscheidung === 'entfernt') {
+        const { error } = await supabase.from(tabelle).delete().eq('id', inhaltId)
+        if (error) return json({ ok: false, error: error.message }, 500)
+      } else if (art === 'bewertung') {
+        await supabase.from('bewertungen').update({ ausgeblendet: false }).eq('id', inhaltId)
+      }
+    }
+
+    const { error: e2 } = await supabase.from('meldungen').update({
+      status: entscheidung, begruendung, entschieden_am: new Date().toISOString()
+    }).eq('id', body.id)
+    if (e2) return json({ ok: false, error: e2.message }, 500)
+
+    let mailGesendet = false
+    if (m.melder_email) {
+      const text = entscheidung === 'entfernt'
+        ? `Wir haben den von dir gemeldeten Inhalt geprüft und entfernt.\n\nGrund: ${begruendung}\n\nVielen Dank für den Hinweis.`
+        : `Wir haben den von dir gemeldeten Inhalt geprüft und lassen ihn stehen.\n\nGrund: ${begruendung}\n\n` +
+          `Wenn du das anders siehst, kannst du uns weitere Angaben schicken (Antwort auf diese Mail) oder ein Gericht anrufen.`
+      mailGesendet = await sendeMail(m.melder_email, 'Deine Meldung bei JobInsides: unsere Entscheidung',
+        text + `\n\nDie Entscheidung hat ein Mensch getroffen, kein automatisches Verfahren.\n\n` +
+        `JobInsides · info@jobinsides.de · https://jobinsides.de/impressum`)
+    }
+    return json({ ok: true, mailGesendet, hatAdresse: !!m.melder_email })
   }
 
   // ── Meldung als erledigt abhaken (ohne den Inhalt zu löschen) ──
@@ -83,6 +217,13 @@ Deno.serve(async (req) => {
     if (body.sperren !== undefined) felder.gesperrt = !!body.sperren
     const { error } = await supabase.from('firmen').update(felder).eq('id', body.id)
     if (error) return json({ ok: false, error: error.message }, 500)
+    // Gesperrte Firma: ihre Anzeigen gehen offline. Die öffentliche Regel für
+    // Anzeigen prüft die Firma nicht, sie blieben sonst sichtbar.
+    // Nach dem Entsperren müssen die Anzeigen neu freigegeben werden.
+    if (body.sperren === true) {
+      await supabase.from('stellenanzeigen')
+        .update({ freigegeben: false, freigegeben_am: null }).eq('firma_id', body.id)
+    }
     return json({ ok: true })
   }
 
@@ -261,7 +402,7 @@ Deno.serve(async (req) => {
     bewCount, berCount, bew7, bew14, suchen,
     firmen, stellen, einstellungen
   ] = await Promise.all([
-    supabase.from('meldungen').select('*').order('created_at', { ascending: false }).limit(50),
+    supabase.from('meldungen').select('*').order('created_at', { ascending: false }).limit(200),
     supabase.from('bewertungen').select('*').order('created_at', { ascending: false }).limit(25),
     supabase.from('diskussionen').select('*').order('created_at', { ascending: false }).limit(15),
     supabase.from('newsletter_abos').select('bestaetigt, beruf_name, abo_bewertungen, abo_stellen'),
@@ -275,19 +416,39 @@ Deno.serve(async (req) => {
     supabase.from('einstellungen').select('schluessel, wert')
   ])
 
-  // Gemeldete Bewertungen mit Inhalt anreichern
-  const meldungsListe = meldungen.data || []
+  // Offene Meldungen mit dem gemeldeten Inhalt anreichern.
+  // Ohne Spalte "status" (Skript noch nicht gelaufen) gelten alle als offen.
+  const meldungsListe = (meldungen.data || []).filter((m: any) => !m.status || m.status === 'offen')
   let gemeldet: any[] = []
   if (meldungsListe.length) {
-    const ids = [...new Set(meldungsListe.map((m: any) => m.bewertung_id).filter(Boolean))]
-    const { data: inhalte } = await supabase.from('bewertungen').select('*').in('id', ids)
-    const nachId: Record<string, any> = {}
-    ;(inhalte || []).forEach((b: any) => { nachId[b.id] = b })
-    gemeldet = meldungsListe.map((m: any) => ({
-      meldung_id: m.id,
-      gemeldet_am: m.created_at,
-      bewertung: nachId[m.bewertung_id] || null
+    const nachArt: Record<string, string[]> = { bewertung: [], diskussion: [], antwort: [] }
+    meldungsListe.forEach((m: any) => {
+      const art = m.art || 'bewertung'
+      const id = m.inhalt_id || m.bewertung_id
+      if (id && nachArt[art]) nachArt[art].push(id)
+    })
+    const inhalte: Record<string, any> = {}
+    await Promise.all(Object.entries(nachArt).map(async ([art, ids]) => {
+      if (!ids.length) return
+      const { data } = await supabase.from(INHALT_TABELLE[art]).select('*').in('id', [...new Set(ids)])
+      ;(data || []).forEach((x: any) => { inhalte[art + ':' + x.id] = x })
     }))
+    gemeldet = meldungsListe.map((m: any) => {
+      const art = m.art || 'bewertung'
+      const inhalt = inhalte[art + ':' + (m.inhalt_id || m.bewertung_id)] || null
+      return {
+        meldung_id: m.id,
+        gemeldet_am: m.created_at,
+        art,
+        grund: m.grund || null,
+        fundstelle: m.fundstelle || null,
+        melder_name: m.melder_name || null,
+        hat_email: !!m.melder_email,
+        inhalt,
+        // für ältere Fassungen von admin.html
+        bewertung: art === 'bewertung' ? inhalt : null
+      }
+    })
   }
 
   // Abo-Statistik

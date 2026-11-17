@@ -17,6 +17,16 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     # Weder Kamera noch Mikrofon noch Standort werden gebraucht
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    # Content-Security-Policy: Von welchen Adressen die Seite Skripte laden
+    # und wohin sie Daten schicken darf. Schadcode, der über eine Lücke in die
+    # Seite gelangt, kann damit keine fremden Skripte nachladen und nichts an
+    # fremde Server schicken.
+    # 'unsafe-inline' bei Skripten ist nötig, solange die Seite onclick="…"
+    # im HTML nutzt. Erlaubt sind nur: Supabase, jsDelivr (Supabase-Bibliothek),
+    # Cloudflare (Captcha) sowie Meta und TikTok (Pixel, nur nach Einwilligung).
+    # Kommt ein neuer Dienst dazu, muss er hier ergänzt werden – sonst blockiert
+    # ihn der Browser (sichtbar in der Konsole).
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://challenges.cloudflare.com https://connect.facebook.net https://analytics.tiktok.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://kvqdgcixmdnrarlaskyb.supabase.co https://cdn.jsdelivr.net https://challenges.cloudflare.com https://*.facebook.com https://*.facebook.net https://*.tiktok.com; frame-src https://challenges.cloudflare.com https://*.facebook.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
 
 # Das Vorschaubild ändert sich selten
 [[headers]]

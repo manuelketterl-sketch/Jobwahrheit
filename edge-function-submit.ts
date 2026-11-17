@@ -14,8 +14,15 @@ const LIMITS: Record<string, number> = {
   newsletter: 5,
   meldung: 10,
   suche: 120,
-  synonym: 60
+  synonym: 20,
+  hilfreich: 30,
+  loeschen: 10
 }
+
+// Das Captcha gilt nur für Texte, die veröffentlicht werden. Suche, „Hilfreich“
+// und Meldungen müssen ohne gehen: Die Suche läuft bei jedem Tastendruck, und
+// eine Meldung soll so einfach wie möglich sein.
+const MIT_CAPTCHA = ['bewertung', 'diskussion', 'antwort']
 
 // ── Hilfsfunktionen ──
 // Der Prüfwert der IP-Adresse wird mit einem geheimen Schlüssel gebildet (HMAC).
@@ -24,27 +31,37 @@ const LIMITS: Record<string, number> = {
 // Milliarden IPv4-Adressen durchrechnen und die echten Adressen ermitteln können.
 // Ohne den Schlüssel geht das nicht mehr.
 //
-// Der Schlüssel liegt als Supabase-Secret IP_HASH_SECRET vor (Einrichtung siehe
-// Pull Request). Fehlt er, würfelt die Funktion beim Start einen eigenen aus:
-// Das Rate Limit gilt dann nur, solange diese Instanz läuft, aber es landet
-// nie ein zurückrechenbarer Wert in der Datenbank.
+// Der Schlüssel kommt aus dem Supabase-Secret IP_HASH_SECRET, falls gesetzt,
+// sonst aus dem Vault der Datenbank (Funktion ip_pruefwert_schluessel, nur
+// für service_role aufrufbar, siehe supabase-ip-schluessel.sql). So muss
+// niemand einen Schlüssel abtippen. Fehlt beides, würfelt die Funktion beim
+// Start einen eigenen aus: Das Rate Limit gilt dann nur, solange diese
+// Instanz läuft, aber es landet nie ein zurückrechenbarer Wert in der
+// Datenbank.
 const ersatzSchluessel = crypto.getRandomValues(new Uint8Array(32))
 let hmacSchluessel: Promise<CryptoKey> | null = null
 
-function ladeHmacSchluessel(): Promise<CryptoKey> {
+function ladeHmacSchluessel(supabase: any): Promise<CryptoKey> {
   if (!hmacSchluessel) {
-    const geheim = Deno.env.get('IP_HASH_SECRET')
-    const roh = geheim && geheim.length >= 32
-      ? new TextEncoder().encode(geheim)
-      : ersatzSchluessel
-    hmacSchluessel = crypto.subtle.importKey(
-      'raw', roh, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+    hmacSchluessel = (async () => {
+      let roh: Uint8Array = ersatzSchluessel
+      const geheim = Deno.env.get('IP_HASH_SECRET')
+      if (geheim && geheim.length >= 32) {
+        roh = new TextEncoder().encode(geheim)
+      } else {
+        try {
+          const { data } = await supabase.rpc('ip_pruefwert_schluessel')
+          if (typeof data === 'string' && data.length >= 32) roh = new TextEncoder().encode(data)
+        } catch { /* Ersatzschlüssel */ }
+      }
+      return crypto.subtle.importKey('raw', roh, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+    })()
   }
   return hmacSchluessel
 }
 
-async function hashIp(ip: string): Promise<string> {
-  const schluessel = await ladeHmacSchluessel()
+async function hashIp(ip: string, supabase: any): Promise<string> {
+  const schluessel = await ladeHmacSchluessel(supabase)
   const digest = await crypto.subtle.sign('HMAC', schluessel, new TextEncoder().encode(ip))
   return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('')
 }
@@ -67,6 +84,60 @@ function enthaeltKontaktdaten(...texte: (string | null)[]): boolean {
 
 const HINWEIS_KONTAKTDATEN =
   'Bitte entferne E-Mail-Adressen, Telefonnummern und Links aus deinem Text – so bleibt alles anonym.'
+
+// Die Adresse des Besuchers. Cloudflare steht vor Supabase und setzt
+// cf-connecting-ip selbst – ein Besucher kann den Wert nicht vorgeben.
+// x-forwarded-for dagegen kann ein Aufrufer mit eigenem Inhalt mitschicken;
+// es dient nur als Rückfall, falls der Cloudflare-Wert fehlt.
+function besucherAdresse(req: Request): string {
+  const cf = req.headers.get('cf-connecting-ip')
+  if (cf && cf.trim()) return cf.trim()
+  return (req.headers.get('x-forwarded-for') || 'unbekannt').split(',')[0].trim()
+}
+
+async function sha256(text: string): Promise<string> {
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
+  return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+// ── Löschcode ──
+// Wer eine Bewertung schreibt, bekommt einmal einen Code angezeigt. Damit
+// kann er sie später selbst löschen – ohne Konto und ohne dass wir wissen,
+// wer er ist. Gespeichert wird nur der Prüfwert des Codes.
+// 16 Zeichen aus 32 = 80 Bit Zufall; ohne verwechselbare Zeichen (0/O, 1/I).
+const CODE_ZEICHEN = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+function neuerLoeschcode(): string {
+  const zufall = crypto.getRandomValues(new Uint8Array(16))
+  const z = [...zufall].map(b => CODE_ZEICHEN[b % 32]).join('')
+  return `${z.slice(0, 4)}-${z.slice(4, 8)}-${z.slice(8, 12)}-${z.slice(12, 16)}`
+}
+function codeNormal(v: any): string | null {
+  if (typeof v !== 'string') return null
+  const z = v.toUpperCase().replace(/[^A-Z0-9]/g, '')
+  return z.length === 16 ? z : null
+}
+
+// IDs aus der Datenbank: UUID oder fortlaufende Zahl
+const UUID = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|\d{1,18})$/i
+
+// ── E-Mail an Meldende (Eingangsbestätigung) ──
+// Versand über Resend. Fehlt der Schlüssel oder schlägt der Versand fehl,
+// bleibt die Meldung trotzdem gespeichert.
+async function sendeMail(an: string, betreff: string, text: string): Promise<boolean> {
+  const schluessel = Deno.env.get('RESEND_API_KEY')
+  if (!schluessel) return false
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${schluessel}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: Deno.env.get('MAIL_ABSENDER') || 'JobInsides <info@jobinsides.de>',
+        to: [an], subject: betreff, text
+      })
+    })
+    return r.ok
+  } catch { return false }
+}
 
 function str(v: any, max: number): string | null {
   if (typeof v !== 'string') return null
@@ -100,7 +171,7 @@ Deno.serve(async (req) => {
 
   // ── Optional: Cloudflare Turnstile prüfen (wenn Secret hinterlegt) ──
   const turnstileSecret = Deno.env.get('TURNSTILE_SECRET')
-  if (turnstileSecret) {
+  if (turnstileSecret && MIT_CAPTCHA.includes(action)) {
     const token = body.turnstileToken
     if (!token) return fail('Captcha fehlt')
     const verify = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
@@ -117,8 +188,8 @@ Deno.serve(async (req) => {
   )
 
   // ── Rate Limiting per IP-Hash ──
-  const ip = (req.headers.get('x-forwarded-for') || 'unbekannt').split(',')[0].trim()
-  const ipHash = await hashIp(ip)
+  const ip = besucherAdresse(req)
+  const ipHash = await hashIp(ip, supabase)
   const seitEinerStunde = new Date(Date.now() - 60 * 60 * 1000).toISOString()
 
   const { count } = await supabase
@@ -170,7 +241,8 @@ Deno.serve(async (req) => {
     if (enthaeltKontaktdaten(was_erwartet, alltag_vs_stelle, freitext))
       return fail(HINWEIS_KONTAKTDATEN)
 
-    const { error } = await supabase.from('bewertungen').insert([{
+    const loeschcode = neuerLoeschcode()
+    const zeile: Record<string, unknown> = {
       beruf_name,
       berufsjahre: str(d.berufsjahre, 50),
       region: str(d.region, 50),
@@ -185,8 +257,58 @@ Deno.serve(async (req) => {
       freitext,
       anon_name: str(d.anon_name, 50) || 'Anonym',
       hilfreich: 0
+    }
+    let mitCode = true
+    let { error } = await supabase.from('bewertungen').insert([{
+      ...zeile, loesch_hash: await sha256(codeNormal(loeschcode)!)
     }])
+    // Die Spalte loesch_hash kommt mit supabase-schutz-und-meldungen.sql.
+    // Solange das Skript nicht gelaufen ist, wird ohne Löschcode gespeichert.
+    if (error && /loesch_hash/.test(error.message || '')) {
+      mitCode = false
+      ;({ error } = await supabase.from('bewertungen').insert([zeile]))
+    }
     if (error) return fail('Speichern fehlgeschlagen: ' + error.message, 500)
+
+    await supabase.from('submissions_log').insert([{ ip_hash: ipHash, aktion: action }])
+    return ok(mitCode ? { loeschcode } : {})
+  }
+
+  // ── Eigene Bewertung mit dem Löschcode entfernen ──
+  else if (action === 'loeschen') {
+    // Jeder Versuch zählt fürs Limit, auch der falsche – sonst ließen sich
+    // Codes ungebremst durchprobieren.
+    await supabase.from('submissions_log').insert([{ ip_hash: ipHash, aktion: action }])
+    const code = codeNormal(d.code)
+    if (!code) return fail('Der Code hat 16 Zeichen, zum Beispiel ABCD-EFGH-JKLM-NPQR.')
+    const { data: treffer, error } = await supabase.from('bewertungen')
+      .delete().eq('loesch_hash', await sha256(code)).select('id')
+    if (error) return fail('Löschen fehlgeschlagen. Bitte schreib uns an info@jobinsides.de.', 500)
+    if (!treffer?.length) return fail('Zu diesem Code gibt es keine Bewertung.', 404)
+    return ok()
+  }
+
+  // ── „Hilfreich“ ──
+  // Lief vorher direkt aus dem Browser in die Datenbank, ohne jede Grenze.
+  // Jetzt: einmal je Anschluss und Bewertung (solange das Log den Eintrag
+  // hält, also bis zu zwei Tage) und höchstens 30 Klicks pro Stunde.
+  // Gespeichert wird ein Prüfwert aus Adresse und Bewertung zusammen – aus
+  // dem Log lässt sich nicht ablesen, wer welche Bewertung hilfreich fand.
+  else if (action === 'hilfreich') {
+    const id = str(d.id, 60)
+    if (!id || !UUID.test(id)) return fail('Bewertung fehlt')
+    const einzel = await hashIp(ip + '|hilfreich|' + id, supabase)
+    const { count: schon } = await supabase.from('submissions_log')
+      .select('id', { count: 'exact', head: true })
+      .eq('ip_hash', einzel).eq('aktion', 'hilfreich_einzel')
+    if ((schon ?? 0) > 0) return ok({ doppelt: true })
+    const { error } = await supabase.rpc('increment_hilfreich', { row_id: id })
+    if (error) return fail('Das hat nicht geklappt.', 500)
+    await supabase.from('submissions_log').insert([
+      { ip_hash: ipHash, aktion: action },
+      { ip_hash: einzel, aktion: 'hilfreich_einzel' }
+    ])
+    return ok()
   }
 
   else if (action === 'diskussion') {
@@ -247,8 +369,8 @@ Deno.serve(async (req) => {
       treffer,
       geoeffnet
     }])
-    // Suchprotokoll nicht ins Rate-Limit-Log schreiben (zu häufig)
-    return ok()
+    // Zählt fürs Limit mit. Vorher stand hier ein vorzeitiges Ende – die
+    // Grenze von 120 pro Stunde hat deshalb nie gegriffen.
   }
 
   else if (action === 'synonym') {
@@ -283,29 +405,78 @@ Deno.serve(async (req) => {
         begriff, begriff_lower, hauptberuf, beruf_name, stellen
       }])
     }
-    // Nicht ins Rate-Limit-Log schreiben – passiert bei jeder erfolglosen Suche
-    return ok()
+    // Zählt fürs Limit mit (vorher nicht – jeder konnte beliebig viele
+    // Zuordnungen eintragen).
   }
 
   else if (action === 'meldung') {
-    const bewertung_id = str(d.bewertung_id, 60)
-    if (!bewertung_id) return fail('Bewertungs-ID fehlt')
-    const { error } = await supabase.from('meldungen').insert([{ bewertung_id }])
-    if (error) return fail('Speichern fehlgeschlagen: ' + error.message, 500)
+    // Zwei Wege:
+    //  - das Formular „Inhalt melden“ mit Begründung (Art. 16 DSA)
+    //  - der alte Ein-Klick-Knopf ohne Begründung (ältere Seitenfassungen)
+    const grund = str(d.grund, 3000)
+    const arten = ['bewertung', 'diskussion', 'antwort', 'sonstiges']
+    const art = arten.includes(d.art) ? d.art : 'bewertung'
+    const roheId = str(d.inhalt_id, 60) || str(d.bewertung_id, 60)
+    const inhalt_id = roheId && UUID.test(roheId) ? roheId : null
+    const bewertung_id = art === 'bewertung' ? inhalt_id : null
+
+    let bestaetigt = false
+    if (grund === null) {
+      if (!bewertung_id) return fail('Bewertungs-ID fehlt')
+      const { error } = await supabase.from('meldungen').insert([{ bewertung_id }])
+      if (error) return fail('Speichern fehlgeschlagen: ' + error.message, 500)
+    } else {
+      if (grund.length < 10) return fail('Bitte beschreib kurz, was an dem Inhalt nicht in Ordnung ist.')
+      if (!d.richtig) return fail('Bitte bestätige, dass deine Angaben richtig sind.')
+      const fundstelle = str(d.fundstelle, 500)
+      if (!inhalt_id && !fundstelle) return fail('Bitte gib an, wo der Inhalt steht.')
+      const melder_email = str(d.email, 200)?.toLowerCase() || null
+      if (melder_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(melder_email)) return fail('Ungültige E-Mail')
+
+      const { error } = await supabase.from('meldungen').insert([{
+        bewertung_id, art, inhalt_id, fundstelle, grund,
+        melder_name: str(d.name, 120), melder_email, status: 'offen'
+      }])
+      if (error) {
+        // Die neuen Spalten kommen mit supabase-schutz-und-meldungen.sql
+        if (/column|schema cache/i.test(error.message || ''))
+          return fail('Das Meldeformular ist noch nicht eingerichtet. Bitte schreib an info@jobinsides.de.', 503)
+        return fail('Speichern fehlgeschlagen: ' + error.message, 500)
+      }
+
+      // Eingangsbestätigung (Art. 16 Abs. 4 DSA). Der gemeldete Text und die
+      // Begründung stehen bewusst nicht in der Mail: Die Adresse ist nicht
+      // geprüft, und fremde Texte sollen nicht an Dritte verschickt werden.
+      if (melder_email) {
+        const datum = new Date().toLocaleDateString('de-DE', { timeZone: 'Europe/Berlin' })
+        bestaetigt = await sendeMail(melder_email, 'Deine Meldung ist bei JobInsides eingegangen',
+          `Danke für deine Meldung. Wir haben sie am ${datum} erhalten und prüfen den Inhalt ` +
+          `in der Regel innerhalb von zwei Werktagen. Du bekommst unsere Entscheidung an diese Adresse. ` +
+          `Die Prüfung übernimmt ein Mensch.\n\n` +
+          `Hast du nichts gemeldet? Dann hat jemand deine Adresse eingetragen – du musst nichts tun.\n\n` +
+          `JobInsides · info@jobinsides.de · https://jobinsides.de/impressum`)
+      }
+    }
 
     // Betreiber sofort informieren (Fehler hier blockieren die Meldung nicht)
     try {
-      const { data: bw } = await supabase.from('bewertungen')
-        .select('beruf_name, freitext').eq('id', bewertung_id).maybeSingle()
+      let bw: any = null
+      if (bewertung_id) {
+        ({ data: bw } = await supabase.from('bewertungen')
+          .select('beruf_name, freitext').eq('id', bewertung_id).maybeSingle())
+      }
       await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/benachrichtigung`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ art: 'sofort', typ: 'meldung', daten: bw || {} })
+        body: JSON.stringify({ art: 'sofort', typ: 'meldung', daten: { ...(bw || {}), art, grund } })
       })
     } catch { /* Benachrichtigung ist nicht kritisch */ }
+
+    await supabase.from('submissions_log').insert([{ ip_hash: ipHash, aktion: action }])
+    return ok({ bestaetigt })
   }
 
   // ── Erfolg loggen (für Rate Limiting) ──

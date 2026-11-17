@@ -253,12 +253,17 @@ function zeigeTab(t){
   document.getElementById('tab-registrieren').style.display = t==='registrieren'?'block':'none';
 }
 
-// Informiert den Betreiber über etwas Neues (still, blockiert nie)
+// Informiert den Betreiber über etwas Neues (still, blockiert nie).
+// Schickt das Anmelde-Token mit: Die Funktion nimmt solche Meldungen nur
+// noch von eingeloggten Arbeitgebern an, nicht von jedem mit dem
+// öffentlichen Schlüssel.
 async function melde(typ, daten){
   try{
+    const { data: { session } } = await sb.auth.getSession();
+    if(!session) return;
     await fetch(SUPABASE_URL+'/functions/v1/benachrichtigung',{
       method:'POST',
-      headers:{'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
+      headers:{'Authorization':'Bearer '+session.access_token,'Content-Type':'application/json'},
       body:JSON.stringify({art:'sofort',typ,daten})
     });
   }catch{/* nicht kritisch */}

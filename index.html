@@ -13,7 +13,7 @@
 <!-- Beschreibung für Suchmaschinen -->
 <link rel="canonical" href="https://jobinsides.de/">
 <meta name="robots" content="index,follow">
-<meta name="description" content="Echte Bewertungen von echten Angestellten: Alltag, Gehalt und Anforderungen in über 9.000 Berufen. Andere bewerten Arbeitgeber – wir bewerten die Arbeit. Anonym und ohne Anmeldung.">
+<meta name="description" content="Anonyme Erfahrungsberichte von Menschen, die den Beruf machen: Alltag, Gehalt und Anforderungen in über 9.000 Berufen. Andere bewerten Arbeitgeber – wir bewerten die Arbeit. Anonym und ohne Anmeldung.">
 
 <!-- Vorschau beim Teilen (WhatsApp, LinkedIn, Slack …) -->
 <meta property="og:type" content="website">
@@ -21,7 +21,7 @@
 <meta property="og:locale" content="de_DE">
 <meta property="og:url" content="https://jobinsides.de/">
 <meta property="og:title" content="JobInsides – Wir bewerten die Arbeit, nicht den Arbeitgeber">
-<meta property="og:description" content="Bewertungen von echten Angestellten aus über 9.000 Berufen. Kein Hochglanz, keine Werbung – nur der Job, so wie er ist.">
+<meta property="og:description" content="Anonyme Erfahrungsberichte aus über 9.000 Berufen. Kein Hochglanz, keine Werbung – nur der Job, so wie er ist.">
 <meta property="og:image" content="https://jobinsides.de/og-bild.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:alt" content="JobInsides – Was dich im Job wirklich erwartet.">
@@ -30,7 +30,7 @@
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="JobInsides – Wir bewerten die Arbeit, nicht den Arbeitgeber">
-<meta name="twitter:description" content="Bewertungen von echten Angestellten aus über 9.000 Berufen. Kein Hochglanz, keine Werbung.">
+<meta name="twitter:description" content="Anonyme Erfahrungsberichte aus über 9.000 Berufen. Kein Hochglanz, keine Werbung.">
 <meta name="twitter:image" content="https://jobinsides.de/og-bild.png">
 <link rel="stylesheet" href="/fonts.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -72,7 +72,7 @@
   <section class="hero">
     <div class="hero-badge">🔒 <strong>100% anonym</strong> · Kein Account · Keine E-Mail</div>
     <h1>Was dich im Job<br><em>wirklich</em> erwartet.</h1>
-    <p class="hero-sub">Bewertungen von echten Angestellten: Alltag, Gehalt, Belastung – alles, was in keiner Stellenbeschreibung steht.</p>
+    <p class="hero-sub">Erfahrungen von Menschen, die den Job machen: Alltag, Gehalt, Belastung – alles, was in keiner Stellenbeschreibung steht.</p>
 
     <div class="search-wrap">
       <!-- Insi schaut hinter der Suchleiste hervor, die Pfoten auf ihrem Rand -->
@@ -215,9 +215,11 @@
       </div>
       <div class="score-item">
         <div class="score-big green" id="score-gehalt">–</div>
-        <div class="score-label">Ø Bruttogehalt</div>
+        <div class="score-label">Bruttogehalt (Median)</div>
       </div>
     </div>
+    <!-- Bei wenigen Bewertungen kippt jede neue den Schnitt. Das sagen wir offen. -->
+    <div id="score-wenige" style="display:none;margin-top:1rem;position:relative;z-index:1;font-size:.82rem;color:rgba(255,255,255,.7)"></div>
     <div id="score-leer" style="display:none;margin-top:2rem;position:relative;z-index:1">
       <div style="display:inline-flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:99px;padding:.7rem 1.3rem;backdrop-filter:blur(8px)">
         <span style="font-size:1.1rem">✍️</span>
@@ -406,7 +408,7 @@
           <div class="gehalt-fill" id="w-gehalt-fill" style="left:0%;width:0%"></div>
         </div>
         <div class="gehalt-median" id="w-gehalt-median">–</div>
-        <div class="gehalt-label">Ø Bruttogehalt / Monat</div>
+        <div class="gehalt-label">Median brutto / Monat</div>
       </div>
 
       <div class="widget" id="widget-bewerten">
@@ -784,6 +786,16 @@
       <p style="margin-bottom:1rem">Damit hilfst du anderen bei der Berufswahl.</p>
     </div>
 
+    <!-- Löschcode: wird genau einmal gezeigt und nur als Prüfwert gespeichert -->
+    <div id="loeschcode-box" style="display:none;border:1.5px dashed var(--border);border-radius:16px;padding:.9rem 1rem;margin-bottom:1rem">
+      <div style="font-weight:700;font-size:.9rem;margin-bottom:.25rem">🔑 Dein Löschcode</div>
+      <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+        <code id="loeschcode-wert" style="font-size:1rem;font-weight:700;letter-spacing:.06em;background:var(--bg-soft);padding:.35rem .6rem;border-radius:8px;user-select:all"></code>
+        <button type="button" class="modal-btn" style="padding:.4rem .9rem;font-size:.8rem" onclick="loeschcodeKopieren()">Kopieren</button>
+      </div>
+      <p style="font-size:.72rem;color:var(--muted);line-height:1.45;margin-top:.45rem">Damit kannst du deine Bewertung später selbst löschen, unter „Bewertung löschen“ unten auf der Seite. Wir zeigen ihn nur jetzt – heb ihn dir auf, wenn du das möchtest.</p>
+    </div>
+
     <div style="background:var(--bg-soft);border-radius:16px;padding:1rem;margin-bottom:1rem">
       <div style="font-weight:700;font-size:.95rem;margin-bottom:.2rem">📬 Neues zu diesem Beruf erfahren?</div>
       <div style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem;overflow-wrap:anywhere">Optional – für <strong class="nl-beruf-name" style="color:var(--ink)">diesen Beruf</strong></div>
@@ -825,10 +837,99 @@
   </div>
 </div>
 
+<!-- Captcha (Cloudflare Turnstile). Bleibt leer, solange in app.js kein
+     Schlüssel eingetragen ist; sonst erscheint hier nur bei Verdacht ein Kästchen. -->
+<div id="captcha-box" hidden style="position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:1000"></div>
+
 <!-- Hinweisleiste (ersetzt Browser-Alerts) -->
 <div class="hinweis-leiste" id="hinweis-leiste" role="status" aria-live="polite">
   <span id="hinweis-text"></span>
   <button class="schliessen" onclick="hinweisSchliessen()" aria-label="Schließen">×</button>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: INHALT MELDEN (Art. 16 DSA)
+════════════════════════════════════════ -->
+<div class="page" id="page-melden">
+  <div style="max-width:760px;margin:0 auto;padding:3rem 5vw">
+    <div class="breadcrumb" style="margin-bottom:1.5rem">
+      <span onclick="showPage('home')">Startseite</span> › Inhalt melden
+    </div>
+    <h2 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:900;font-size:2rem;margin-bottom:.75rem">Inhalt melden</h2>
+    <p style="color:var(--muted);margin-bottom:1.75rem;line-height:1.6">Ein Beitrag nennt Namen, beleidigt jemanden oder ist aus deiner Sicht rechtswidrig? Sag uns, worum es geht. Jede Meldung prüft ein Mensch, in der Regel innerhalb von zwei Werktagen.</p>
+
+    <div class="rt-karte" id="melden-formular">
+      <div id="m-bezug" style="display:none;background:var(--bg-soft);border-radius:12px;padding:.85rem 1rem;margin-bottom:1.25rem;font-size:.88rem;line-height:1.5"></div>
+      <input type="hidden" id="m-inhalt-id">
+
+      <div id="m-ohne-bezug">
+        <div class="form-group">
+          <label class="form-label" for="m-art">Was möchtest du melden?</label>
+          <select id="m-art" class="form-select">
+            <option value="bewertung">Eine Bewertung</option>
+            <option value="diskussion">Eine Diskussion</option>
+            <option value="antwort">Eine Antwort in einer Diskussion</option>
+            <option value="sonstiges">Etwas anderes</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="m-fundstelle">Wo steht der Inhalt?</label>
+          <input type="text" id="m-fundstelle" class="form-input" maxlength="500" placeholder="Adresse der Seite und ein paar Worte aus dem Beitrag">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="m-grund">Was ist an dem Inhalt nicht in Ordnung? *</label>
+        <textarea id="m-grund" class="form-textarea" maxlength="3000" placeholder="Zum Beispiel: Der Beitrag nennt den Namen meiner Vorgesetzten. / Die Behauptung über unseren Betrieb ist falsch, weil …"></textarea>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem">
+        <div class="form-group">
+          <label class="form-label" for="m-name">Dein Name (empfohlen)</label>
+          <input type="text" id="m-name" class="form-input" maxlength="120" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="m-email">Deine E-Mail-Adresse (empfohlen)</label>
+          <input type="email" id="m-email" class="form-input" maxlength="200" autocomplete="email">
+        </div>
+      </div>
+      <p style="font-size:.78rem;color:var(--muted);line-height:1.5;margin:-.25rem 0 1rem">Ohne E-Mail-Adresse können wir dir weder den Eingang bestätigen noch unsere Entscheidung mitteilen. Name und Adresse löschen wir nach sechs Monaten.</p>
+
+      <label style="display:flex;gap:.6rem;align-items:flex-start;font-size:.88rem;line-height:1.5;margin-bottom:1.25rem;cursor:pointer">
+        <input type="checkbox" id="m-richtig" style="accent-color:var(--accent);margin-top:.25rem;flex-shrink:0">
+        <span>Ich bin überzeugt, dass meine Angaben richtig und vollständig sind. *</span>
+      </label>
+
+      <button class="btn-submit" id="m-senden" onclick="sendeMeldung()">Meldung absenden</button>
+      <p style="font-size:.78rem;color:var(--muted);line-height:1.5;margin-top:1rem">Lieber per E-Mail? Schreib an <a href="mailto:info@jobinsides.de" style="color:var(--accent-deep)">info@jobinsides.de</a>. Mehr zur Verarbeitung deiner Angaben steht in der <a href="/datenschutz" data-intern style="color:var(--accent-deep)">Datenschutzerklärung</a>.</p>
+    </div>
+
+    <div class="rt-karte" id="melden-danke" style="display:none">
+      <h3>Danke, deine Meldung ist da.</h3>
+      <p id="melden-danke-text"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE: EIGENE BEWERTUNG LÖSCHEN
+════════════════════════════════════════ -->
+<div class="page" id="page-loeschen">
+  <div style="max-width:760px;margin:0 auto;padding:3rem 5vw">
+    <div class="breadcrumb" style="margin-bottom:1.5rem">
+      <span onclick="showPage('home')">Startseite</span> › Bewertung löschen
+    </div>
+    <h2 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:900;font-size:2rem;margin-bottom:.75rem">Eigene Bewertung löschen</h2>
+    <p style="color:var(--muted);margin-bottom:1.75rem;line-height:1.6">Nach dem Absenden hast du einen Löschcode bekommen. Gib ihn hier ein, dann ist deine Bewertung sofort und endgültig weg.</p>
+    <div class="rt-karte">
+      <div class="form-group">
+        <label class="form-label" for="l-code">Löschcode</label>
+        <input type="text" id="l-code" class="form-input" maxlength="24" autocomplete="off" spellcheck="false" placeholder="ABCD-EFGH-JKLM-NPQR" style="font-family:monospace;letter-spacing:.06em;text-transform:uppercase" onkeydown="if(event.key==='Enter')loescheEigeneBewertung()">
+      </div>
+      <button class="btn-submit" id="l-senden" onclick="loescheEigeneBewertung()">Bewertung löschen</button>
+      <p style="font-size:.78rem;color:var(--muted);line-height:1.5;margin-top:1rem">Code verloren? Schreib an <a href="mailto:info@jobinsides.de" style="color:var(--accent-deep)">info@jobinsides.de</a> und beschreib, welche Bewertung es ist – Beruf, ungefähr wann, und ein paar Worte aus dem Text. Weil wir nicht wissen, wer was geschrieben hat, können wir dann nur nach Plausibilität entscheiden.</p>
+    </div>
+  </div>
 </div>
 
 <!-- ════════════════════════════════════════
@@ -855,6 +956,15 @@
       <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Kontakt</h3>
       <p style="font-size:.95rem;line-height:1.8;color:var(--ink)">
         E-Mail: <a href="mailto:info@jobinsides.de" style="color:var(--accent2)">info@jobinsides.de</a>
+      </p>
+    </div>
+
+    <div style="background:#fff;border:1px solid var(--border);border-radius:14px;padding:2rem;margin-bottom:1.5rem">
+      <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:1rem">Kontaktstelle nach dem Gesetz über digitale Dienste (Art. 11 und 12 DSA)</h3>
+      <p style="font-size:.95rem;line-height:1.8;color:var(--ink)">
+        Behörden und Nutzer erreichen uns unter <a href="mailto:info@jobinsides.de" style="color:var(--accent2)">info@jobinsides.de</a>.
+        Wir kommunizieren auf Deutsch und Englisch.<br>
+        Rechtswidrige Inhalte kannst du über die Seite <a href="/melden" data-intern style="color:var(--accent2)">Inhalt melden</a> oder per E-Mail melden.
       </p>
     </div>
 
@@ -943,6 +1053,22 @@
         veröffentlichen (Art. 6 Abs. 1 lit. a DSGVO).
       </p>
       <p>
+        Öffentlich zeigen wir bei Bewertungen nur Monat und Jahr des Eingangs, nicht den genauen
+        Zeitpunkt. Beim Absenden prüft ein automatisches Verfahren, ob ein Text E-Mail-Adressen,
+        Telefonnummern oder Links enthält, und lehnt ihn dann mit einem Hinweis ab; dabei wird
+        nichts zusätzlich gespeichert. Nach dem Absenden einer Bewertung zeigen wir dir einmal
+        einen <strong>Löschcode</strong>. Gespeichert wird davon nur ein nicht umkehrbarer
+        Prüfwert. Mit dem Code kannst du deine Bewertung jederzeit selbst löschen.
+      </p>
+      <p>
+        <strong>Meldungen:</strong> Meldest du über „Inhalt melden“ einen Beitrag, speichern wir,
+        welcher Inhalt gemeint ist, deine Begründung und – wenn du sie angibst – deinen Namen und
+        deine E-Mail-Adresse. Die Adresse nutzen wir für die Eingangsbestätigung und um dir unsere
+        Entscheidung mitzuteilen. Rechtsgrundlage ist unsere Pflicht, ein Meldeverfahren
+        anzubieten (Art. 6 Abs. 1 lit. c DSGVO in Verbindung mit Art. 16 DSA). Name und
+        E-Mail-Adresse löschen wir nach sechs Monaten automatisch.
+      </p>
+      <p>
         Bitte gib in Freitextfeldern keine Angaben an, über die du oder andere Personen
         identifizierbar wären – also keine Namen von Vorgesetzten oder Kollegen und keine
         Firmennamen. Solche Beiträge löschen wir.
@@ -980,10 +1106,13 @@
         <strong>Schutz vor Missbrauch:</strong> Beim Absenden von Beiträgen wird ein
         pseudonymisierter Prüfwert deiner IP-Adresse gespeichert, um
         automatisierte Massenzugriffe zu verhindern. Der Prüfwert wird mit einem geheimen
-        Schlüssel gebildet, der getrennt von der Datenbank aufbewahrt wird; ohne diesen
-        Schlüssel lässt sich die IP-Adresse aus dem Prüfwert nicht ermitteln. Der Prüfwert wird nicht
+        Schlüssel gebildet, der verschlüsselt und getrennt von den gespeicherten Prüfwerten
+        aufbewahrt wird; ohne diesen Schlüssel lässt sich die IP-Adresse aus dem Prüfwert
+        nicht ermitteln. Der Prüfwert wird nicht
         zusammen mit deiner Bewertung gespeichert und spätestens nach 48 Stunden automatisch
-        gelöscht (Art. 6 Abs. 1 lit. f DSGVO).
+        gelöscht (Art. 6 Abs. 1 lit. f DSGVO). Klickst du bei einer Bewertung auf „Hilfreich“,
+        speichern wir ebenso für höchstens 48 Stunden einen Prüfwert aus IP-Adresse und Bewertung,
+        damit jede Bewertung von einem Anschluss nur einmal gezählt wird.
       </p>
 
       <p>
@@ -1034,6 +1163,16 @@
         <strong>jsDelivr (Volentio JSD Ltd.)</strong> – Über dieses Auslieferungsnetz wird eine
         Programmbibliothek geladen, die für den Betrieb der Seite benötigt wird. Auch hierbei
         wird deine IP-Adresse an den Anbieter übertragen (Art. 6 Abs. 1 lit. f DSGVO).
+      </p>
+      <p data-turnstile-hinweis hidden>
+        <strong>Cloudflare Turnstile (Cloudflare, Inc., USA)</strong> – Schutz vor automatisch
+        abgeschickten Bewertungen und Beiträgen. Erst wenn du einen Beitrag abschickst, lädt dein
+        Browser ein Skript von Cloudflare. Es prüft anhand technischer Merkmale von Browser und
+        Gerät, ob ein Mensch das Formular bedient; dabei wird deine IP-Adresse an Cloudflare
+        übertragen. Werbe-Cookies setzt Turnstile nicht. Rechtsgrundlage ist unser berechtigtes
+        Interesse am Schutz vor Missbrauch (Art. 6 Abs. 1 lit. f DSGVO), für den Zugriff auf dein
+        Gerät § 25 Abs. 2 Nr. 2 TDDDG. Cloudflare ist nach dem EU-US Data Privacy Framework
+        zertifiziert.
       </p>
 
       <p style="margin-top:1.6rem">
@@ -1097,7 +1236,13 @@
       <h3>5. Wie lange wir speichern</h3>
       <p>
         <strong>Bewertungen und Diskussionsbeiträge:</strong> dauerhaft, solange sie für andere
-        nützlich sind. Da sie anonym sind, enthalten sie keine personenbezogenen Daten.
+        nützlich sind. Wir erheben dazu keine Angaben zu deiner Person. Achte selbst darauf, dass
+        dein Text dich nicht erkennbar macht – in kleinen Berufen können Region, Berufsjahre und
+        Details aus dem Alltag zusammen auf eine Person hindeuten.
+      </p>
+      <p>
+        <strong>Meldungen:</strong> Name und E-Mail-Adresse der Meldenden sechs Monate. Die
+        Meldung selbst und unsere Entscheidung bewahren wir ohne diese Angaben zur Dokumentation auf.
       </p>
       <p>
         <strong>Benachrichtigungs-Anmeldungen:</strong> bis zu deinem Widerruf über den
@@ -1140,9 +1285,11 @@
         Ein Hinweis zur Ehrlichkeit: Weil Bewertungen bewusst ohne Konto und ohne Kennung
         abgegeben werden, können wir einen einzelnen Beitrag nachträglich keiner Person
         zuordnen. Wir können dir daher zu anonymen Beiträgen keine Auskunft erteilen und sie
-        auch nicht auf Zuruf einer Person löschen. Möchtest du einen eigenen Beitrag entfernt
-        haben, schreib uns – wir brauchen dann Angaben, über die sich der Beitrag eindeutig
-        auffinden lässt.
+        auch nicht auf Zuruf einer Person löschen. Eigene Bewertungen kannst du mit dem
+        Löschcode, den du nach dem Absenden bekommst, unter
+        <a href="/bewertung-loeschen" data-intern>Bewertung löschen</a> selbst entfernen. Hast du
+        den Code nicht mehr, schreib uns – wir brauchen dann Angaben, über die sich der Beitrag
+        eindeutig auffinden lässt.
       </p>
       <p>
         Du hast außerdem das Recht, dich bei einer Datenschutz-Aufsichtsbehörde zu beschweren
@@ -1198,9 +1345,11 @@
 <footer style="background:var(--ink);color:#666;padding:2rem 5vw;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;font-size:.82rem;border-top:1px solid #2e2b27">
   <div style="font-family:'Bricolage Grotesque',sans-serif;font-weight:900;font-size:1.1rem;color:var(--bg)">Job<span style="color:var(--accent)">Insides</span></div>
   <div style="color:#888">Wir bewerten die Arbeit, nicht den Arbeitgeber.</div>
-  <div style="display:flex;gap:1.5rem">
+  <div style="display:flex;gap:.6rem 1.5rem;flex-wrap:wrap">
     <a href="/impressum" data-intern class="footer-link">Impressum</a>
     <a href="/datenschutz" data-intern class="footer-link">Datenschutz</a>
+    <a href="/melden" data-intern class="footer-link">Inhalt melden</a>
+    <a href="/bewertung-loeschen" data-intern class="footer-link">Bewertung löschen</a>
     <a href="#" class="footer-link" data-cookie-einstellungen hidden onclick="werbung.einstellungenOeffnen(); return false">Cookie-Einstellungen</a>
   </div>
 </footer>

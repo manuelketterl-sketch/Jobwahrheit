@@ -195,6 +195,29 @@ async function loeschen(tabelle,id,was){
   if(d.ok) laden(); else alert('Fehler: '+(d.error||''));
 }
 
+// Textbausteine für die Begründung an den Meldenden – vor dem Absenden anpassen
+const BEGRUENDUNG = {
+  entfernt: 'Der Beitrag verstößt gegen unsere Regeln, weil er eine erkennbare Person oder Firma nennt.',
+  bleibt: 'Der Beitrag schildert eine persönliche Erfahrung mit einem Beruf, nennt keine Person und keine Firma und überschreitet die Grenze zur Beleidigung nicht.'
+};
+
+async function entscheiden(id, entscheidung){
+  const frage = entscheidung === 'entfernt'
+    ? 'Inhalt ENDGÜLTIG löschen. Begründung für den Meldenden:'
+    : 'Inhalt bleibt stehen. Begründung für den Meldenden:';
+  const begruendung = prompt(frage, BEGRUENDUNG[entscheidung]);
+  if (begruendung === null) return;
+  const d = await ruf({aktion:'meldung_entscheiden', id, entscheidung, begruendung});
+  if(!d.ok){ alert('Fehler: '+(d.error||'')); return; }
+  if(d.hatAdresse && !d.mailGesendet) alert('Gespeichert. Die Mail an den Meldenden ging NICHT raus – bitte selbst antworten.');
+  laden();
+}
+
+async function ausblenden(id, an){
+  const d = await ruf({aktion:'ausblenden', id, ausblenden:an});
+  if(d.ok) laden(); else alert('Fehler: '+(d.error||''));
+}
+
 async function meldungErledigt(id){
   const d = await ruf({aktion:'meldung_erledigt',id});
   if(d.ok) laden(); else alert('Fehler: '+(d.error||''));
@@ -377,23 +400,37 @@ function zeichne(d){
     `🚩 Gemeldete Inhalte ${d.gemeldet.length ? `<span class="tag rot">${d.gemeldet.length}</span>` : ''}`;
   document.getElementById('meldungen').innerHTML = d.gemeldet.length
     ? d.gemeldet.map(g => {
-        const b = g.bewertung;
-        if(!b) return `<div class="karte"><div class="zeile">
-          <div><em style="color:var(--muted)">Bewertung existiert nicht mehr</em>
-          <div class="meta">gemeldet ${datum(g.gemeldet_am)}</div></div>
-          <button class="btn-klein ok" onclick="meldungErledigt('${g.meldung_id}')">Meldung entfernen</button>
-        </div></div>`;
+        const x = g.inhalt;
+        const artName = {bewertung:'Bewertung', diskussion:'Diskussion', antwort:'Antwort', sonstiges:'Sonstiges'}[g.art] || g.art;
+        let inhalt;
+        if (x && g.art === 'bewertung') {
+          inhalt = `<div class="sterne">${'★'.repeat(x.bewertung_gesamt||0)}${'☆'.repeat(5-(x.bewertung_gesamt||0))}</div>
+            <div style="font-weight:700;margin:.2rem 0">${esc(x.beruf_name)}${x.ausgeblendet ? ' <span class="tag rot">ausgeblendet</span>' : ''}</div>
+            <div style="font-size:.88rem">${esc(x.freitext||'(kein Satz)')}</div>
+            ${x.alltag_vs_stelle ? `<div style="font-size:.84rem;color:var(--muted)">Realität: ${esc(x.alltag_vs_stelle)}</div>` : ''}
+            <div class="meta">${esc(x.anon_name||'Anonym')} · ${datum(x.created_at)}</div>`;
+        } else if (x) {
+          inhalt = `<div style="font-weight:700;margin:.2rem 0">${esc(x.titel || '')}</div>
+            <div style="font-size:.88rem">${esc(x.inhalt || '')}</div>
+            <div class="meta">${esc(x.anon_name||'Anonym')} · ${datum(x.created_at)}${x.beruf_name ? ' · ' + esc(x.beruf_name) : ''}</div>`;
+        } else if (g.fundstelle) {
+          inhalt = `<div style="font-size:.88rem"><strong>Fundstelle:</strong> ${esc(g.fundstelle)}</div>`;
+        } else {
+          inhalt = `<em style="color:var(--muted)">Inhalt existiert nicht mehr</em>`;
+        }
+        const ausblenden = x && g.art === 'bewertung'
+          ? `<button class="btn-klein" onclick="ausblenden('${esc(x.id)}', ${x.ausgeblendet ? 'false' : 'true'})">${x.ausgeblendet ? 'Einblenden' : 'Sofort ausblenden'}</button>` : '';
         return `<div class="karte" style="border-color:#f5c6b8">
           <div class="zeile">
             <div style="flex:1">
-              <div class="sterne">${'★'.repeat(b.bewertung_gesamt||0)}${'☆'.repeat(5-(b.bewertung_gesamt||0))}</div>
-              <div style="font-weight:700;margin:.2rem 0">${esc(b.beruf_name)}</div>
-              <div style="font-size:.88rem">${esc(b.freitext||'(kein Text)')}</div>
-              <div class="meta">${esc(b.anon_name||'Anonym')} · ${datum(b.created_at)} · gemeldet ${datum(g.gemeldet_am)}</div>
+              <div class="meta" style="margin-bottom:.35rem"><span class="tag rot">${esc(artName)}</span> gemeldet ${datum(g.gemeldet_am)}${g.melder_name ? ' von ' + esc(g.melder_name) : ''} · ${g.hat_email ? 'mit E-Mail' : 'ohne E-Mail'}</div>
+              ${g.grund ? `<div style="font-size:.88rem;background:#fff6f3;border-radius:10px;padding:.5rem .7rem;margin-bottom:.6rem"><strong>Begründung:</strong> ${esc(g.grund)}</div>` : '<div class="meta" style="margin-bottom:.4rem">Ein-Klick-Meldung ohne Begründung</div>'}
+              ${inhalt}
             </div>
-            <div style="display:flex;flex-direction:column;gap:.4rem">
-              <button class="btn-klein" onclick="loeschen('bewertungen','${b.id}','Bewertung')">Löschen</button>
-              <button class="btn-klein ok" onclick="meldungErledigt('${g.meldung_id}')">Behalten</button>
+            <div style="display:flex;flex-direction:column;gap:.4rem;min-width:150px">
+              ${ausblenden}
+              <button class="btn-klein" onclick="entscheiden('${esc(g.meldung_id)}','entfernt')">Entfernen …</button>
+              <button class="btn-klein ok" onclick="entscheiden('${esc(g.meldung_id)}','bleibt')">Bleibt stehen …</button>
             </div>
           </div></div>`;
       }).join('')

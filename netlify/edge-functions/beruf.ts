@@ -77,7 +77,10 @@ export default async (req: Request, context: { next: () => Promise<Response> }) 
     const name = beruf.name
     let bewertungen = 0
     try {
-      const z = await frage(`/bewertungen?select=id&beruf_name=ilike.${encodeURIComponent(name)}&limit=1`, true)
+      // Erst die öffentliche Sicht, sonst (Skript noch nicht gelaufen) die Tabelle
+      const filter = `?select=id&beruf_name=ilike.${encodeURIComponent(name)}&limit=1`
+      let z = await frage('/bewertungen_oeffentlich' + filter, true)
+      if (!z.ok) z = await frage('/bewertungen' + filter, true)
       bewertungen = parseInt((z.headers.get('content-range') || '').split('/')[1]) || 0
     } catch { /* ohne Zahl geht es auch */ }
 

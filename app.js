@@ -27,6 +27,30 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ════════════════════════════════════════
+// BEWERTUNGEN LESEN
+// Öffentlich gelesen wird die Sicht "bewertungen_oeffentlich" (siehe
+// supabase-schutz-und-meldungen.sql): ohne Löschcode-Prüfwert, ohne
+// ausgeblendete Bewertungen und mit dem Eingang nur auf den Monat genau.
+// Solange das Skript nicht gelaufen ist, gibt es die Sicht nicht – dann
+// wird wie bisher die Tabelle gelesen.
+// ════════════════════════════════════════
+let bewertungsQuelle = 'bewertungen_oeffentlich';
+
+async function bewertungenLesen(abfrage) {
+  let antwort = await abfrage(sb.from(bewertungsQuelle));
+  const fehlt = antwort.error && /bewertungen_oeffentlich|PGRST205|42P01|does not exist|schema cache/i
+    .test((antwort.error.code || '') + ' ' + (antwort.error.message || ''));
+  if (fehlt && bewertungsQuelle !== 'bewertungen') {
+    bewertungsQuelle = 'bewertungen';
+    antwort = await abfrage(sb.from(bewertungsQuelle));
+  }
+  return antwort;
+}
+
+// Geladene Bewertungen nach ID – fürs Meldeformular (Auszug anzeigen)
+const geladeneBewertungen = {};
+
+// ════════════════════════════════════════
 // BEWERTUNGEN LADEN
 // ════════════════════════════════════════
 async function loadBewertungen(berufName) {
@@ -36,11 +60,10 @@ async function loadBewertungen(berufName) {
 
   container.innerHTML = `<div style="color:var(--muted);font-size:.9rem;padding:1rem 0">Lade Bewertungen…</div>`;
 
-  const { data, error } = await sb
-    .from('bewertungen')
+  const { data, error } = await bewertungenLesen(q => q
     .select('*')
     .ilike('beruf_name', berufName)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false }));
 
   if (error || !data?.length) {
     // Der Aufruf zum Bewerten steht schon im Kasten oben (#erstbewerter),
@@ -55,6 +78,7 @@ async function loadBewertungen(berufName) {
   seoBewertungen(berufName, data.length);
   if (counter) counter.textContent = `(${data.length})`;
   updateStatistiken(data);
+  data.forEach(b => { geladeneBewertungen[b.id] = b; });
   container.innerHTML = data.map(b => renderBewertung(b)).join('');
 }
 
@@ -81,6 +105,8 @@ function resetStatistiken() {
   const leer = document.getElementById('score-leer');
   if (row) row.style.display = 'none';
   if (leer) leer.style.display = 'block';
+  const wenige = document.getElementById('score-wenige');
+  if (wenige) wenige.style.display = 'none';
 
   ['score-gesamt','score-empfehlung','score-erwartung','score-gehalt'].forEach(id => setText(id, '–'));
   ['val-erwartung','val-gesamt','val-empfehlung'].forEach(id => setText(id, '–'));
@@ -109,6 +135,16 @@ function updateStatistiken(data) {
   const leer = document.getElementById('score-leer');
   if (row) row.style.display = 'flex';
   if (leer) leer.style.display = 'none';
+
+  // Unter fünf Bewertungen kann eine einzige neue (oder gefälschte) den
+  // Schnitt kräftig verschieben. Wir zeigen die Werte, sagen das aber dazu.
+  const wenige = document.getElementById('score-wenige');
+  if (wenige) {
+    wenige.textContent = n < 5
+      ? `Erst ${n} Bewertung${n === 1 ? '' : 'en'} – die Werte können sich mit jeder neuen noch deutlich ändern.`
+      : '';
+    wenige.style.display = n < 5 ? 'block' : 'none';
+  }
 
   // ── Gesamtbewertung ──
   const avgGesamt = data.reduce((s,b) => s + (b.bewertung_gesamt||0), 0) / n;
@@ -234,7 +270,9 @@ function updateStatistiken(data) {
 function renderBewertung(b) {
   const stars = '★'.repeat(b.bewertung_gesamt || 0) + '☆'.repeat(5 - (b.bewertung_gesamt || 0));
   const tags = (b.skills || []).map(s => `<span class="rc-tag">${escHtml(s)}</span>`).join('');
-  const datum = new Date(b.created_at).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+  // Nur Monat und Jahr: Der genaue Zeitpunkt würde zusammen mit dem
+  // Pixel-Ereignis „Bewertung abgeschickt“ eine Zuordnung erleichtern.
+  const datum = new Date(b.created_at).toLocaleDateString('de-DE', { month:'long', year:'numeric' });
   const empf = b.weiterempfehlung ? 'Empfohlen' : 'Nicht empfohlen';
 
   return `
@@ -253,7 +291,7 @@ function renderBewertung(b) {
         <span>${b.gehalt_brutto ? `Bruttogehalt: <strong>${b.gehalt_brutto.toLocaleString('de')} €</strong>` : ''}${b.bonus_monatsgehaelter > 0 ? ` + ${monatsgehaelter(b.bonus_monatsgehaelter)} Sonderzahlungen` : ''} ${b.region ? '· ' + escHtml(b.region) : ''} · ${empf}</span>
         <div style="display:flex;gap:1rem;align-items:center">
           <button class="rc-helpful" onclick="markHilfreich('${b.id}', this)">👍 ${b.hilfreich || 0} Hilfreich</button>
-          <span class="rc-flag" title="Melden" onclick="meldenBewertung('${b.id}')">⚑</span>
+          <span class="rc-flag" title="Melden" role="button" tabindex="0" onclick="meldenBewertung('${b.id}')">⚑</span>
         </div>
       </div>
     </div>`;
@@ -272,7 +310,62 @@ function escHtml(str) {
 // ════════════════════════════════════════
 const SUBMIT_URL = SUPABASE_URL + '/functions/v1/submit';
 
+// ── Captcha (Cloudflare Turnstile) ──
+// Leer = aus. Zum Einschalten: im Cloudflare-Dashboard unter Turnstile ein
+// Widget für jobinsides.de anlegen, den Site Key hier eintragen und
+// veröffentlichen. ERST DANACH den Secret Key als Supabase-Secret
+// TURNSTILE_SECRET setzen – sonst lehnt der Server alle Beiträge ab.
+const TURNSTILE_SITEKEY = '';
+const MIT_CAPTCHA = ['bewertung', 'diskussion', 'antwort'];
+let captchaGeladen = null, captchaWidget = null, captchaWartet = null;
+
+function ladeCaptcha() {
+  if (captchaGeladen) return captchaGeladen;
+  captchaGeladen = new Promise((fertig, fehler) => {
+    const s = document.createElement('script');
+    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    s.async = true;
+    s.onload = () => {
+      const box = document.getElementById('captcha-box');
+      box.hidden = false;
+      captchaWidget = window.turnstile.render(box, {
+        sitekey: TURNSTILE_SITEKEY,
+        execution: 'execute',
+        appearance: 'interaction-only',
+        language: 'de',
+        callback: token => { if (captchaWartet) { captchaWartet(token); captchaWartet = null; } },
+        'error-callback': () => { if (captchaWartet) { captchaWartet(null); captchaWartet = null; } }
+      });
+      fertig();
+    };
+    s.onerror = () => { captchaGeladen = null; fehler(new Error('Captcha nicht erreichbar')); };
+    document.head.appendChild(s);
+  });
+  return captchaGeladen;
+}
+
+// Holt ein frisches Token. Ein Token gilt nur einmal, deshalb vor jedem
+// Absenden zurücksetzen und neu ausführen.
+async function holeCaptchaToken() {
+  try { await ladeCaptcha(); } catch { return null; }
+  return new Promise(fertig => {
+    captchaWartet = fertig;
+    try {
+      window.turnstile.reset(captchaWidget);
+      window.turnstile.execute(captchaWidget);
+    } catch { captchaWartet = null; fertig(null); return; }
+    setTimeout(() => { if (captchaWartet === fertig) { captchaWartet = null; fertig(null); } }, 60000);
+  });
+}
+
 async function secureSubmit(action, data) {
+  let turnstileToken;
+  if (TURNSTILE_SITEKEY && MIT_CAPTCHA.includes(action)) {
+    turnstileToken = await holeCaptchaToken();
+    if (!turnstileToken) {
+      return { ok: false, error: 'Die Sicherheitsprüfung hat nicht geklappt. Bitte lade die Seite neu und versuch es nochmal.' };
+    }
+  }
   try {
     const res = await fetch(SUBMIT_URL, {
       method: 'POST',
@@ -283,6 +376,7 @@ async function secureSubmit(action, data) {
       body: JSON.stringify({
         action,
         data,
+        turnstileToken,
         website: document.getElementById('hp-website')?.value || '' // Honeypot
       })
     });
@@ -355,6 +449,13 @@ async function submitBewertung() {
   // Abgeschickte Bewertung als Anzeigen-Erfolg melden (nur mit Einwilligung,
   // nur der Ereignisname, siehe einwilligung.js)
   if (window.werbung) werbung.bewertungAbgeschickt();
+
+  // Löschcode einmal zeigen (fehlt, solange die Datenbank-Spalte fehlt)
+  const codeBox = document.getElementById('loeschcode-box');
+  if (codeBox) {
+    document.getElementById('loeschcode-wert').textContent = result.loeschcode || '';
+    codeBox.style.display = result.loeschcode ? 'block' : 'none';
+  }
 
   // Berufsname ins Newsletter-Modal übernehmen
   document.querySelectorAll('.nl-beruf-name').forEach(el => el.textContent = berufName);
@@ -567,6 +668,7 @@ async function loadDiskussionen(berufName) {
           <span>${counts[t.id] || 0} Antwort${(counts[t.id] || 0) === 1 ? '' : 'en'}</span>
           <span>${escapeHtml(t.anon_name || 'Anonym')}</span>
           <span>${zeitAgo(t.created_at)}</span>
+          <span class="rc-flag" title="Melden" role="button" tabindex="0" style="margin-left:auto" onclick="event.stopPropagation();meldenDiskussion('${t.id}', this.closest('.disc-thread').querySelector('.dt-title').textContent)">⚑</span>
         </div>
         <div id="thread-${t.id}" style="display:none;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)" onclick="event.stopPropagation()"></div>
       </div>
@@ -617,14 +719,14 @@ async function toggleThread(id) {
 
   const { data: antworten } = await sb
     .from('diskussion_antworten')
-    .select('created_at, inhalt, anon_name')
+    .select('id, created_at, inhalt, anon_name')
     .eq('diskussion_id', id)
     .order('created_at', { ascending: true });
 
   const antwortenHtml = (antworten || []).map(a => `
     <div style="background:var(--bg-soft);border-radius:12px;padding:.8rem 1rem;margin-bottom:.6rem">
-      <div style="font-size:.88rem;line-height:1.55">${escapeHtml(a.inhalt)}</div>
-      <div style="font-size:.72rem;color:var(--muted);margin-top:.4rem">${escapeHtml(a.anon_name || 'Anonym')} · ${zeitAgo(a.created_at)}</div>
+      <div style="font-size:.88rem;line-height:1.55" id="antwort-text-${a.id}">${escapeHtml(a.inhalt)}</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:.4rem">${escapeHtml(a.anon_name || 'Anonym')} · ${zeitAgo(a.created_at)} · <span class="rc-flag" title="Melden" role="button" tabindex="0" onclick="meldenAntwort('${a.id}')">⚑ melden</span></div>
     </div>
   `).join('') || `<div style="font-size:.85rem;color:var(--muted);margin-bottom:.6rem">Noch keine Antworten – schreib die erste!</div>`;
 
@@ -668,19 +770,126 @@ function generateAnonName(beruf) {
 // ════════════════════════════════════════
 async function markHilfreich(id, btn) {
   const key = 'hilfreich_' + id;
-  if (localStorage.getItem(key)) return;
-  localStorage.setItem(key, '1');
+  try { if (localStorage.getItem(key)) return; } catch { /* Speicher gesperrt */ }
+  btn.disabled = true;
 
-  await sb.rpc('increment_hilfreich', { row_id: id });
+  // Läuft über den Server: Der zählt jede Bewertung je Anschluss nur
+  // einmal und begrenzt die Klicks pro Stunde.
+  const result = await secureSubmit('hilfreich', { id });
+  btn.disabled = false;
+  if (!result.ok) {
+    hinweis(result.error || 'Das hat nicht geklappt.', 'fehler');
+    return;
+  }
+  try { localStorage.setItem(key, '1'); } catch { /* egal */ }
+  if (result.doppelt) return;
   const current = parseInt(btn.textContent.match(/\d+/)?.[0] || 0);
   btn.textContent = `👍 ${current + 1} Hilfreich`;
 }
 
-async function meldenBewertung(id) {
-  if (confirm('Diese Bewertung als unangemessen melden?')) {
-    const result = await secureSubmit('meldung', { bewertung_id: id });
-    hinweis(result.ok ? 'Danke, wir schauen uns die Bewertung an.' : (result.error || 'Das hat nicht geklappt.'), result.ok ? 'erfolg' : 'fehler');
+// ── Melden ──
+// Der Knopf führt aufs Formular „Inhalt melden“: Eine Meldung braucht eine
+// Begründung (Art. 16 DSA), ein Klick allein reicht nicht.
+function meldenBewertung(id) {
+  const b = geladeneBewertungen[id];
+  const auszug = b ? (b.freitext || b.alltag_vs_stelle || b.was_erwartet || '') : '';
+  oeffneMelden('bewertung', id, b ? `Bewertung zu „${b.beruf_name}“` : 'Bewertung', auszug);
+}
+
+function meldenDiskussion(id, titel) {
+  oeffneMelden('diskussion', id, 'Diskussion', titel || '');
+}
+
+function meldenAntwort(id) {
+  const el = document.getElementById('antwort-text-' + id);
+  oeffneMelden('antwort', id, 'Antwort in einer Diskussion', el ? el.textContent : '');
+}
+
+function oeffneMelden(art, id, was, auszug) {
+  showPage('melden');
+  document.getElementById('melden-formular').style.display = 'block';
+  document.getElementById('melden-danke').style.display = 'none';
+  document.getElementById('m-inhalt-id').value = id || '';
+  document.getElementById('m-art').value = art || 'bewertung';
+  const bezug = document.getElementById('m-bezug');
+  const ohne = document.getElementById('m-ohne-bezug');
+  if (id) {
+    const kurz = auszug && auszug.length > 220 ? auszug.slice(0, 220) + '…' : auszug;
+    bezug.innerHTML = `<div style="font-weight:700;margin-bottom:.2rem">Du meldest: ${escHtml(was)}</div>` +
+      (kurz ? `<div style="color:var(--muted)">„${escHtml(kurz)}“</div>` : '');
+    bezug.style.display = 'block';
+    ohne.style.display = 'none';
+  } else {
+    bezug.style.display = 'none';
+    ohne.style.display = 'block';
   }
+  document.getElementById('m-grund')?.focus();
+}
+
+async function sendeMeldung() {
+  const wert = id => document.getElementById(id)?.value?.trim() || '';
+  const inhalt_id = wert('m-inhalt-id');
+  const art = document.getElementById('m-art')?.value || 'bewertung';
+  const fundstelle = wert('m-fundstelle');
+  const grund = wert('m-grund');
+  const email = wert('m-email');
+  const richtig = !!document.getElementById('m-richtig')?.checked;
+
+  if (!inhalt_id && !fundstelle) { hinweis('Bitte gib an, wo der Inhalt steht.', 'fehler'); return; }
+  if (grund.length < 10) { hinweis('Bitte beschreib kurz, was an dem Inhalt nicht in Ordnung ist.', 'fehler'); return; }
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { hinweis('Die E-Mail-Adresse sieht nicht richtig aus.', 'fehler'); return; }
+  if (!richtig) { hinweis('Bitte bestätige, dass deine Angaben richtig sind.', 'fehler'); return; }
+
+  const btn = document.getElementById('m-senden');
+  btn.disabled = true; btn.textContent = 'Wird gesendet…';
+  const result = await secureSubmit('meldung', {
+    art: inhalt_id ? art : (art || 'sonstiges'),
+    inhalt_id: inhalt_id || null,
+    // Für ältere Fassungen der Server-Funktion, die nur diese ID kennen
+    bewertung_id: inhalt_id && art === 'bewertung' ? inhalt_id : null,
+    fundstelle: inhalt_id ? null : fundstelle,
+    grund, name: wert('m-name'), email, richtig
+  });
+  btn.disabled = false; btn.textContent = 'Meldung absenden';
+
+  if (!result.ok) {
+    hinweis(result.error || 'Das hat nicht geklappt. Bitte versuch es nochmal oder schreib an info@jobinsides.de.', 'fehler');
+    return;
+  }
+  ['m-inhalt-id','m-fundstelle','m-grund','m-name','m-email'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('m-richtig').checked = false;
+  document.getElementById('melden-formular').style.display = 'none';
+  document.getElementById('melden-danke-text').textContent = result.bestaetigt
+    ? 'Wir haben dir eine Eingangsbestätigung geschickt. Ein Mensch prüft den Inhalt, in der Regel innerhalb von zwei Werktagen, und du bekommst unsere Entscheidung per E-Mail.'
+    : email
+      ? 'Ein Mensch prüft den Inhalt, in der Regel innerhalb von zwei Werktagen. Unsere Entscheidung schicken wir dir per E-Mail.'
+      : 'Ein Mensch prüft den Inhalt, in der Regel innerhalb von zwei Werktagen. Weil du keine E-Mail-Adresse angegeben hast, können wir dir die Entscheidung nicht mitteilen.';
+  document.getElementById('melden-danke').style.display = 'block';
+}
+
+// ── Eigene Bewertung mit dem Löschcode entfernen ──
+async function loescheEigeneBewertung() {
+  const feld = document.getElementById('l-code');
+  const code = (feld?.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (code.length !== 16) { hinweis('Der Löschcode hat 16 Zeichen, zum Beispiel ABCD-EFGH-JKLM-NPQR.', 'fehler'); return; }
+  if (!confirm('Deine Bewertung wird endgültig gelöscht. Fortfahren?')) return;
+  const btn = document.getElementById('l-senden');
+  btn.disabled = true;
+  const result = await secureSubmit('loeschen', { code });
+  btn.disabled = false;
+  if (!result.ok) { hinweis(result.error || 'Das hat nicht geklappt.', 'fehler'); return; }
+  feld.value = '';
+  hinweis('Deine Bewertung ist gelöscht.', 'erfolg');
+}
+
+function loeschcodeKopieren() {
+  const code = document.getElementById('loeschcode-wert')?.textContent || '';
+  if (!code) return;
+  navigator.clipboard?.writeText(code)
+    .then(() => hinweis('Löschcode kopiert.', 'erfolg'))
+    .catch(() => hinweis('Kopieren ging nicht – bitte markier den Code und kopier ihn selbst.', 'fehler'));
 }
 
 // ════════════════════════════════════════
@@ -913,8 +1122,7 @@ async function berufNameAufloesen(eingabe) {
 }
 
 async function berufStatistik(name) {
-  const { data, error } = await sb
-    .from('bewertungen').select('*').ilike('beruf_name', name);
+  const { data, error } = await bewertungenLesen(q => q.select('*').ilike('beruf_name', name));
   if (error || !data?.length) return null;
 
   const n = data.length;
@@ -947,7 +1155,7 @@ function renderVergleichKarte(el, name, stat, unbekannt) {
     <div class="v-row"><span class="v-label">Gesamtbewertung</span><span class="v-val ${farbe(stat.gesamt)}">${stat.gesamt.toFixed(1)} / 5 ★</span></div>
     <div class="v-row"><span class="v-label">Weiterempfehlung</span><span class="v-val ${stat.empf >= 70 ? 'good' : stat.empf >= 50 ? 'mid' : ''}">${stat.empf}%</span></div>
     <div class="v-row"><span class="v-label">Versprechen ≈ Realität</span><span class="v-val ${stat.erwartung ? farbe(stat.erwartung / 2) : ''}">${stat.erwartung ? stat.erwartung.toFixed(1) + ' / 10' : '–'}</span></div>
-    <div class="v-row"><span class="v-label">Ø Gehalt (Median)</span><span class="v-val good">${stat.median ? stat.median.toLocaleString('de') + ' €' : '–'}</span></div>
+    <div class="v-row"><span class="v-label">Gehalt (Median)</span><span class="v-val good">${stat.median ? stat.median.toLocaleString('de') + ' €' : '–'}</span></div>
     <div class="v-row"><span class="v-label">Bewertungen</span><span class="v-val">${stat.n}</span></div>`;
 }
 
@@ -1059,7 +1267,8 @@ let verlaufAktiv = true;   // false, während wir auf ein Zurück reagieren
 // ════════════════════════════════════════
 const SEITEN_PFADE = {
   home: '/', bewerten: '/bewerten', vergleich: '/vergleich',
-  arbeitgeber: '/fuer-arbeitgeber', impressum: '/impressum', datenschutz: '/datenschutz'
+  arbeitgeber: '/fuer-arbeitgeber', impressum: '/impressum', datenschutz: '/datenschutz',
+  melden: '/melden', loeschen: '/bewertung-loeschen'
 };
 const PFAD_SEITEN = Object.fromEntries(Object.entries(SEITEN_PFADE).map(([k, v]) => [v, k]));
 const SEITE_URL = 'https://jobinsides.de';
@@ -1104,7 +1313,7 @@ function setzeMeta({ titel, beschreibung, pfad, index = true, jsonld = null }) {
 const SEITEN_META = {
   home: {
     titel: 'JobInsides – Was dich im Job wirklich erwartet',
-    beschreibung: 'Echte Bewertungen von echten Angestellten: Alltag, Gehalt und Anforderungen in über 9.000 Berufen. Andere bewerten Arbeitgeber – wir bewerten die Arbeit. Anonym und ohne Anmeldung.'
+    beschreibung: 'Anonyme Erfahrungsberichte von Menschen, die den Beruf machen: Alltag, Gehalt und Anforderungen in über 9.000 Berufen. Andere bewerten Arbeitgeber – wir bewerten die Arbeit. Anonym und ohne Anmeldung.'
   },
   bewerten: {
     titel: 'Beruf ehrlich bewerten – anonym | JobInsides',
@@ -1119,7 +1328,9 @@ const SEITEN_META = {
     beschreibung: 'Erreiche Bewerber, die vorher wissen, was sie erwartet. Weniger Fehlbesetzungen, weniger Abbrüche. Stellenanzeigen in der Startphase kostenlos.'
   },
   impressum: { titel: 'Impressum | JobInsides', beschreibung: 'Impressum von JobInsides.', index: false },
-  datenschutz: { titel: 'Datenschutz | JobInsides', beschreibung: 'Datenschutzerklärung von JobInsides.', index: false }
+  datenschutz: { titel: 'Datenschutz | JobInsides', beschreibung: 'Datenschutzerklärung von JobInsides.', index: false },
+  melden: { titel: 'Inhalt melden | JobInsides', beschreibung: 'Rechtswidrige oder unangemessene Inhalte auf JobInsides melden.', index: false },
+  loeschen: { titel: 'Bewertung löschen | JobInsides', beschreibung: 'Eigene Bewertung mit dem Löschcode entfernen.', index: false }
 };
 
 // ════════════════════════════════════════
@@ -1576,6 +1787,7 @@ function closeFormBerufDropdown() {
 
 // Init beim Seitenstart: die aufgerufene Adresse auswerten
 window.addEventListener('DOMContentLoaded', async () => {
+  if (TURNSTILE_SITEKEY) document.querySelectorAll('[data-turnstile-hinweis]').forEach(el => { el.hidden = false; });
   loadStats();
   ladeBewerteteBerufe();
 
@@ -1632,10 +1844,10 @@ async function ladeBewerteteBerufe() {
   const liste = document.getElementById('bewertete-berufe-liste');
   if (!box || !liste) return;
   try {
-    const { data } = await sb.from('bewertungen')
+    const { data } = await bewertungenLesen(q => q
       .select('beruf_name, created_at')
       .order('created_at', { ascending: false })
-      .limit(200);
+      .limit(200));
     const namen = [...new Set((data || []).map(b => b.beruf_name).filter(Boolean))].slice(0, 24);
     if (!namen.length) return;
     liste.innerHTML = namen.map(n =>

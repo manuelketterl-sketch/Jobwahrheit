@@ -18,6 +18,8 @@
 --    (Meldeverfahren nach Art. 16 DSA) und sind nur noch für die
 --    Server-Funktionen zugänglich.
 --  - Name und E-Mail von Meldenden werden nach sechs Monaten gelöscht.
+--  - Arbeitgeber können Firma und Anzeigen nicht mehr selbst freigeben.
+--  - Suchbegriffe sind nicht mehr öffentlich lesbar.
 -- ════════════════════════════════════════
 
 
@@ -142,6 +144,94 @@ begin
 end;
 $$;
 
+-- ── 6. Arbeitgeber können sich nicht mehr selbst freigeben ──
+-- Befund aus dem Export vom 17.11.: Die Regeln „Firma ändert sich selbst“
+-- und „Firma ändert eigene Anzeigen“ erlauben Änderungen an ALLEN Spalten.
+-- Ein eingeloggter Arbeitgeber konnte deshalb seine Firma und seine
+-- Anzeigen selbst auf freigegeben = true setzen, eine Sperre aufheben und
+-- Anzeigen schon freigegeben anlegen. Die Prüfung im Admin-Bereich ließ
+-- sich so komplett umgehen.
+--
+-- Die Trigger greifen nur für Besucher und eingeloggte Arbeitgeber.
+-- Admin-Funktion (service_role), SQL-Editor und Zeitpläne sind nicht
+-- betroffen.
+create or replace function schuetze_freigabe_firma()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if current_user in ('anon', 'authenticated') then
+    if tg_op = 'INSERT' then
+      new.freigegeben := false;
+      new.freigegeben_am := null;
+      new.gesperrt := false;
+    else
+      new.freigegeben := old.freigegeben;
+      new.freigegeben_am := old.freigegeben_am;
+      new.gesperrt := old.gesperrt;
+      new.user_id := old.user_id;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists firmen_freigabe_schuetzen on firmen;
+create trigger firmen_freigabe_schuetzen
+  before insert or update on firmen
+  for each row execute function schuetze_freigabe_firma();
+
+-- Anzeigen: Freigabe und Klickzahl darf nur der Admin setzen. Ändert ein
+-- Arbeitgeber den Inhalt einer freigegebenen Anzeige, muss sie neu geprüft
+-- werden – sonst ließe sich eine harmlose Anzeige freigeben und danach
+-- beliebig umschreiben. Ein- und Ausschalten (aktiv) bleibt frei.
+create or replace function schuetze_freigabe_stelle()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+declare
+  frei text[] := array['aktiv', 'freigegeben', 'freigegeben_am', 'klicks', 'aktualisiert_am'];
+begin
+  if current_user in ('anon', 'authenticated') then
+    if tg_op = 'INSERT' then
+      new.freigegeben := false;
+      new.freigegeben_am := null;
+      new.klicks := 0;
+    else
+      new.freigegeben := old.freigegeben;
+      new.freigegeben_am := old.freigegeben_am;
+      new.klicks := old.klicks;
+      new.firma_id := old.firma_id;
+      if (to_jsonb(new) - frei) is distinct from (to_jsonb(old) - frei) then
+        new.freigegeben := false;
+        new.freigegeben_am := null;
+      end if;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists stellen_freigabe_schuetzen on stellenanzeigen;
+create trigger stellen_freigabe_schuetzen
+  before insert or update on stellenanzeigen
+  for each row execute function schuetze_freigabe_stelle();
+
+
+-- ── 7. Weitere Lücken aus dem Export ──
+-- Die Sicht suche_ohne_bewertung war für jeden lesbar: alle Suchbegriffe
+-- der letzten 90 Tage. Sie wird nur intern gebraucht.
+revoke all on suche_ohne_bewertung from anon, authenticated;
+
+-- aufraeumen() ließ sich von jedem aufrufen. Harmlos, aber unnötig.
+revoke execute on function aufraeumen() from public, anon, authenticated;
+
+-- Rechte, die über die Schnittstelle ohnehin nie gebraucht werden
+revoke truncate, references, trigger on all tables in schema public from anon, authenticated;
+
+
 -- Schema neu einlesen, damit die neue Sicht sofort abrufbar ist
 notify pgrst, 'reload schema';
 
@@ -149,9 +239,11 @@ notify pgrst, 'reload schema';
 select
   (select count(*) from bewertungen_oeffentlich) as oeffentlich_sichtbar,
   (select count(*) from bewertungen)            as bewertungen_gesamt,
-  has_table_privilege('anon', 'meldungen', 'select')       as fremde_lesen_meldungen,
-  has_table_privilege('anon', 'submissions_log', 'select') as fremde_lesen_spamlog;
--- Erwartet: beide Zahlen gleich, zweimal false
+  has_table_privilege('anon', 'meldungen', 'select')            as fremde_lesen_meldungen,
+  has_table_privilege('anon', 'submissions_log', 'select')      as fremde_lesen_spamlog,
+  has_table_privilege('anon', 'suche_ohne_bewertung', 'select') as fremde_lesen_suchbegriffe,
+  (select count(*) from pg_trigger where tgname in ('firmen_freigabe_schuetzen', 'stellen_freigabe_schuetzen')) as schutz_trigger;
+-- Erwartet: beide Zahlen gleich, dreimal false, schutz_trigger = 2
 
 
 

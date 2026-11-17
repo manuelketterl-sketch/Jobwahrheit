@@ -206,6 +206,13 @@ Deno.serve(async (req) => {
     if (body.sperren !== undefined) felder.gesperrt = !!body.sperren
     const { error } = await supabase.from('firmen').update(felder).eq('id', body.id)
     if (error) return json({ ok: false, error: error.message }, 500)
+    // Gesperrte Firma: ihre Anzeigen gehen offline. Die öffentliche Regel für
+    // Anzeigen prüft die Firma nicht, sie blieben sonst sichtbar.
+    // Nach dem Entsperren müssen die Anzeigen neu freigegeben werden.
+    if (body.sperren === true) {
+      await supabase.from('stellenanzeigen')
+        .update({ freigegeben: false, freigegeben_am: null }).eq('firma_id', body.id)
+    }
     return json({ ok: true })
   }
 

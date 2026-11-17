@@ -250,6 +250,7 @@ select
 
 -- ════════════════════════════════════════
 -- TEIL 2 – erst ausführen, wenn die neue Seite live ist
+-- EINGESPIELT am 17.11.2026 nach dem Merge von Pull Request 5
 -- ════════════════════════════════════════
 -- Zum Ausführen: nur den Block ab hier markieren und „Run“ drücken.
 

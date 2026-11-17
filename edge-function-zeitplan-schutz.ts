@@ -12,6 +12,20 @@
 //   ← HIER EINFÜGEN
 //
 // Eingespielt am 17. November 2026.
+//
+// Weitere Änderungen direkt im Supabase-Dashboard am selben Tag (diese
+// Funktionen liegen nicht im Repository):
+//  - newsletter: höchstens 5 Anmeldungen pro Anschluss und Stunde, höchstens
+//    3 Bestätigungsmails pro Empfängeradresse und Tag (Prüfwerte im
+//    submissions_log); die Antwort verrät nicht mehr, ob eine Adresse schon
+//    angemeldet ist; bestätigte Abos lassen sich ohne Token nicht mehr ändern;
+//    Fehlertexte von Resend gehen nicht mehr an den Aufrufer.
+//  - quick-worker (BERUFENET-Import): Prüfblock wie bei versand.
+//  - index-ts (alte Jobsuche, ersetzt durch jobs): nur noch mit
+//    Service-Schlüssel. Kann gelöscht werden.
+//
+// Empfehlung: Den Code dieser Funktionen bei Gelegenheit ins Repository
+// holen (Dashboard → Funktion → Download), damit er versioniert ist.
 // Vorher konnte jeder "versand" mit {"testlauf": true} aufrufen und bekam
 // die E-Mail-Adressen aller Abonnenten zurück.
 // ════════════════════════════════════════

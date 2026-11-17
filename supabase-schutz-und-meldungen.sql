@@ -25,6 +25,7 @@
 
 -- ════════════════════════════════════════
 -- TEIL 1 – sofort ausführen
+-- EINGESPIELT am 17.11.2026 (Kontrolle bestanden, Trigger getestet)
 -- ════════════════════════════════════════
 
 -- ── 1. Bewertungen: Löschcode und Ausblenden ──

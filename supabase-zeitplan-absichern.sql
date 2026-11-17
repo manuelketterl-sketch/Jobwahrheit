@@ -1,5 +1,7 @@
 -- ════════════════════════════════════════
 -- ZEITPLÄNE UND FUNKTIONEN ABSICHERN (17. November 2026)
+-- EINGESPIELT am 17.11.2026, Prüfblöcke in versand und benachrichtigung
+-- veröffentlicht und getestet
 --
 -- Befund aus dem Export:
 --  - Die Funktionen "versand" und "benachrichtigung" prüfen nicht, wer sie

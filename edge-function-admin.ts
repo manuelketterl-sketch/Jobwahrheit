@@ -37,16 +37,27 @@ const FEHLVERSUCHE_GESAMT = 100
 
 const ersatzSchluessel = crypto.getRandomValues(new Uint8Array(32))
 let hmacSchluessel: Promise<CryptoKey> | null = null
-function ladeHmacSchluessel(): Promise<CryptoKey> {
+// Schlüssel wie in submit: IP_HASH_SECRET oder Vault (ip_pruefwert_schluessel)
+function ladeHmacSchluessel(supabase: any): Promise<CryptoKey> {
   if (!hmacSchluessel) {
-    const geheim = Deno.env.get('IP_HASH_SECRET')
-    const roh = geheim && geheim.length >= 32 ? new TextEncoder().encode(geheim) : ersatzSchluessel
-    hmacSchluessel = crypto.subtle.importKey('raw', roh, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+    hmacSchluessel = (async () => {
+      let roh: Uint8Array = ersatzSchluessel
+      const geheim = Deno.env.get('IP_HASH_SECRET')
+      if (geheim && geheim.length >= 32) {
+        roh = new TextEncoder().encode(geheim)
+      } else {
+        try {
+          const { data } = await supabase.rpc('ip_pruefwert_schluessel')
+          if (typeof data === 'string' && data.length >= 32) roh = new TextEncoder().encode(data)
+        } catch { /* Ersatzschlüssel */ }
+      }
+      return crypto.subtle.importKey('raw', roh, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+    })()
   }
   return hmacSchluessel
 }
-async function hashIp(ip: string): Promise<string> {
-  const d = await crypto.subtle.sign('HMAC', await ladeHmacSchluessel(), new TextEncoder().encode('admin|' + ip))
+async function hashIp(ip: string, supabase: any): Promise<string> {
+  const d = await crypto.subtle.sign('HMAC', await ladeHmacSchluessel(supabase), new TextEncoder().encode('admin|' + ip))
   return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, '0')).join('')
 }
 function besucherAdresse(req: Request): string {
@@ -91,7 +102,7 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
-  const ipHash = await hashIp(besucherAdresse(req))
+  const ipHash = await hashIp(besucherAdresse(req), supabase)
   const seitEinerStunde = new Date(Date.now() - 3600e3).toISOString()
   const [jeAdresse, gesamt] = await Promise.all([
     supabase.from('submissions_log').select('id', { count: 'exact', head: true })

@@ -31,27 +31,37 @@ const MIT_CAPTCHA = ['bewertung', 'diskussion', 'antwort']
 // Milliarden IPv4-Adressen durchrechnen und die echten Adressen ermitteln können.
 // Ohne den Schlüssel geht das nicht mehr.
 //
-// Der Schlüssel liegt als Supabase-Secret IP_HASH_SECRET vor (Einrichtung siehe
-// Pull Request). Fehlt er, würfelt die Funktion beim Start einen eigenen aus:
-// Das Rate Limit gilt dann nur, solange diese Instanz läuft, aber es landet
-// nie ein zurückrechenbarer Wert in der Datenbank.
+// Der Schlüssel kommt aus dem Supabase-Secret IP_HASH_SECRET, falls gesetzt,
+// sonst aus dem Vault der Datenbank (Funktion ip_pruefwert_schluessel, nur
+// für service_role aufrufbar, siehe supabase-ip-schluessel.sql). So muss
+// niemand einen Schlüssel abtippen. Fehlt beides, würfelt die Funktion beim
+// Start einen eigenen aus: Das Rate Limit gilt dann nur, solange diese
+// Instanz läuft, aber es landet nie ein zurückrechenbarer Wert in der
+// Datenbank.
 const ersatzSchluessel = crypto.getRandomValues(new Uint8Array(32))
 let hmacSchluessel: Promise<CryptoKey> | null = null
 
-function ladeHmacSchluessel(): Promise<CryptoKey> {
+function ladeHmacSchluessel(supabase: any): Promise<CryptoKey> {
   if (!hmacSchluessel) {
-    const geheim = Deno.env.get('IP_HASH_SECRET')
-    const roh = geheim && geheim.length >= 32
-      ? new TextEncoder().encode(geheim)
-      : ersatzSchluessel
-    hmacSchluessel = crypto.subtle.importKey(
-      'raw', roh, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+    hmacSchluessel = (async () => {
+      let roh: Uint8Array = ersatzSchluessel
+      const geheim = Deno.env.get('IP_HASH_SECRET')
+      if (geheim && geheim.length >= 32) {
+        roh = new TextEncoder().encode(geheim)
+      } else {
+        try {
+          const { data } = await supabase.rpc('ip_pruefwert_schluessel')
+          if (typeof data === 'string' && data.length >= 32) roh = new TextEncoder().encode(data)
+        } catch { /* Ersatzschlüssel */ }
+      }
+      return crypto.subtle.importKey('raw', roh, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+    })()
   }
   return hmacSchluessel
 }
 
-async function hashIp(ip: string): Promise<string> {
-  const schluessel = await ladeHmacSchluessel()
+async function hashIp(ip: string, supabase: any): Promise<string> {
+  const schluessel = await ladeHmacSchluessel(supabase)
   const digest = await crypto.subtle.sign('HMAC', schluessel, new TextEncoder().encode(ip))
   return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('')
 }
@@ -179,7 +189,7 @@ Deno.serve(async (req) => {
 
   // ── Rate Limiting per IP-Hash ──
   const ip = besucherAdresse(req)
-  const ipHash = await hashIp(ip)
+  const ipHash = await hashIp(ip, supabase)
   const seitEinerStunde = new Date(Date.now() - 60 * 60 * 1000).toISOString()
 
   const { count } = await supabase
@@ -287,7 +297,7 @@ Deno.serve(async (req) => {
   else if (action === 'hilfreich') {
     const id = str(d.id, 60)
     if (!id || !UUID.test(id)) return fail('Bewertung fehlt')
-    const einzel = await hashIp(ip + '|hilfreich|' + id)
+    const einzel = await hashIp(ip + '|hilfreich|' + id, supabase)
     const { count: schon } = await supabase.from('submissions_log')
       .select('id', { count: 'exact', head: true })
       .eq('ip_hash', einzel).eq('aktion', 'hilfreich_einzel')

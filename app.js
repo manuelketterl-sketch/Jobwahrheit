@@ -578,7 +578,9 @@ async function submitNewsletter() {
     return;
   }
 
-  feedback('Fast geschafft – bitte bestätige den Link in der Mail, die wir dir gerade geschickt haben.', true);
+  // Die Antwort sagt bewusst nicht, ob die Adresse schon angemeldet ist –
+  // sonst ließe sich für fremde Adressen abfragen, wer was abonniert hat.
+  feedback('Fast geschafft – falls du für diesen Beruf noch nicht angemeldet bist, bekommst du gleich eine Mail mit Bestätigungslink.', true);
   setTimeout(closeModalToBeruf, 4000);
 }
 

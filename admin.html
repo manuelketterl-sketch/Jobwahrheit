@@ -146,7 +146,13 @@ const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 
 let passwort = sessionStorage.getItem('ji_admin') || '';
 
-function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+// Nur echte Web-Adressen werden zum Link. Ein Arbeitgeber könnte sonst
+// "javascript:…" als Webseite eintragen – ein Klick darauf liefe hier im
+// Admin-Bereich, mit dem Admin-Passwort im Speicher.
+function webAdresse(roh){
+  try{ const u=new URL(String(roh||'').trim()); return (u.protocol==='https:'||u.protocol==='http:')?u.href:null }catch{ return null }
+}
 function datum(d){return new Date(d).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}
 
 async function ruf(daten){
@@ -412,7 +418,9 @@ function zeichne(d){
               </div>
               <div class="meta">
                 ${f.ansprechpartner?esc(f.ansprechpartner)+' · ':''}${f.telefon?esc(f.telefon)+' · ':''}${ort?esc(ort)+' · ':''}registriert ${datum(f.created_at)}
-                ${f.website?`<br><a href="${esc(f.website)}" target="_blank" rel="noopener" style="color:var(--accent-deep)">${esc(f.website)}</a>`:''}
+                ${f.website?(webAdresse(f.website)
+                  ?`<br><a href="${esc(webAdresse(f.website))}" target="_blank" rel="noopener noreferrer" style="color:var(--accent-deep)">${esc(f.website)}</a>`
+                  :`<br><span style="color:#e8552d">Ungültige Web-Adresse: ${esc(f.website)}</span>`):''}
               </div>
               ${f.beschreibung?`<div style="font-size:.85rem;color:var(--muted);margin-top:.35rem">${esc(f.beschreibung)}</div>`:''}
             </div>

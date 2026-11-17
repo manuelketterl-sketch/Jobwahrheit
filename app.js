@@ -260,7 +260,7 @@ function renderBewertung(b) {
 }
 
 function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 // ════════════════════════════════════════
@@ -511,7 +511,7 @@ function zeitAgo(dateStr) {
 }
 
 function escapeHtml(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function toggleNewDiscussion() {
@@ -755,9 +755,10 @@ async function ladeStellen(force) {
       ? `💰 ${s.gehalt_von ? s.gehalt_von.toLocaleString('de') : '?'}–${s.gehalt_bis ? s.gehalt_bis.toLocaleString('de') : '?'} €` : null;
     const details = [ort ? '📍 ' + escHtml(ort) : null, s.beschaeftigungsart ? escHtml(s.beschaeftigungsart) : null, gehalt]
       .filter(Boolean).join(' · ');
-    const ziel = s.bewerbung_url || (s.bewerbung_email ? 'mailto:' + s.bewerbung_email : null);
+    const ziel = sichereAdresse(s.bewerbung_url) ||
+      (s.bewerbung_email ? sichereAdresse('mailto:' + s.bewerbung_email) : null);
     return `<div class="stellenanzeige" style="border-color:var(--accent)"
-      ${ziel ? `onclick="stelleGeklickt('${s.id}');window.open('${escHtml(ziel)}','_blank','noopener')"` : ''}>
+      ${ziel ? `data-ziel="${escHtml(ziel)}" data-stelle="${escHtml(s.id)}" onclick="stelleOeffnen(this)"` : ''}>
       <div class="sa-badge">DIREKT</div>
       <div class="sa-title">${escHtml(s.titel)}</div>
       ${details ? `<div class="sa-detail">${details}</div>` : ''}
@@ -788,7 +789,8 @@ async function ladeStellen(force) {
 
     const neu = s.veroeffentlicht && (Date.now() - new Date(s.veroeffentlicht).getTime()) < 7 * 864e5;
 
-    return `<div class="stellenanzeige" ${s.url ? `onclick="window.open('${s.url}','_blank','noopener')"` : ''}>
+    const ziel = sichereAdresse(s.url);
+    return `<div class="stellenanzeige" ${ziel ? `data-ziel="${escHtml(ziel)}" onclick="stelleOeffnen(this)"` : ''}>
       ${neu ? '<div class="sa-badge">NEU</div>' : ''}
       ${s.arbeitgeber && s.arbeitgeber !== 'Arbeitgeber nicht genannt'
         ? `<div class="sa-company">${escHtml(s.arbeitgeber)}</div>` : ''}
@@ -796,6 +798,28 @@ async function ladeStellen(force) {
       ${details ? `<div class="sa-detail">${details}</div>` : ''}
     </div>`;
   }).join('') + `<div style="font-size:.72rem;color:var(--muted);text-align:center;margin-top:1rem">Quelle: Jobbörse der Bundesagentur für Arbeit</div>`;
+}
+
+// Lässt nur Adressen durch, die wirklich irgendwohin führen: https, http, mailto.
+// Alles andere (javascript:, data:, kaputte Eingaben) wird verworfen. Die Adresse
+// eines Arbeitgebers ist fremde Eingabe und darf nie als Code im Browser landen.
+function sichereAdresse(roh) {
+  if (typeof roh !== 'string') return null;
+  const adresse = roh.trim();
+  if (/^mailto:[^\s@<>"']+@[^\s@<>"']+\.[a-z]{2,}$/i.test(adresse)) return adresse;
+  try {
+    const u = new URL(adresse);
+    return (u.protocol === 'https:' || u.protocol === 'http:') ? u.href : null;
+  } catch { return null; }
+}
+
+// Öffnet eine Stellenanzeige. Die Adresse steht als Daten am Element und wird
+// nie in den Klick-Code hineingeschrieben – so kann sie dort nichts ausführen.
+function stelleOeffnen(el) {
+  const ziel = sichereAdresse(el.dataset.ziel);
+  if (!ziel) return;
+  if (el.dataset.stelle) stelleGeklickt(el.dataset.stelle);
+  window.open(ziel, '_blank', 'noopener');
 }
 
 // Zählt Klicks auf eigene Stellenanzeigen (für die Arbeitgeber-Statistik)

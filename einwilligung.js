@@ -83,6 +83,10 @@ window.werbung = (() => {
     // Keine automatischen Seitenaufrufe bei Adresswechseln – das steuern wir selbst,
     // sonst würde Meta auch /bewerten melden.
     window.fbq.disablePushState = true;
+    // Ohne diesen Schalter verschickt Meta nach dem ersten Seitenaufruf keine
+    // weiteren – bei uns wechseln die Seiten aber ohne Neuladen. Doppelte
+    // Meldungen derselben Adresse verhindert seitenwechsel() selbst.
+    window.fbq.allowDuplicatePageViews = true;
     // Keine automatisch erkannten Ereignisse (z. B. Klicks mit Knopftexten)
     window.fbq('set', 'autoConfig', false, id);
     window.fbq('init', id);

@@ -18,7 +18,7 @@
 
 const WERBE_IDS = {
   // Meta: Events Manager → Datenquellen → Datensatz-ID (nur Ziffern)
-  meta: '',
+  meta: '1129802703205774',
   // TikTok: Ads Manager → Tools → Events → Web-Events → Pixel-ID
   tiktok: ''
 };
@@ -36,7 +36,8 @@ const EREIGNISSE = {
 // Speicherort der Entscheidung. Das Speichern der Entscheidung selbst
 // ist technisch erforderlich und braucht keine Einwilligung.
 const EW_SCHLUESSEL = 'jobinsides-einwilligung';
-const EW_VERSION = 1;            // erhöhen, wenn neue Dienste dazukommen → erneut fragen
+const EW_VERSION = 1;            // erhöhen, wenn sich Text oder Zweck ändern → erneut fragen.
+                                 // Neue Dienste (z. B. TikTok-ID eingetragen) erkennt die Seite selbst.
 const EW_GUELTIG_TAGE = 365;     // nach einem Jahr erneut fragen
 
 // Als window.werbung, damit app.js und die onclick-Links im HTML es finden
@@ -46,6 +47,8 @@ window.werbung = (() => {
     WERBE_IDS.tiktok && 'TikTok'
   ].filter(Boolean);
   const konfiguriert = dienste.length > 0;
+  // Für welche Dienste die Einwilligung gilt. Kommt einer dazu, wird neu gefragt.
+  const dienstSchluessel = Object.keys(WERBE_IDS).filter(k => WERBE_IDS[k]).sort().join(',');
 
   let geladen = false;
   let zuletztGesehen = null;
@@ -55,6 +58,7 @@ window.werbung = (() => {
     try {
       const roh = JSON.parse(localStorage.getItem(EW_SCHLUESSEL) || 'null');
       if (!roh || roh.v !== EW_VERSION) return null;
+      if (roh.dienste !== dienstSchluessel) return null;
       if (Date.now() - new Date(roh.zeit).getTime() > EW_GUELTIG_TAGE * 864e5) return null;
       return roh;
     } catch { return null; }
@@ -63,7 +67,7 @@ window.werbung = (() => {
   function speichern(marketing) {
     try {
       localStorage.setItem(EW_SCHLUESSEL,
-        JSON.stringify({ v: EW_VERSION, marketing, zeit: new Date().toISOString() }));
+        JSON.stringify({ v: EW_VERSION, dienste: dienstSchluessel, marketing, zeit: new Date().toISOString() }));
     } catch { /* privater Modus: dann fragen wir beim nächsten Besuch eben wieder */ }
   }
 

@@ -1442,7 +1442,11 @@ function insiGucktAktualisieren() {
     return;
   }
   const schwelle = seite === 'page-home' ? window.innerHeight * 0.8 : 400;
-  if (window.scrollY > schwelle) {
+  // Sobald der Seitenfuß ins Bild kommt, taucht Insi ab – sonst verdeckt er
+  // dort Links wie „Inhalt melden“ oder „Cookie-Einstellungen“.
+  const fuss = document.querySelector('footer');
+  const fussImBild = fuss && fuss.getBoundingClientRect().top < window.innerHeight;
+  if (window.scrollY > schwelle && !fussImBild) {
     if (el.hidden) {
       el.hidden = false;
       void el.offsetWidth; // Startlage einmal berechnen lassen, damit Insi hochgleitet
